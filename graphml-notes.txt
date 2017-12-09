@@ -1,0 +1,177 @@
+We start at the top with a graph:
+
+ <graph edgedefault="directed" id="G">
+
+It contains nodes and edges:
+
+    <node id="n0">
+    ...
+    <edge id="e0" source="n4::n5" target="n1::n0">
+    ...
+
+There are only 5 nodes at the top graph level: n0 to n4.
+
+These correspond to the 4 group boxes plus the 1 "Outside..." box which has no group.
+
+Therefore, the other nodes are inside the group boxes.
+
+Here's a group box node:
+
+    <node id="n1" yfiles.foldertype="group">
+
+A non-group node contains the data in the <y:NodeLabel>:
+
+    <node id="n0">
+      <data key="d6">
+        <y:GenericNode configuration="com.yworks.flowchart.process">
+          <y:Geometry height="30.0" width="63.048828125" x="362.0515780009918" y="1091.7227603148642"/>
+          <y:Fill color="#E8EEF7" color2="#B7C9E3" transparent="false"/>
+          <y:BorderStyle color="#000000" type="line" width="1.0"/>
+          <y:NodeLabel alignment="left" autoSizePolicy="content" fontFamily="Segoe UI" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="19.9609375" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="53.048828125" x="5.0" y="5.01953125">Outside...<y:LabelModel>
+              <y:SmartNodeLabelModel distance="4.0"/>
+            </y:LabelModel>
+            <y:ModelParameter>
+              <y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/>
+            </y:ModelParameter>
+          </y:NodeLabel>
+        </y:GenericNode>
+      </data>
+    </node>
+
+The group node has various <data>, which contain the group labels as <y:NodeLabel>:
+
+    <node id="n1" yfiles.foldertype="group">
+      <data key="d4"/>
+      <data key="d6">
+        <y:ProxyAutoBoundsNode>
+          <y:Realizers active="0">
+            <y:GroupNode>
+              <y:Geometry height="258.7413024974618" width="908.6690476190477" x="200.18670634920613" y="341.7896423412119"/>
+              <y:Fill color="#F2F0D8" transparent="false"/>
+              <y:BorderStyle color="#000000" type="line" width="1.0"/>
+              <y:NodeLabel alignment="right" autoSizePolicy="node_width" backgroundColor="#B7B69E" borderDistance="0.0" fontFamily="Segoe UI" fontSize="15" fontStyle="plain" hasLineColor="false" height="23.951171875" horizontalTextPosition="center" iconTextGap="4" modelName="internal" modelPosition="t" textColor="#000000" verticalTextPosition="bottom" visible="true" width="908.6690476190477" x="0.0" y="0.0">Hallway</y:NodeLabel>
+              <y:Shape type="rectangle"/>
+              <y:DropShadow color="#D2D2D2" offsetX="4" offsetY="4"/>
+              <y:State closed="false" closedHeight="50.0" closedWidth="50.0" innerGraphDisplayEnabled="false"/>
+              <y:Insets bottom="15" bottomF="15.0" left="15" leftF="15.0" right="15" rightF="15.0" top="15" topF="15.0"/>
+              <y:BorderInsets bottom="0" bottomF="0.0" left="48" leftF="48.43869357638886" right="1" rightF="1.0000310019840981" top="0" topF="0.0"/>
+            </y:GroupNode>
+
+The group node also contains <graph> at the same level as <data>, which contains all the ungrouped nodes in the groups.
+The nodes are named "PARENT_NODE_ID::CHILD_NODE_ID", ex "n1::n0":
+
+      <graph edgedefault="directed" id="n1:">
+        <node id="n1::n0">
+          <data key="d6">
+            <y:GenericNode configuration="com.yworks.flowchart.process">
+              <y:Geometry height="45.921875" width="259.900390625" x="263.625399925595" y="380.7408142162119"/>
+              <y:Fill color="#E8EEF7" color2="#B7C9E3" transparent="false"/>
+              <y:BorderStyle color="#000000" type="line" width="1.0"/>
+              <y:NodeLabel alignment="left" autoSizePolicy="content" fontFamily="Segoe UI" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="35.921875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="249.900390625" x="5.000000000000114" y="5.0">There is a functioning {elevator} in the hallway.
+There is a {door} to room 603.<y:LabelModel>
+                  <y:SmartNodeLabelModel distance="4.0"/>
+                </y:LabelModel>
+                <y:ModelParameter>
+                  <y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="4.440892098500626E-16" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/>
+                </y:ModelParameter>
+              </y:NodeLabel>
+            </y:GenericNode>
+          </data>
+        </node>
+
+Switching to a simpler example.
+
+The edge declaration is self explanatory. Source and target give the direction:
+
+    <edge id="n0::e0" source="n0::n1" target="n0::n0::n0">
+
+The text is contained in a <y:EdgeLabel>:
+
+    <edge id="n0::e0" source="n0::n1" target="n0::n0::n0">
+      <data key="d9"/>
+      <data key="d10">
+        <y:PolyLineEdge>
+          <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
+          <y:LineStyle color="#000000" type="line" width="1.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" preferredPlacement="anywhere" ratio="0.5" textColor="#000000" verticalTextPosition="bottom" visible="true" width="124.673828125" x="-62.3369140625" y="84.41305541992188">OUTER-INNER EDGE<y:LabelModel>
+              <y:SmartEdgeLabelModel autoRotationEnabled="false" defaultAngle="0.0" defaultDistance="10.0"/>
+            </y:LabelModel>
+            <y:ModelParameter>
+              <y:SmartEdgeLabelModelParameter angle="6.283185307179586" distance="10.0" distanceToCenter="false" position="center" ratio="3.0" segment="-1"/>
+            </y:ModelParameter>
+            <y:PreferredPlacementDescriptor angle="0.0" angleOffsetOnRightSide="0" angleReference="absolute" angleRotationOnRightSide="co" distance="-1.0" frozen="true" placement="anywhere" side="anywhere" sideReference="relative_to_edge_flow"/>
+          </y:EdgeLabel>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+
+So terminal nodes and edges are very simple.
+
+The overall structure is this:
+
+    <graph>
+        <node id="NODE_ID"> // a terminal node
+            ...
+                <y:NodeLabel>NODE_TEXT</y:NodeLabel>
+            ...
+        </node>
+        <edge source="NODE_ID" target="NODE_ID"> // an edge node
+            ...
+                <y:EdgeLabel>EDGE_TEXT</y:EdgeLabel>
+            ...
+        </edge>
+        <node id="NODE_ID" yfiles.foldertype="group"> // a group node
+            ...
+                <data>
+                    ...
+                        <y:NodeLabel>GROUP_TEXT</y:NodeLabel>
+                    ...
+                </data>
+                <graph>
+                    <node id="NODE_ID"> // a nested terminal node
+                        ...
+                            <y:NodeLabel>NESTED_NODE_TEXT</y:NodeLabel>
+                        ...
+                    <node id="NODE_ID" yfiles.foldertype="group"> // a nested group node
+                        // etc.
+                    </node>
+                </graph>
+            ...
+        </node>
+    </graph>
+
+But what do we want to create from this?
+
+We want a one-dimensional array of locations.
+
+Every location contains:
+
+    location description
+
+    visual group id
+
+    auditory group id
+
+    list of target location indexes
+
+But how do we do this?
+
+    For every node, regardless of group
+
+        Make a location for each node
+        Give it the node text
+
+    For every edge
+
+        Add a node target based on the edge source and target
+
+    Whatever auditory and visual groups a node is in, mark it in the nodes
+
+There are two namespaces used in the yworks graphml:
+
+    http://graphml.graphdrawing.org/xmlns
+    http://www.yworks.com/xml/graphml
+
+
