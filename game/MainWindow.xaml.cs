@@ -110,23 +110,23 @@ namespace game
 
       // TEST ONLY 
 
-      string listin = "";
+      string listing = "";
 
       foreach (var location in locations)
       {
-        listin += location.Key + "=" + location.Value.Text + "\n";
-        listin += "auditory zone=" + location.Value.AuditoryZoneId + "\n";
-        listin += "visual zone=" + location.Value.VisualZoneId + "\n";
+        listing += location.Key + "=" + location.Value.Text + "\n";
+        listing += "auditory zone=" + location.Value.AuditoryZoneId + "\n";
+        listing += "visual zone=" + location.Value.VisualZoneId + "\n";
         foreach (var target in location.Value.Targets)
         {
-          listin += "   " + target.Key + "=>" + target.Value + "\n";
+          listing += "   " + target.Key + "=>" + target.Value + "\n";
         }
-        listin += "\n";
+        listing += "\n";
       }
 
       FlowDocumentScrollViewer outputBox = (FlowDocumentScrollViewer)FindName("viewer");
       FlowDocument document = new FlowDocument();
-      Paragraph paragraph = new Paragraph(new Run(listin));
+      Paragraph paragraph = new Paragraph(new Run(listing));
       paragraph.FontSize = 13;
       document.Blocks.Add(paragraph);
       outputBox.Document = document;
