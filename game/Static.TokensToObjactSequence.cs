@@ -5,45 +5,43 @@ namespace Game
 {
   public static partial class Static
   {
-    // These temporary global variables aren't that great and should be gotten rid of.
-    private static Token PushedToken;
-    private static Token GottenToken;
-    private static List<Token> Tokens;
-    private static int TokenIndex;
-
-    private static void GetToken()
-    {
-      if (PushedToken != null)
-      {
-        GottenToken = PushedToken;
-        PushedToken = null;
-      }
-      else
-      {
-        // This should never go off the end. There is already an end of source text marker at the end of the tokens.
-        GottenToken = Tokens[TokenIndex];
-        ++TokenIndex;
-      }
-    }
-
-    private static void UngetToken()
-    {
-      PushedToken = GottenToken;
-    }
-
-    private static string Expected(
-      string expected,
-      Token actual)
-    {
-      return string.Format("{0}: expected {1} but got '{2}'", actual.LineNumber, expected, actual.Value);
-    }
-
     public static (ObjactSequence, string) TokensToObjactSequence(
       List<Token> tokens)
     {
-      Tokens = tokens;
-      PushedToken = null;
-      TokenIndex = 0;
+      Token pushedToken = null;
+      Token gottenToken;
+      int tokenIndex = 0;
+
+      // Some local helper functions.
+
+      void GetToken()
+      {
+        if (pushedToken != null)
+        {
+          gottenToken = pushedToken;
+          pushedToken = null;
+        }
+        else
+        {
+          // This should never go off the end. There is already an end of source text marker at the end of the tokens.
+          gottenToken = tokens[tokenIndex];
+          ++tokenIndex;
+        }
+      }
+
+      void UngetToken()
+      {
+        pushedToken = gottenToken;
+      }
+
+      string Expected(
+        string expected,
+        Token actual)
+      {
+        return string.Format("{0}: expected {1} but got '{2}'", actual.LineNumber, expected, actual.Value);
+      }
+
+      // Start here
 
       var result = new ObjactSequence();
 
@@ -51,13 +49,13 @@ namespace Game
       {
         GetToken();
 
-        if (GottenToken.Type == Token.Text)
+        if (gottenToken.Type == Token.Text)
         {
-          result.Objacts.Add(new ObjactText(GottenToken.Value));
+          result.Objacts.Add(new ObjactText(gottenToken.Value));
         }
-        else if (GottenToken.Type == Token.Id)
+        else if (gottenToken.Type == Token.Id)
         {
-          result.Objacts.Add(new ObjactLookup(GottenToken.Value));
+          result.Objacts.Add(new ObjactLookup(gottenToken.Value));
         }
         /*
         else if (GottenToken.Type == Token.If)

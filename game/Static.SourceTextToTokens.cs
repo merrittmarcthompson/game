@@ -5,76 +5,77 @@ namespace Game
 {
   public static partial class Static
   {
-    // These temporary global variables aren't that great and should be gotten rid of.
-    private static char PushedLetter = '\0';
-    private static char GottenLetter;
-    private static int LetterIndex;
-    private static string SourceText;
-
-    private static bool GetLetter()
-    {
-      if (PushedLetter != '\0')
-      {
-        GottenLetter = PushedLetter;
-        PushedLetter = '\0';
-        return true;
-      }
-
-      if (LetterIndex >= SourceText.Length)
-      {
-        GottenLetter = '\0';
-        return false;
-      }
-
-      GottenLetter = SourceText[LetterIndex];
-      ++LetterIndex;
-      return true;
-    }
-
-    private static void UngetLetter()
-    {
-      PushedLetter = GottenLetter;
-    }
-
-    private static bool GetComment()
-    {
-      // Nesting example:
-      //   [[ They always were.[p] ]]
-      // No-nesting example:
-      //   [[ They always were. ]]
-      int level = 0;
-      while (true)
-      {
-        if (!GetLetter())
-          return false;
-        if (GottenLetter == '[')
-        {
-          ++level;
-        }
-        else if (GottenLetter == ']')
-        {
-          --level;
-          if (level < 0)
-          {
-            if (!GetLetter())
-              return false;
-            if (GottenLetter == ']')
-              return true;
-            UngetLetter();
-          }
-        }
-      }
-    }
-
     public static (List<Token>, string) SourceTextToTokens(
       string sourceText)
     {
+      char pushedLetter = '\0';
+      char gottenLetter;
+      int letterIndex;
+
+      // Some local helper functions
+
+      bool GetLetter()
+      {
+        if (pushedLetter != '\0')
+        {
+          gottenLetter = pushedLetter;
+          pushedLetter = '\0';
+          return true;
+        }
+
+        if (letterIndex >= sourceText.Length)
+        {
+          gottenLetter = '\0';
+          return false;
+        }
+
+        gottenLetter = sourceText[letterIndex];
+        ++letterIndex;
+        return true;
+      }
+
+      void UngetLetter()
+      {
+        pushedLetter = gottenLetter;
+      }
+
+      bool GetComment()
+      {
+        // Nesting example:
+        //   [[ They always were.[p] ]]
+        // No-nesting example:
+        //   [[ They always were. ]]
+        int level = 0;
+        while (true)
+        {
+          if (!GetLetter())
+            return false;
+          if (gottenLetter == '[')
+          {
+            ++level;
+          }
+          else if (gottenLetter == ']')
+          {
+            --level;
+            if (level < 0)
+            {
+              if (!GetLetter())
+                return false;
+              if (gottenLetter == ']')
+                return true;
+              UngetLetter();
+            }
+          }
+        }
+      }
+
+      // Start here
+
       List<Token> result = new List<Token>();
       string textAccumulator = "";
       int lineNumber = 1;
 
-      LetterIndex = 0;
-      SourceText = sourceText;
+      letterIndex = 0;
 
       // This outer loop is for accumulating text strings
       while (true)
@@ -90,7 +91,7 @@ namespace Game
           return (result, null);
         }
 
-        switch (GottenLetter)
+        switch (gottenLetter)
         {
           case '\n':
             // [p] lets you explicitly put in a paragraph break. We'll clean up any extra spaces later. This lets you break continguous text up into multiple lines within 'if' groups without having it affect formatting.
@@ -108,7 +109,7 @@ namespace Game
 
           // Didn't want to put this way at the bottom--gets lost.
           default:
-            textAccumulator += GottenLetter;
+            textAccumulator += gottenLetter;
             break;
 
           case '[':
@@ -119,7 +120,7 @@ namespace Game
             }
 
             // Check for a [[ comment starter.
-            if (GottenLetter != '[')
+            if (gottenLetter != '[')
             {
               // No comment--pretend this never happened.
               UngetLetter();
@@ -153,7 +154,7 @@ namespace Game
                 return (result, null);
               }
 
-              switch (GottenLetter)
+              switch (gottenLetter)
               {
                 case ' ':
                 case '\r':
@@ -179,9 +180,9 @@ namespace Game
                     result.Add(new Token(Token.EndOfSourceText, "", lineNumber));
                     return (result, null);
                   }
-                  if (GottenLetter != '[')
+                  if (gottenLetter != '[')
                   {
-                    string syntaxError = String.Format("{0}: expected '[[' but got '[{1}'", lineNumber, GottenLetter);
+                    string syntaxError = String.Format("{0}: expected '[[' but got '[{1}'", lineNumber, gottenLetter);
                     return (null, syntaxError);
                   }
 
@@ -195,20 +196,20 @@ namespace Game
                   break;
 
                 default:
-                  if (!Char.IsLetterOrDigit(GottenLetter))
+                  if (!Char.IsLetterOrDigit(gottenLetter))
                   {
-                    string syntaxError = String.Format("{0}: unexpected character '[{1}'", lineNumber, GottenLetter);
+                    string syntaxError = String.Format("{0}: unexpected character '[{1}'", lineNumber, gottenLetter);
                     return (null, syntaxError);
                   }
 
                   string id = "";
                   do
                   {
-                    id += GottenLetter;
+                    id += gottenLetter;
 
                     if (!GetLetter())
                       break;
-                  } while (Char.IsLetterOrDigit(GottenLetter) || GottenLetter == '.');
+                  } while (Char.IsLetterOrDigit(gottenLetter) || gottenLetter == '.');
 
                   UngetLetter();
                   if (id.NoCaseEquals("if"))
