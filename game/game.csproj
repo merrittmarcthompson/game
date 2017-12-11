@@ -36,6 +36,9 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.ValueTuple, Version=4.0.2.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.ValueTuple.4.4.0\lib\net461\System.ValueTuple.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -62,7 +65,19 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Class1.cs" />
+    <Compile Include="Class.Token.cs" />
+    <Compile Include="Class.TokenType.cs" />
+    <Compile Include="Class.ObjactText.cs" />
+    <Compile Include="Class.ObjactLookup.cs" />
+    <Compile Include="Static.RemoveBlanksAfterNewLines.cs" />
+    <Compile Include="Static.RemoveExtraBlanks.cs" />
+    <Compile Include="Static.NoCaseEquals.cs" />
+    <Compile Include="Static.SourceTextToTokens.cs" />
+    <Compile Include="Class.Objact.cs" />
+    <Compile Include="Class.ObjactSequence.cs" />
+    <Compile Include="Static.TokensToObjactSequence.cs" />
+    <Compile Include="Static.GraphmlToLocationDictionary.cs" />
+    <Compile Include="Class.Location.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -86,6 +101,7 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

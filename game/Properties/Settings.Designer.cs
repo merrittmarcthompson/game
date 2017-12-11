@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace game.Properties
+namespace Game.Properties
 {
 
 
