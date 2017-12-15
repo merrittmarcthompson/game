@@ -70,14 +70,15 @@
     <Compile Include="Class.TokenType.cs" />
     <Compile Include="Class.ObjactText.cs" />
     <Compile Include="Class.ObjactLookup.cs" />
+    <Compile Include="Static.MyLookup.cs" />
     <Compile Include="Static.RemoveBlanksAfterNewLines.cs" />
     <Compile Include="Static.RemoveExtraBlanks.cs" />
-    <Compile Include="Static.NoCaseEquals.cs" />
+    <Compile Include="Static.MyNoCaseEquals.cs" />
     <Compile Include="Static.SourceTextToTokens.cs" />
     <Compile Include="Class.Objact.cs" />
     <Compile Include="Class.ObjactSequence.cs" />
     <Compile Include="Static.TokensToObjactSequence.cs" />
-    <Compile Include="Static.GraphmlToLocationDictionary.cs" />
+    <Compile Include="Static.GraphmlToProperties.cs" />
     <Compile Include="Class.Location.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>

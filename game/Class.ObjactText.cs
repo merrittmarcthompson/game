@@ -15,7 +15,7 @@ namespace Game
 
     // 'text' and 'directives' are accumulators.
     public override void Reduce(
-      Dictionary<string, string> properties,
+      HashSet<(string, string, string)> properties,
       ref string text,
       ref Dictionary<string, string> directives)
     {

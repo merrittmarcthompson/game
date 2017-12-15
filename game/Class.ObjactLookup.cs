@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace Game
 {
@@ -13,11 +14,11 @@ namespace Game
     }
 
     public override void Reduce(
-      Dictionary<string, string> properties,
+      HashSet<(string, string, string)> properties,
       ref string text,
       ref Dictionary<string, string> directives)
     {
-      string setting = properties[Id];
+      string setting = properties.MyLookup("~", Id);
       if (setting == null)
       {
         text += "?" + Id + "?";

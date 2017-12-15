@@ -212,35 +212,35 @@ namespace Game
                   } while (Char.IsLetterOrDigit(gottenLetter) || gottenLetter == '.');
 
                   UngetLetter();
-                  if (id.NoCaseEquals("if"))
+                  if (id.MyNoCaseEquals("if"))
                   {
                     result.Add(new Token(Token.If, id, lineNumber));
                   }
-                  else if (id.NoCaseEquals("else"))
+                  else if (id.MyNoCaseEquals("else"))
                   {
                     result.Add(new Token(Token.Else, id, lineNumber));
                   }
-                  else if (id.NoCaseEquals("or"))
+                  else if (id.MyNoCaseEquals("or"))
                   {
                     result.Add(new Token(Token.Or, id, lineNumber));
                   }
-                  else if (id.NoCaseEquals("not"))
+                  else if (id.MyNoCaseEquals("not"))
                   {
                     result.Add(new Token(Token.Not, id, lineNumber));
                   }
-                  else if (id.NoCaseEquals("end"))
+                  else if (id.MyNoCaseEquals("end"))
                   {
                     result.Add(new Token(Token.End, id, lineNumber));
                   }
-                  else if (id.NoCaseEquals("raise"))
+                  else if (id.MyNoCaseEquals("raise"))
                   {
                     result.Add(new Token(Token.Raise, id, lineNumber));
                   }
-                  else if (id.NoCaseEquals("lower"))
+                  else if (id.MyNoCaseEquals("lower"))
                   {
                     result.Add(new Token(Token.Lower, id, lineNumber));
                   }
-                  else if (id.NoCaseEquals("set"))
+                  else if (id.MyNoCaseEquals("set"))
                   {
                     result.Add(new Token(Token.Set, id, lineNumber));
                   }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -8,11 +9,8 @@ namespace Game
 {
   public partial class MainWindow : Window
   {
-    private Location CurrentLocation;
-    private Dictionary<string, Location> Locations;
-    private Dictionary<string, string> Properties;
-
-
+    private string CurrentLocation;
+    private HashSet<(string, string, string)> Properties;
 
     private void SetScreenText()
     {
@@ -21,7 +19,8 @@ namespace Game
       paragraph.FontSize = 13;
       paragraph.LineHeight = 22;
 
-      (var tokens, var lexicalError) = Static.SourceTextToTokens(CurrentLocation.SourceText);
+      (var tokens, var lexicalError) = Static.SourceTextToTokens(Properties.MyLookup(CurrentLocation, "text"));
+
       if (tokens == null)
       {
         // If there's a source code problem, put an error message on the screen.
@@ -78,36 +77,31 @@ namespace Game
     {
       var hyperlink = sender as Hyperlink;
       var text = hyperlink.Tag as string;
-      CurrentLocation = Locations[CurrentLocation.Targets[text]];
+      CurrentLocation = Properties.MyLookup(CurrentLocation, "target" + "~" + text);
       SetScreenText();
     }
 
     public MainWindow()
     {
+    /*
       try
       {
+    */
         InitializeComponent();
 
         string graphml = System.IO.File.ReadAllText("map.boneyard-simplified.graphml");
-        Locations = Static.GraphmlToLocationDictionary(graphml);
-        Properties = new Dictionary<string, string>();
-        Properties.Add("p", "\r\n");
-
-        foreach (var location in Locations.Values)
-        {
-          if (location.SourceText.StartsWith("<< Barclay Hotel room 603"))
-          {
-            CurrentLocation = location;
-            break;
-          }
-        }
+        Properties = Static.GraphmlToProperties(graphml);
+        Properties.Add(("~", "p", "\r\n"));
+        CurrentLocation = "n4::n0";
 
         SetScreenText();
-      }
-      catch (Exception e)
-      {
-        MessageBox.Show(String.Format("{0}", e), "Exception caught");
-      }
+      /*
+        }
+        catch (Exception e)
+        {
+          MessageBox.Show(String.Format("{0}", e), "Exception caught");
+        }
+      */
     }
   }
 }

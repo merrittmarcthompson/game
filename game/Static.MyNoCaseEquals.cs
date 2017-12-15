@@ -4,7 +4,7 @@ namespace Game
 {
   public static partial class Static
   {
-    public static bool NoCaseEquals(
+    public static bool MyNoCaseEquals(
       this string left,
       string right)
     {
