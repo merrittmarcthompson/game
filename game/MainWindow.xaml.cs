@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -12,7 +13,7 @@ namespace Game
     private Dictionary<string, string> Properties;
 
 
-    
+
     private void SetScreenText()
     {
       // One way or another, we're going to put a paragraph on the screen.
@@ -83,23 +84,30 @@ namespace Game
 
     public MainWindow()
     {
-      InitializeComponent();
-
-      string graphml = System.IO.File.ReadAllText("map.boneyard-simplified.graphml");
-      Locations = Static.GraphmlToLocationDictionary(graphml);
-      Properties = new Dictionary<string, string>();
-      Properties.Add("p", "\r\n");
-
-      foreach (var location in Locations.Values)
+      try
       {
-        if (location.SourceText.StartsWith("<< Barclay Hotel room 603"))
-        {
-          CurrentLocation = location;
-          break;
-        }
-      }
+        InitializeComponent();
 
-      SetScreenText();
+        string graphml = System.IO.File.ReadAllText("map.boneyard-simplified.graphml");
+        Locations = Static.GraphmlToLocationDictionary(graphml);
+        Properties = new Dictionary<string, string>();
+        Properties.Add("p", "\r\n");
+
+        foreach (var location in Locations.Values)
+        {
+          if (location.SourceText.StartsWith("<< Barclay Hotel room 603"))
+          {
+            CurrentLocation = location;
+            break;
+          }
+        }
+
+        SetScreenText();
+      }
+      catch (Exception e)
+      {
+        MessageBox.Show(String.Format("{0}", e), "Exception caught");
+      }
     }
   }
 }

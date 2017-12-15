@@ -198,7 +198,7 @@ namespace Game
                 default:
                   if (!Char.IsLetterOrDigit(gottenLetter))
                   {
-                    string syntaxError = String.Format("{0}: unexpected character '[{1}'", lineNumber, gottenLetter);
+                    string syntaxError = String.Format("{0}: unexpected character '{1}'", lineNumber, gottenLetter);
                     return (null, syntaxError);
                   }
 
