@@ -46,9 +46,9 @@ namespace Game
       "n0::n1", "text", "A man sits in a chair by the bed."
       "n0::n2", "text", "[First] [Last] lies in the bed."
       "n0::n3", "text", "There is a door with a lock."
-      "n0::n0", "target~door", "n0::n1"
-      "n0::n0", "target~window", "n0::n2"
-      "n0::n0", "target~box", "n0::n3"
+      "n0::n0", "target", "n0::n1~door"
+      "n0::n0", "target", "n0::n2~window"
+      "n0::n0", "target", "n0::n3~box"
       "n0::n0", "group", "Doc Mitchell's infirmary"
     */
     public static HashSet<(string, string, string)> GraphmlToProperties(
@@ -84,7 +84,7 @@ namespace Game
         string source = edge.Attribute("source").Value;
         string target = edge.Attribute("target").Value;
         string text = edge.Descendants(y + "EdgeLabel").DefaultIfEmpty(null)?.First()?.Value;
-        result.Add((source, "target~" + text, target));
+        result.Add((source, "target", target + "~" + text));
       }
 
       // 3. Set the groups based on the groups in the source graphml.

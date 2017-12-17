@@ -13,11 +13,10 @@ namespace Game
       TheText = text;
     }
 
-    // 'text' and 'directives' are accumulators.
     public override void Reduce(
       HashSet<(string, string, string)> properties,
-      ref string text,
-      ref Dictionary<string, string> directives)
+      string defaultOwner,
+      ref string text)
     {
       text += TheText;
     }

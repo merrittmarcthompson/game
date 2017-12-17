@@ -1,31 +1,33 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 
 namespace Game
 {
   public class ObjactLookup : Objact
   {
-    public string Id;
+    public string Owner;
+    public string Label;
 
     public ObjactLookup(
-      string id)
+      string owner,
+      string label)
     {
-      Id = id;
+      Owner = owner;
+      Label = label;
     }
 
     public override void Reduce(
-      HashSet<(string, string, string)> properties,
-      ref string text,
-      ref Dictionary<string, string> directives)
+      HashSet<(string, string, string)> tags,
+      string defaultOwner,
+      ref string text)
     {
-      string setting = properties.MyLookup("~", Id);
-      if (setting == null)
+      string value = Static.Lookup(tags, Owner, defaultOwner, Label);
+      if (value == null)
       {
-        text += "?" + Id + "?";
+        text += "?" + Static.PickOwner(Owner, defaultOwner) + ":" + Label + "?";
       }
       else
       {
-        text += setting;
+        text += value;
       }
     }
   }

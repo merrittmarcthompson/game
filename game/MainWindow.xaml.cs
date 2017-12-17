@@ -1,29 +1,108 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 
 namespace Game
 {
+  public class Location
+  {
+    // You've got to have get/set property if a member is going to be displayed in the UI.
+    public string Node { get; set; }
+    public string Description { get; set; }
+
+    public Location(
+      string node,
+      string description)
+    {
+      Node = node;
+      Description = description;
+    }
+  }
+
+  public class Reaction
+  {
+    // You've got to have get/set property if a member is going to be displayed in the UI.
+    public string Name { get; set; }
+    public string Description { get; set; }
+
+    public Reaction(
+      string name,
+      string description)
+    {
+      Name = name;
+      Description = description;
+    }
+  }
+
   public partial class MainWindow : Window
   {
-    private string CurrentLocation;
-    private HashSet<(string, string, string)> Properties;
+    private HashSet<(string, string, string)> Tags;
+    public List<Reaction> ReactionList { get; set; }
+    public List<Location> LocationList { get; set; }
+    private DateTime NextGoodClick = DateTime.Now;
 
-    private void SetScreenText()
+    private void ReactionListControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+      // Get rid of key bounce.
+      if (DateTime.Now < NextGoodClick)
+        return;
+      NextGoodClick = DateTime.Now.AddSeconds(0.5);
+
+      /*
+      Reaction reaction = ((sender as ListBox).SelectedItem as Reaction);
+
+      if (reaction == null)
+        return;
+
+      Position.MoveTo(reaction);
+      SetUpScreen();
+      this.DataContext = Position.CurrentInteraction;
+      */
+    }
+
+    private void MapListControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+      // Get rid of key bounce.
+      if (DateTime.Now < NextGoodClick)
+        return;
+      NextGoodClick = DateTime.Now.AddSeconds(0.5);
+
+      var listBox = sender as ListBox;
+
+      // The top one is a constant title.
+      if (listBox.SelectedIndex == 0)
+      {
+        listBox.SelectedIndex = -1;
+        return;
+      }
+
+      Location location = listBox.SelectedItem as Location;
+
+      if (location == null || location.Node == null)
+        return;
+      
+      SetScreenText(location.Node);
+
+      // Don't leave a selection box on the item after you click.
+      listBox.SelectedIndex = -1;
+    }
+
+
+    private void SetScreenText(
+      string node)
     {
       // One way or another, we're going to put a paragraph on the screen.
       var paragraph = new Paragraph();
       paragraph.FontSize = 13;
       paragraph.LineHeight = 22;
 
-      (var tokens, var lexicalError) = Static.SourceTextToTokens(Properties.MyLookup(CurrentLocation, "text"));
+      (var tokens, var lexicalError) = Static.SourceTextToTokens(Static.Lookup(Tags, node, null, "text"));
 
       if (tokens == null)
       {
-        // If there's a source code problem, put an error message on the screen.
+        // If there's a source code problem, put the error message on the screen.
         paragraph.Inlines.Add(new Run(lexicalError));
       }
       else
@@ -31,70 +110,65 @@ namespace Game
         (var sequence, var syntaxError) = Static.TokensToObjactSequence(tokens);
         if (sequence == null)
         {
-          // If there's a source code problem, put an error message on the screen.
+          // If there's a source code problem, put the error message on the screen.
           paragraph.Inlines.Add(new Run(syntaxError));
         }
         else
         {
           var text = "";
-          var directives = new Dictionary<string, string>();
-          sequence.Reduce(Properties, ref text, ref directives);
+          sequence.Reduce(Tags, node, ref text);
 
           text = Static.RemoveExtraBlanks(text);
           text = Static.RemoveBlanksAfterNewLines(text);
 
-          // Break it up by links, then build the links into the text. Every other split piece will be a link.
-          bool onLink = text[0] == '{';
-          // Split "{}" behavior:
-          //   "here's a {link} or {two}" => "here's a " / "link" / " or " / "two" / ""
-          //   "{here} is a {link}"       => "here" / " is a " / "link" / ""
-          string[] pieces = text.Split("{}".ToCharArray());
-          foreach (var piece in pieces)
+
+          if (Static.Lookup(Tags, node, null, "location") == null)
           {
-            if (onLink)
-            {
-              var hyperlink = new Hyperlink(new Run(piece));
-              hyperlink.Click += Hyperlink_Click;
-              hyperlink.Tag = piece;
-              paragraph.Inlines.Add(hyperlink);
-            }
-            else
-            {
-              paragraph.Inlines.Add(new Run(piece));
-            }
-            onLink = !onLink;
+            paragraph.Inlines.Add(new Run("Here is a story about " + Static.Lookup(Tags, node, null, "text") + ". Isn't that interesting? I thought so."));
           }
+          else
+          {
+            LocationList.Clear();
+            LocationList.Add(new Location(null, text));
+            foreach (var target in Static.MultiLookup(Tags, node, null, "target"))
+            {
+              var pieces = target.Split('~');
+              LocationList.Add(new Location(pieces[0], pieces[1]));
+            }
+          }
+
+          // This lets the UI get to the WPF data. Yes, you've got to set it to null first, otherwise it won't redisplay anything.
+          DataContext = null;
+          DataContext = this;
         }
       }
+
       FlowDocument document = new FlowDocument();
       document.TextAlignment = TextAlignment.Left;
       document.Blocks.Add(paragraph);
-      FlowDocumentScrollViewer viewer = (FlowDocumentScrollViewer)FindName("viewer");
+      FlowDocumentScrollViewer viewer = (FlowDocumentScrollViewer)FindName("StoryViewer");
       viewer.Document = document;
-    }
 
-    private void Hyperlink_Click(object sender, RoutedEventArgs e)
-    {
-      var hyperlink = sender as Hyperlink;
-      var text = hyperlink.Tag as string;
-      CurrentLocation = Properties.MyLookup(CurrentLocation, "target" + "~" + text);
-      SetScreenText();
+      ReactionList.Clear();
+      ReactionList.Add(new Reaction("It works!", "Here is a big one. Now is the time for all good men to come to the aid of their country"));
+      ReactionList.Add(new Reaction("Here's another one", "Hurray!"));
     }
 
     public MainWindow()
     {
-    /*
-      try
-      {
-    */
-        InitializeComponent();
+      /*
+        try
+        {
+      */
+      InitializeComponent();
 
-        string graphml = System.IO.File.ReadAllText("map.boneyard-simplified.graphml");
-        Properties = Static.GraphmlToProperties(graphml);
-        Properties.Add(("~", "p", "\r\n"));
-        CurrentLocation = "n4::n0";
+      string graphml = System.IO.File.ReadAllText("map.boneyard-simplified.graphml");
+      Tags = Static.GraphmlToProperties(graphml);
+      Tags.Add(("~", "p", "\r\n"));
+      LocationList = new List<Location>();
+      ReactionList = new List<Reaction>();
 
-        SetScreenText();
+      SetScreenText("n4::n0");
       /*
         }
         catch (Exception e)

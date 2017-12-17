@@ -173,6 +173,10 @@ namespace Game
                   result.Add(new Token(Token.Equal, "=", lineNumber));
                   break;
 
+                case ':':
+                  result.Add(new Token(Token.Colon, ":", lineNumber));
+                  break;
+
                 case '[':
                   // Must be a comment.
                   if (!GetLetter())
@@ -232,17 +236,9 @@ namespace Game
                   {
                     result.Add(new Token(Token.End, id, lineNumber));
                   }
-                  else if (id.MyNoCaseEquals("raise"))
+                  else if (id.MyNoCaseEquals("tag"))
                   {
-                    result.Add(new Token(Token.Raise, id, lineNumber));
-                  }
-                  else if (id.MyNoCaseEquals("lower"))
-                  {
-                    result.Add(new Token(Token.Lower, id, lineNumber));
-                  }
-                  else if (id.MyNoCaseEquals("set"))
-                  {
-                    result.Add(new Token(Token.Set, id, lineNumber));
+                    result.Add(new Token(Token.Tag, id, lineNumber));
                   }
                   else
                   {

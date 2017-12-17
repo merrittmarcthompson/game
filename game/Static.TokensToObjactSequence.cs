@@ -55,7 +55,58 @@ namespace Game
         }
         else if (gottenToken.Type == Token.Id)
         {
-          result.Objacts.Add(new ObjactLookup(gottenToken.Value));
+          // This can be:
+          //  [OWNER-ID :] LABEL-ID
+          var label = gottenToken.Value;
+          var owner = "";
+          GetToken();
+          if (gottenToken.Type == Token.Colon)
+          {
+            owner = label;
+            GetToken();
+            if (gottenToken.Type != Token.Id)
+              return (null, Expected(Token.Id.Name, gottenToken));
+            label = gottenToken.Value;
+          }
+          else
+          {
+            UngetToken();
+          }
+          result.Objacts.Add(new ObjactLookup(owner, label));
+        }
+        else if (gottenToken.Type == Token.Tag)
+        {
+          // You can get one of these:
+          //  tag [OWNER-ID :] LABEL-ID [= VALUE-ID]
+          //  tag [OWNER-ID :] LABEL-ID = TOKENS [END]
+          GetToken();
+          if (gottenToken.Type != Token.Id)
+            return (null, Expected(Token.Id.Name, gottenToken));
+
+          // Let's assume it's going to be the label with no owner.
+          var label = gottenToken.Value;
+          var owner = "";
+          GetToken();
+          if (gottenToken.Type == Token.Colon)
+          {
+            // But if it's followed by a colon, it turns out to be the owner.
+            owner = label;
+            GetToken();
+
+            // So the next ID must be the label.
+            if (gottenToken.Type != Token.Id)
+              return (null, Expected(Token.Id.Name, gottenToken));
+            label = gottenToken.Value;
+          }
+          else
+          {
+            // If no colon, there's no owner. Pretend we didn't get the colon.
+            UngetToken();
+          }
+
+          // I'm not implementing the '=' yet.
+
+          result.Objacts.Add(new ObjactTag(owner, label, ""));
         }
         /*
         else if (GottenToken.Type == Token.If)
@@ -67,13 +118,6 @@ namespace Game
           GetToken();
           if (GottenToken.Type != Token.End)
             return (null, Expected(Token.End.Name, GottenToken));
-        }
-        else if (GottenToken.Type == Token.Set)
-        {
-          GetToken();
-          if (GottenToken.Type != Token.Id)
-            return (null, Expected(Token.Id.Name, GottenToken));
-          result.Objacts.Add(new ObjactSet(GottenToken.Value));
         }
         else if (!isActionSequence && (GottenToken.Type == Token.Lower || GottenToken.Type == Token.Raise))
         {

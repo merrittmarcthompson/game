@@ -11,9 +11,8 @@
     public static TokenType Or = new TokenType("'or'");
     public static TokenType Not = new TokenType("'not'");
     public static TokenType Equal = new TokenType("an equal sign");
-    public static TokenType Lower = new TokenType("'lower'");
-    public static TokenType Raise = new TokenType("'raise'");
-    public static TokenType Set = new TokenType("'set'");
+    public static TokenType Colon = new TokenType("a colon");
+    public static TokenType Tag = new TokenType("'tag'");
 
     public TokenType Type { get; set; }
     public string Value { get; set; }

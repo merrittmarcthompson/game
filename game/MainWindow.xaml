@@ -5,8 +5,28 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Game"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525">
+        Title="MainWindow" Height="794" Width="1284.3">
     <Grid>
-        <FlowDocumentScrollViewer Name="viewer" FontFamily="Georgia" FontSize="10" />
+        <FlowDocumentScrollViewer Name="StoryViewer" FontFamily="Georgia" FontSize="10" Margin="428,0,322,45" />
+        <ListBox x:Name="ReactionListControl" HorizontalAlignment="Left" Height="687" Margin="973,31,0,0" VerticalAlignment="Top" Width="276" ItemsSource="{Binding ReactionList}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" FontSize="11" BorderThickness="0" SelectionChanged="ReactionListControl_SelectionChanged">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <DockPanel>
+                        <TextBlock TextWrapping="Wrap" DockPanel.Dock="Left" Margin="10,5" FontSize="12.5"><Run FontWeight="Bold" Text="{Binding Name}" /><Run Text=" / "/><Run Text="{Binding Description}" /></TextBlock>
+                    </DockPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <ListBox x:Name="MapListControl" HorizontalAlignment="Left" Height="687" Margin="28,10,0,0" VerticalAlignment="Top" Width="380" ItemsSource="{Binding LocationList}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" FontSize="11" BorderThickness="0" SelectionChanged="MapListControl_SelectionChanged">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <DockPanel>
+                        <TextBlock TextWrapping="Wrap" DockPanel.Dock="Left" Margin="10,3" FontSize="13" FontFamily="Georgia"><Run Text="{Binding Description}" /></TextBlock>
+                    </DockPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+
+        </ListBox>
+
     </Grid>
 </Window>

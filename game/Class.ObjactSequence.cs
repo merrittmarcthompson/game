@@ -12,15 +12,14 @@ namespace Game
       Objacts = new List<Objact>();
     }
 
-    // 'text' and 'directives' are accumulators.
     public override void Reduce(
-      HashSet<(string, string, string)> properties,
-      ref string text,
-      ref Dictionary<string, string> directives)
+      HashSet<(string, string, string)> tags,
+      string defaultOwner,
+      ref string text)
     {
       foreach (var objact in Objacts)
       {
-        objact.Reduce(properties, ref text, ref directives);
+        objact.Reduce(tags, defaultOwner, ref text);
       }
     }
   }
