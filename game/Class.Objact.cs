@@ -9,7 +9,7 @@ namespace Game
   public abstract class Objact
   {
     public abstract void Reduce(
-      HashSet<(string, string, string)> tags,
+      HashSet<Tag> tags,
       string defaultOwner,
       ref string text);
   }

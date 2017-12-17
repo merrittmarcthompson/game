@@ -40,25 +40,25 @@ namespace Game
           </node>
       </graph>
     */
-    // The output is tuples like this:
+    // The output is Tags like this:
     /*
-      "n0::n0", "text", "Here is a small room, clean, of old wood painted white. There's a fan\non the ceiling and a small metal table with some medical equipment\non it. There's a old, metal-framed bed. There are no windows."
-      "n0::n1", "text", "A man sits in a chair by the bed."
-      "n0::n2", "text", "[First] [Last] lies in the bed."
-      "n0::n3", "text", "There is a door with a lock."
-      "n0::n0", "target", "n0::n1~door"
-      "n0::n0", "target", "n0::n2~window"
-      "n0::n0", "target", "n0::n3~box"
-      "n0::n0", "group", "Doc Mitchell's infirmary"
+      {n0::n0}:text='Here is a small room, clean, of old wood painted white. There's a fan\non the ceiling and a small metal table with some medical equipment\non it. There's a old, metal-framed bed. There are no windows.'
+      {n0::n1}:text='A man sits in a chair by the bed.'
+      {n0::n2}:text='[First] [Last] lies in the bed.'
+      {n0::n3}:text='There is a door with a lock.'
+      {n0::n0}:target='n0::n1~door'
+      {n0::n0}:target='n0::n2~window'
+      {n0::n0}:target='n0::n3~box'
+      {n0::n0}:group='Doc Mitchell's infirmary'
     */
-    public static HashSet<(string, string, string)> GraphmlToProperties(
+    public static HashSet<Tag> GraphmlToProperties(
       string graphml)
     {
       XNamespace g = "http://graphml.graphdrawing.org/xmlns";
       XNamespace y = "http://www.yworks.com/xml/graphml";
       XElement root = XElement.Parse(graphml);
 
-      var result = new HashSet<(string, string, string)>();
+      var result = new HashSet<Tag>();
 
       // 1. Create a value for each non-group node in the source graphml, that contains the text.
 
@@ -69,7 +69,7 @@ namespace Game
 
       foreach (XElement node in nodes)
       {
-        var item = (node.Attribute("id").Value, "text", node.Descendants(y + "NodeLabel").First().Value);
+        var item = new Tag(node.Attribute("id").Value, "text", node.Descendants(y + "NodeLabel").First().Value);
         result.Add(item);
       }
 
@@ -84,7 +84,7 @@ namespace Game
         string source = edge.Attribute("source").Value;
         string target = edge.Attribute("target").Value;
         string text = edge.Descendants(y + "EdgeLabel").DefaultIfEmpty(null)?.First()?.Value;
-        result.Add((source, "target", target + "~" + text));
+        result.Add(new Tag(source, "target", target + "~" + text));
       }
 
       // 3. Set the groups based on the groups in the source graphml.
@@ -119,7 +119,7 @@ namespace Game
           where subNode.Attribute("yfiles.foldertype")?.Value != "group"
           select subNode.Attribute("id").Value;
 
-        result.Add((subNodes.First(), "group", groupId));
+        result.Add(new Tag(subNodes.First(), "group", groupId));
       }
       return result;
     }

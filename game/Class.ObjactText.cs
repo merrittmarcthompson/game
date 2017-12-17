@@ -5,20 +5,20 @@ namespace Game
   public class ObjactText : Objact
   {
     // This is the text.
-    public string TheText;
+    public string Text;
 
     public ObjactText(
       string text)
     {
-      TheText = text;
+      Text = text;
     }
 
     public override void Reduce(
-      HashSet<(string, string, string)> properties,
+      HashSet<Tag> properties,
       string defaultOwner,
       ref string text)
     {
-      text += TheText;
+      text += Text;
     }
   }
 }

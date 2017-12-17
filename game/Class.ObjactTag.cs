@@ -8,26 +8,36 @@ namespace Game
 {
   public class ObjactTag : Objact
   {
-    public string Owner;
+    public string SpecifiedOwner;
     public string Label;
     public string Value;
 
     public ObjactTag(
-      string owner,
+      string specifiedOwner,
       string label,
       string value)
     {
-      Owner = owner;
+      SpecifiedOwner = specifiedOwner;
       Label = label;
       Value = value;
     }
 
     public override void Reduce(
-      HashSet<(string, string, string)> tags,
+      HashSet<Tag> tags,
       string defaultOwner,
       ref string text)
     {
-      tags.Add((Static.PickOwner(Owner, defaultOwner), Label, Value));
+      // Get rid of any existing tags for the owner and label.
+      var selected = Static.MultiLookupTags(tags, SpecifiedOwner, defaultOwner, Label);
+      tags.RemoveWhere(tag => selected.Contains(tag));
+
+      // Create a new tag in the list. We're assuming there must be a defaultOwner.
+      string owner = SpecifiedOwner;
+      if (owner == null || owner == "")
+      {
+        owner = defaultOwner;
+      }
+      tags.Add(new Tag(owner, Label, Value));
     }
   }
 }

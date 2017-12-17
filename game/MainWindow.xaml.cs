@@ -38,7 +38,7 @@ namespace Game
 
   public partial class MainWindow : Window
   {
-    private HashSet<(string, string, string)> Tags;
+    private HashSet<Tag> Tags;
     public List<Reaction> ReactionList { get; set; }
     public List<Location> LocationList { get; set; }
     private DateTime NextGoodClick = DateTime.Now;
@@ -98,7 +98,7 @@ namespace Game
       paragraph.FontSize = 13;
       paragraph.LineHeight = 22;
 
-      (var tokens, var lexicalError) = Static.SourceTextToTokens(Static.Lookup(Tags, node, null, "text"));
+      (var tokens, var lexicalError) = Static.SourceTextToTokens(Static.SingleLookup(Tags, node, null, "text"));
 
       if (tokens == null)
       {
@@ -122,9 +122,9 @@ namespace Game
           text = Static.RemoveBlanksAfterNewLines(text);
 
 
-          if (Static.Lookup(Tags, node, null, "location") == null)
+          if (Static.SingleLookup(Tags, node, null, "location") == null)
           {
-            paragraph.Inlines.Add(new Run("Here is a story about " + Static.Lookup(Tags, node, null, "text") + ". Isn't that interesting? I thought so."));
+            paragraph.Inlines.Add(new Run("Here is a story about " + Static.SingleLookup(Tags, node, null, "text") + ". Isn't that interesting? I thought so."));
           }
           else
           {
@@ -164,7 +164,7 @@ namespace Game
 
       string graphml = System.IO.File.ReadAllText("map.boneyard-simplified.graphml");
       Tags = Static.GraphmlToProperties(graphml);
-      Tags.Add(("~", "p", "\r\n"));
+      Tags.Add(new Tag("~", "p", "\r\n"));
       LocationList = new List<Location>();
       ReactionList = new List<Reaction>();
 

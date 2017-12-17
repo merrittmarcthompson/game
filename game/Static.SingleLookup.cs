@@ -5,15 +5,16 @@ namespace Game
 {
   public static partial class Static
   {
-    public static IEnumerable<string> MultiLookup(
+    public static string SingleLookup(
       HashSet<Tag> tags,
       string specifiedOwner,
       string defaultOwner,
       string label)
     {
-      return
-        from tag in MultiLookupTags(tags, specifiedOwner, defaultOwner, label)
-        select tag.Value;
+      var selected = Static.MultiLookup(tags, specifiedOwner, defaultOwner, label);
+      if (selected.Any())
+        return selected.First();
+      return null;
     }
   }
 }
