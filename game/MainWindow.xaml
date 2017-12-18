@@ -12,20 +12,16 @@
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <DockPanel>
-                        <TextBlock TextWrapping="Wrap" DockPanel.Dock="Left" Margin="10,5" FontSize="12.5"><Run FontWeight="Bold" Text="{Binding Name}" /><Run Text=" / "/><Run Text="{Binding Description}" /></TextBlock>
+                        <TextBlock TextWrapping="Wrap" DockPanel.Dock="Left" Margin="10,5" FontSize="12.5">
+                            <Run FontWeight="Bold" Text="{Binding Name}" />
+                            <Run Text=" / "/>
+                            <Run Text="{Binding Description}" />
+                        </TextBlock>
                     </DockPanel>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
-        <ListBox x:Name="MapListControl" HorizontalAlignment="Left" Height="687" Margin="28,10,0,0" VerticalAlignment="Top" Width="380" ItemsSource="{Binding LocationList}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" FontSize="11" BorderThickness="0" SelectionChanged="MapListControl_SelectionChanged">
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <DockPanel>
-                        <TextBlock TextWrapping="Wrap" DockPanel.Dock="Left" Margin="10,3" FontSize="13" FontFamily="Georgia"><Run Text="{Binding Description}" /></TextBlock>
-                    </DockPanel>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-
+        <ListBox x:Name="MapListBox" HorizontalAlignment="Left" Height="687" Margin="10,10,0,0" VerticalAlignment="Top" Width="380" ScrollViewer.HorizontalScrollBarVisibility="Disabled" FontSize="13" BorderThickness="0" SelectionChanged="MapListControl_SelectionChanged" FontFamily="Georgia">
         </ListBox>
 
     </Grid>

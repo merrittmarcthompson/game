@@ -3,24 +3,10 @@ using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
+using System.Windows.Input;
 
 namespace Game
 {
-  public class Location
-  {
-    // You've got to have get/set property if a member is going to be displayed in the UI.
-    public string Node { get; set; }
-    public string Description { get; set; }
-
-    public Location(
-      string node,
-      string description)
-    {
-      Node = node;
-      Description = description;
-    }
-  }
-
   public class Reaction
   {
     // You've got to have get/set property if a member is going to be displayed in the UI.
@@ -40,7 +26,6 @@ namespace Game
   {
     private HashSet<Tag> Tags;
     public List<Reaction> ReactionList { get; set; }
-    public List<Location> LocationList { get; set; }
     private DateTime NextGoodClick = DateTime.Now;
 
     private void ReactionListControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -78,17 +63,108 @@ namespace Game
         return;
       }
 
-      Location location = listBox.SelectedItem as Location;
-
-      if (location == null || location.Node == null)
+      var panel = listBox.SelectedItem as DockPanel;
+      if (panel == null)
         return;
-      
-      SetScreenText(location.Node);
+
+      SetScreenText(panel.Tag as string);
 
       // Don't leave a selection box on the item after you click.
       listBox.SelectedIndex = -1;
     }
 
+    private void AddToListBox(
+      ListBox box,
+      string text,
+      string node)
+    {
+      text = Static.RemoveExtraBlanks(text);
+      text = Static.RemoveBlanksAfterNewLines(text);
+
+      TextBlock block = new TextBlock();
+      var accumulator = "";
+      for (var i = 0; i < text.Length;)
+      {
+        if (text[i] == '^')
+        {
+          if (accumulator.Length > 0)
+          {
+            block.Inlines.Add(new Run(accumulator));
+            accumulator = "";
+          }
+          ++i;
+          while (true)
+          {
+            if (i >= text.Length || text[i] == '^')
+            {
+              if (accumulator.Length > 0)
+              {
+                var run = new Run(accumulator);
+                run.FontSize = 14;
+                block.Inlines.Add(new Bold(run));
+                accumulator = "";
+                ++i;
+                break;
+              }
+            }
+            else
+            {
+              accumulator += text[i];
+              ++i;
+            }
+          }
+        }
+        else if (text[i] == '_')
+        {
+          if (accumulator.Length > 0)
+          {
+            block.Inlines.Add(new Run(accumulator));
+            accumulator = "";
+          }
+          ++i;
+          while (true)
+          {
+            if (i >= text.Length || text[i] == '_')
+            {
+              if (accumulator.Length > 0)
+              {
+                var run = new Run(accumulator);
+                block.Inlines.Add(new Italic(run));
+                accumulator = "";
+                ++i;
+                break;
+              }
+            }
+            else
+            {
+              accumulator += text[i];
+              ++i;
+            }
+          }
+        }
+        else
+        {
+          accumulator += text[i];
+          ++i;
+        }
+      }
+      if (accumulator.Length > 0)
+      {
+        block.Inlines.Add(new Run(accumulator));
+      }
+
+      block.TextWrapping = TextWrapping.Wrap;
+      block.Margin = new Thickness(10, 2, 10, 0);
+      block.LineHeight = 20;
+      block.Tag = node;
+
+      DockPanel dockPanel = new DockPanel();
+      dockPanel.Children.Add(block);
+      DockPanel.SetDock(block, Dock.Left);
+      dockPanel.Tag = node;
+
+      box.Items.Add(dockPanel);
+    }
 
     private void SetScreenText(
       string node)
@@ -118,25 +194,21 @@ namespace Game
           var text = "";
           sequence.Reduce(Tags, node, ref text);
 
-          text = Static.RemoveExtraBlanks(text);
-          text = Static.RemoveBlanksAfterNewLines(text);
-
-
           if (Static.SingleLookup(Tags, node, null, "location") == null)
           {
-            paragraph.Inlines.Add(new Run("Here is a story about " + Static.SingleLookup(Tags, node, null, "text") + ". Isn't that interesting? I thought so."));
+             paragraph.Inlines.Add(new Run("Here is a story about " + Static.SingleLookup(Tags, node, null, "text") + ". Isn't that interesting? I thought so."));
           }
           else
           {
-            LocationList.Clear();
-            LocationList.Add(new Location(null, text));
+            var box = (ListBox)FindName("MapListBox");
+            box.Items.Clear();
+            AddToListBox(box, text, null);
             foreach (var target in Static.MultiLookup(Tags, node, null, "target"))
             {
               var pieces = target.Split('~');
-              LocationList.Add(new Location(pieces[0], pieces[1]));
+              AddToListBox(box, pieces[1], pieces[0]);
             }
           }
-
           // This lets the UI get to the WPF data. Yes, you've got to set it to null first, otherwise it won't redisplay anything.
           DataContext = null;
           DataContext = this;
@@ -163,12 +235,13 @@ namespace Game
       InitializeComponent();
 
       string graphml = System.IO.File.ReadAllText("map.boneyard-simplified.graphml");
-      Tags = Static.GraphmlToProperties(graphml);
+      Tags = Static.GraphmlToProperties(graphml, "map.boneyard-simplified");
+      graphml = System.IO.File.ReadAllText("story.mitchell-simplified.graphml");
+      Tags.UnionWith(Static.GraphmlToProperties(graphml, "story.mitchell-simplified"));
       Tags.Add(new Tag("~", "p", "\r\n"));
-      LocationList = new List<Location>();
       ReactionList = new List<Reaction>();
 
-      SetScreenText("n4::n0");
+      SetScreenText("map.boneyard-simplified:n4::n0");
       /*
         }
         catch (Exception e)

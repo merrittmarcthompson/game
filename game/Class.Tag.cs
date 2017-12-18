@@ -19,7 +19,7 @@
     public override string ToString()
     {
       // Ex. "{Lucy}:{hero's first name}='Johnny'"
-      return "{" + Owner + "}:{" + Label + "='" + Value + "'";
+      return "{" + Owner + "}:{" + Label + "}='" + Value + "'";
     }
   }
 }

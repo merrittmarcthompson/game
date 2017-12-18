@@ -52,7 +52,8 @@ namespace Game
       {n0::n0}:group='Doc Mitchell's infirmary'
     */
     public static HashSet<Tag> GraphmlToProperties(
-      string graphml)
+      string graphml,
+      string uniquifier)
     {
       XNamespace g = "http://graphml.graphdrawing.org/xmlns";
       XNamespace y = "http://www.yworks.com/xml/graphml";
@@ -69,7 +70,7 @@ namespace Game
 
       foreach (XElement node in nodes)
       {
-        var item = new Tag(node.Attribute("id").Value, "text", node.Descendants(y + "NodeLabel").First().Value);
+        var item = new Tag(uniquifier + ":" + node.Attribute("id").Value, "text", node.Descendants(y + "NodeLabel").First().Value);
         result.Add(item);
       }
 
@@ -84,7 +85,7 @@ namespace Game
         string source = edge.Attribute("source").Value;
         string target = edge.Attribute("target").Value;
         string text = edge.Descendants(y + "EdgeLabel").DefaultIfEmpty(null)?.First()?.Value;
-        result.Add(new Tag(source, "target", target + "~" + text));
+        result.Add(new Tag(uniquifier + ":" + source, "target", uniquifier + ":" + target + "~" + text));
       }
 
       // 3. Set the groups based on the groups in the source graphml.
@@ -119,7 +120,7 @@ namespace Game
           where subNode.Attribute("yfiles.foldertype")?.Value != "group"
           select subNode.Attribute("id").Value;
 
-        result.Add(new Tag(subNodes.First(), "group", groupId));
+        result.Add(new Tag(uniquifier + ":" + subNodes.First(), "group", groupId));
       }
       return result;
     }
