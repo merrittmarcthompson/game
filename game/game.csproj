@@ -83,7 +83,7 @@
     <Compile Include="Class.Objact.cs" />
     <Compile Include="Class.ObjactSequence.cs" />
     <Compile Include="Static.TokensToObjactSequence.cs" />
-    <Compile Include="Static.GraphmlToProperties.cs" />
+    <Compile Include="Static.GraphmlToTags.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>

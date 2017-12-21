@@ -15,7 +15,7 @@ namespace Game
                   <y:NodeLabel>NODE_TEXT</y:NodeLabel>
               ...
           </node>
-          <edge source="NODE_ID" target="NODE_ID"> // an edge node
+          <edge id="e0" source="NODE_ID" target="NODE_ID"> // an edge node
               ...
                   <y:EdgeLabel>EDGE_TEXT</y:EdgeLabel>
               ...
@@ -40,18 +40,21 @@ namespace Game
           </node>
       </graph>
     */
-    // The output is Tags like this:
+    // The output is tags like this:
     /*
-      {n0::n0}:text='Here is a small room, clean, of old wood painted white. There's a fan\non the ceiling and a small metal table with some medical equipment\non it. There's a old, metal-framed bed. There are no windows.'
-      {n0::n1}:text='A man sits in a chair by the bed.'
-      {n0::n2}:text='[First] [Last] lies in the bed.'
-      {n0::n3}:text='There is a door with a lock.'
-      {n0::n0}:target='n0::n1~door'
-      {n0::n0}:target='n0::n2~window'
-      {n0::n0}:target='n0::n3~box'
-      {n0::n0}:group='Doc Mitchell's infirmary'
+      	map.test_n0:text=This is a room.
+	      map.test_n0:arrow=e0
+	      map.test_n0:arrow=e1
+	      map.test_e0:text=There is a door.
+	      map.test_e0:target=n1
+	      map.test_e1:text=There is a dog.
+	      map.test_e1:target=n2
+	      map.test_n1:text=
+	      map.test_n1:line=e2
+	      map.test_n2:text=Woof!
+        map.test_n2:line=n1
     */
-    public static HashSet<Tag> GraphmlToProperties(
+    public static HashSet<Tag> GraphmlToTags(
       string graphml,
       string uniquifier)
     {
@@ -70,11 +73,11 @@ namespace Game
 
       foreach (XElement node in nodes)
       {
-        var item = new Tag(uniquifier + ":" + node.Attribute("id").Value, "text", node.Descendants(y + "NodeLabel").First().Value);
+        var item = new Tag(uniquifier + "_" + node.Attribute("id").Value, "text", node.Descendants(y + "NodeLabel").First().Value);
         result.Add(item);
       }
 
-      // 2. Set the targets for the node based on the edges (arrows) in the source graphml.
+      // 2. Add the arrows.
 
       IEnumerable<XElement> edges =
         from edge in root.Descendants(g + "edge")
@@ -82,10 +85,13 @@ namespace Game
 
       foreach (XElement edge in edges)
       {
-        string source = edge.Attribute("source").Value;
-        string target = edge.Attribute("target").Value;
-        string text = edge.Descendants(y + "EdgeLabel").DefaultIfEmpty(null)?.First()?.Value;
-        result.Add(new Tag(uniquifier + ":" + source, "target", uniquifier + ":" + target + "~" + text));
+        string sourceNodeId = edge.Attribute("source").Value;
+        string targetNodeId = edge.Attribute("target").Value;
+        string edgeId = edge.Attribute("id").Value;
+        string edgeText = edge.Descendants(y + "EdgeLabel").DefaultIfEmpty(null)?.First()?.Value;
+        result.Add(new Tag(uniquifier + "_" + sourceNodeId, "arrow", uniquifier + "_" + edgeId));
+        result.Add(new Tag(uniquifier + "_" + edgeId, "text", edgeText));
+        result.Add(new Tag(uniquifier + "_" + edgeId, "target", uniquifier + "_" + targetNodeId));
       }
 
       // 3. Set the groups based on the groups in the source graphml.

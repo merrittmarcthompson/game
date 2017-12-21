@@ -100,7 +100,6 @@ namespace Game
               if (accumulator.Length > 0)
               {
                 var run = new Run(accumulator);
-                run.FontSize = 14;
                 block.Inlines.Add(new Bold(run));
                 accumulator = "";
                 ++i;
@@ -235,13 +234,13 @@ namespace Game
       InitializeComponent();
 
       string graphml = System.IO.File.ReadAllText("map.boneyard-simplified.graphml");
-      Tags = Static.GraphmlToProperties(graphml, "map.boneyard-simplified");
-      graphml = System.IO.File.ReadAllText("story.mitchell-simplified.graphml");
-      Tags.UnionWith(Static.GraphmlToProperties(graphml, "story.mitchell-simplified"));
+      Tags = Static.GraphmlToTags(graphml, "map.boneyard-simplified");
+//      graphml = System.IO.File.ReadAllText("story.mitchell-simplified.graphml");
+//      Tags.UnionWith(Static.GraphmlToTags(graphml, "story.mitchell-simplified"));
       Tags.Add(new Tag("~", "p", "\r\n"));
       ReactionList = new List<Reaction>();
 
-      SetScreenText("map.boneyard-simplified:n4::n0");
+      SetScreenText("map.boneyard-simplified:n0");
       /*
         }
         catch (Exception e)
