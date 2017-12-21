@@ -54,7 +54,7 @@ namespace Game
 	      map.test_n2:text=Woof!
         map.test_n2:line=n1
     */
-    public static HashSet<Tag> GraphmlToTags(
+    public static Tags GraphmlToTags(
       string graphml,
       string uniquifier)
     {
@@ -62,7 +62,7 @@ namespace Game
       XNamespace y = "http://www.yworks.com/xml/graphml";
       XElement root = XElement.Parse(graphml);
 
-      var result = new HashSet<Tag>();
+      var result = new Tags();
 
       // 1. Create a value for each non-group node in the source graphml, that contains the text.
 
@@ -73,8 +73,7 @@ namespace Game
 
       foreach (XElement node in nodes)
       {
-        var item = new Tag(uniquifier + "_" + node.Attribute("id").Value, "text", node.Descendants(y + "NodeLabel").First().Value);
-        result.Add(item);
+        result.Add(uniquifier + "_" + node.Attribute("id").Value, "text", node.Descendants(y + "NodeLabel").First().Value);
       }
 
       // 2. Add the arrows.
@@ -89,9 +88,9 @@ namespace Game
         string targetNodeId = edge.Attribute("target").Value;
         string edgeId = edge.Attribute("id").Value;
         string edgeText = edge.Descendants(y + "EdgeLabel").DefaultIfEmpty(null)?.First()?.Value;
-        result.Add(new Tag(uniquifier + "_" + sourceNodeId, "arrow", uniquifier + "_" + edgeId));
-        result.Add(new Tag(uniquifier + "_" + edgeId, "text", edgeText));
-        result.Add(new Tag(uniquifier + "_" + edgeId, "target", uniquifier + "_" + targetNodeId));
+        result.Add(uniquifier + "_" + sourceNodeId, "arrow", uniquifier + "_" + edgeId);
+        result.Add(uniquifier + "_" + edgeId, "text", edgeText);
+        result.Add(uniquifier + "_" + edgeId, "target", uniquifier + "_" + targetNodeId);
       }
 
       // 3. Set the groups based on the groups in the source graphml.
@@ -126,7 +125,7 @@ namespace Game
           where subNode.Attribute("yfiles.foldertype")?.Value != "group"
           select subNode.Attribute("id").Value;
 
-        result.Add(new Tag(uniquifier + ":" + subNodes.First(), "group", groupId));
+        result.Add(uniquifier + ":" + subNodes.First(), "group", groupId);
       }
       return result;
     }

@@ -6,33 +6,33 @@ namespace Game
   {
     // This is produced by code like this:
     //  This is a paragraph.[p]
-    //  His name was [First].
-    //  [Lucy:{hero's first name}] was Lucy's pet name for him.
+    //  His name was [first].
+    //  [Lucy:herosFirstName] was Lucy's pet name for him.
 
-    // Owner is the explicitly specified owner from the code, ex. "Lucy". It's null or "" if there is no explicit owner.
-    public string SpecifiedOwner;
-    // Label is the label itself, ex "p", "First", "hero's first name".
+    // SpecifiedName is the explicitly specified name from the code, ex. "Lucy". It's null or "" if there is no explicit name.
+    public string SpecifiedName;
+    // Label is the label itself, ex "p", "first", "herosFirstName".
     public string Label;
 
     public ObjactLookup(
-      string specifiedOwner,
+      string specifiedName,
       string label)
     {
-      SpecifiedOwner = specifiedOwner;
+      SpecifiedName = specifiedName;
       Label = label;
     }
 
     public override void Reduce(
-      HashSet<Tag> tags,
-      string defaultOwner,
+      Tags tags,
+      string defaultName,
       ref string text)
     {
-      // The defaultOwner is the context that the Reduce is being run in, i.e. we reducing the text for a location node or story node. The owner is the location or story ID. This is used when there is no explicit owner specified.
-      string value = Static.SingleLookup(tags, SpecifiedOwner, defaultOwner, Label);
+      // The defaultName is the context that the Reduce is being run in, i.e. we reducing the text for a location node or story node. The name is the location or story ID. This is used when there is no explicit name specified.
+      string value = tags.LookupFirst(SpecifiedName, defaultName, Label);
       if (value == null)
       {
         // Ex. "[{Lucy}? {}?:{hero's first name}]"
-        text += "[{" + SpecifiedOwner + "}? {" + defaultOwner + "}?:{" + Label + "}]";
+        text += "[{" + SpecifiedName + "}? {" + defaultName + "}?:{" + Label + "}]";
       }
       else
       {

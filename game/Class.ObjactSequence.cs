@@ -13,13 +13,13 @@ namespace Game
     }
 
     public override void Reduce(
-      HashSet<Tag> tags,
-      string defaultOwner,
+      Tags tags,
+      string defaultName,
       ref string text)
     {
       foreach (var objact in Objacts)
       {
-        objact.Reduce(tags, defaultOwner, ref text);
+        objact.Reduce(tags, defaultName, ref text);
       }
     }
   }

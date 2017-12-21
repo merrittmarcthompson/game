@@ -56,13 +56,13 @@ namespace Game
         else if (gottenToken.Type == Token.Id)
         {
           // This can be:
-          //  [OWNER-ID :] LABEL-ID
+          //  [NAME :] LABEL-ID
           var label = gottenToken.Value;
-          var owner = "";
+          var name = "";
           GetToken();
-          if (gottenToken.Type == Token.Colon)
+          if (gottenToken.Type == Token.Period)
           {
-            owner = label;
+            name = label;
             GetToken();
             if (gottenToken.Type != Token.Id)
               return (null, Expected(Token.Id.Name, gottenToken));
@@ -72,25 +72,25 @@ namespace Game
           {
             UngetToken();
           }
-          result.Objacts.Add(new ObjactLookup(owner, label));
+          result.Objacts.Add(new ObjactLookup(name, label));
         }
         else if (gottenToken.Type == Token.Tag)
         {
           // You can get one of these:
-          //  tag [OWNER-ID :] LABEL-ID [= VALUE-ID]
-          //  tag [OWNER-ID :] LABEL-ID = TOKENS [END]
+          //  tag [NAME :] LABEL-ID [= VALUE-ID]
+          //  tag [NAME :] LABEL-ID = TOKENS [END]
           GetToken();
           if (gottenToken.Type != Token.Id)
             return (null, Expected(Token.Id.Name, gottenToken));
 
-          // Let's assume it's going to be the label with no owner.
+          // Let's assume it's going to be the label with no name.
           var label = gottenToken.Value;
-          var owner = "";
+          var name = "";
           GetToken();
-          if (gottenToken.Type == Token.Colon)
+          if (gottenToken.Type == Token.Period)
           {
-            // But if it's followed by a colon, it turns out to be the owner.
-            owner = label;
+            // But if it's followed by a colon, it turns out to be the name.
+            name = label;
             GetToken();
 
             // So the next ID must be the label.
@@ -100,13 +100,13 @@ namespace Game
           }
           else
           {
-            // If no colon, there's no owner. Pretend we didn't get the colon.
+            // If no colon, there's no name. Pretend we didn't get the colon.
             UngetToken();
           }
 
           // I'm not implementing the '=' yet.
 
-          result.Objacts.Add(new ObjactTag(owner, label, ""));
+          result.Objacts.Add(new ObjactTag(name, label, ""));
         }
         /*
         else if (GottenToken.Type == Token.If)

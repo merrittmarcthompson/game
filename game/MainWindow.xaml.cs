@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
-using System.Windows.Input;
 
 namespace Game
 {
@@ -24,7 +23,7 @@ namespace Game
 
   public partial class MainWindow : Window
   {
-    private HashSet<Tag> Tags;
+    private Tags Tags;
     public List<Reaction> ReactionList { get; set; }
     private DateTime NextGoodClick = DateTime.Now;
 
@@ -173,7 +172,7 @@ namespace Game
       paragraph.FontSize = 13;
       paragraph.LineHeight = 22;
 
-      (var tokens, var lexicalError) = Static.SourceTextToTokens(Static.SingleLookup(Tags, node, null, "text"));
+      (var tokens, var lexicalError) = Static.SourceTextToTokens(Tags.LookupFirst(node, null, "text"));
 
       if (tokens == null)
       {
@@ -193,16 +192,16 @@ namespace Game
           var text = "";
           sequence.Reduce(Tags, node, ref text);
 
-          if (Static.SingleLookup(Tags, node, null, "location") == null)
+          if (Tags.LookupFirst(node, null, "location") == null)
           {
-             paragraph.Inlines.Add(new Run("Here is a story about " + Static.SingleLookup(Tags, node, null, "text") + ". Isn't that interesting? I thought so."));
+             paragraph.Inlines.Add(new Run("Here is a story about " + Tags.LookupFirst(node, null, "text") + ". Isn't that interesting? I thought so."));
           }
           else
           {
             var box = (ListBox)FindName("MapListBox");
             box.Items.Clear();
             AddToListBox(box, text, null);
-            foreach (var target in Static.MultiLookup(Tags, node, null, "target"))
+            foreach (var target in Tags.LookupAll(node, null, "target"))
             {
               var pieces = target.Split('~');
               AddToListBox(box, pieces[1], pieces[0]);
@@ -237,7 +236,7 @@ namespace Game
       Tags = Static.GraphmlToTags(graphml, "map.boneyard-simplified");
 //      graphml = System.IO.File.ReadAllText("story.mitchell-simplified.graphml");
 //      Tags.UnionWith(Static.GraphmlToTags(graphml, "story.mitchell-simplified"));
-      Tags.Add(new Tag("~", "p", "\r\n"));
+      Tags.Add("~", "p", "\r\n");
       ReactionList = new List<Reaction>();
 
       SetScreenText("map.boneyard-simplified:n0");

@@ -173,8 +173,8 @@ namespace Game
                   result.Add(new Token(Token.Equal, "=", lineNumber));
                   break;
 
-                case ':':
-                  result.Add(new Token(Token.Colon, ":", lineNumber));
+                case '.':
+                  result.Add(new Token(Token.Period, ".", lineNumber));
                   break;
 
                 case '[':

@@ -71,11 +71,7 @@
     <Compile Include="Class.ObjactText.cs" />
     <Compile Include="Class.ObjactLookup.cs" />
     <Compile Include="Class.ObjactTag.cs" />
-    <Compile Include="Class.Tag.cs" />
-    <Compile Include="Static.MultiLookupTags.cs" />
-    <Compile Include="Static.MultiLookup.cs" />
-    <Compile Include="static.PickOwner.cs" />
-    <Compile Include="Static.SingleLookup.cs" />
+    <Compile Include="Class.Tags.cs" />
     <Compile Include="Static.RemoveBlanksAfterNewLines.cs" />
     <Compile Include="Static.RemoveExtraBlanks.cs" />
     <Compile Include="Static.MyNoCaseEquals.cs" />

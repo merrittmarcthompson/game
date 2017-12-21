@@ -14,8 +14,8 @@ namespace Game
     }
 
     public override void Reduce(
-      HashSet<Tag> properties,
-      string defaultOwner,
+      Tags tags,
+      string defaultName,
       ref string text)
     {
       text += Text;
