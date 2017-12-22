@@ -6,13 +6,13 @@ using System.Threading.Tasks;
 
 namespace Game
 {
-  public class ObjactTag : Objact
+  public class ObjectTag : Game.Object
   {
     public string SpecifiedName;
     public string Label;
     public string Value;
 
-    public ObjactTag(
+    public ObjectTag(
       string specifiedName,
       string label,
       string value)

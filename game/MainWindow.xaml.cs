@@ -165,6 +165,7 @@ namespace Game
     }
 
     private void SetScreenText(
+      // This node could be anything selected from the location pane--a stage, an object, a person, etc.
       string node)
     {
       // One way or another, we're going to put a paragraph on the screen.
@@ -172,39 +173,42 @@ namespace Game
       paragraph.FontSize = 13;
       paragraph.LineHeight = 22;
 
-      (var tokens, var lexicalError) = Static.SourceTextToTokens(Tags.LookupFirst(node, null, "text"));
-
-      if (tokens == null)
+      if (Tags.LookupFirst(node, null, "isStage") == null)
       {
-        // If there's a source code problem, put the error message on the screen.
-        paragraph.Inlines.Add(new Run(lexicalError));
+        // If they selected an object, tell a story about it.
+        paragraph.Inlines.Add(new Run("Here is a story about " + Tags.LookupFirst(node, null, "text") + ". Isn't that interesting? I thought so."));
       }
       else
       {
-        (var sequence, var syntaxError) = Static.TokensToObjactSequence(tokens);
-        if (sequence == null)
+        // If they selected a stage, go to the stage. This is only temporary. We will have a story that does this.
+        (var tokens, var lexicalError) = Static.SourceTextToTokens(Tags.LookupFirst(node, null, "text"));
+
+        if (tokens == null)
         {
           // If there's a source code problem, put the error message on the screen.
-          paragraph.Inlines.Add(new Run(syntaxError));
+          paragraph.Inlines.Add(new Run(lexicalError));
         }
         else
         {
-          var text = "";
-          sequence.Reduce(Tags, node, ref text);
-
-          if (Tags.LookupFirst(node, null, "location") == null)
+          (var sequence, var syntaxError) = Static.TokensToObjactSequence(tokens);
+          if (sequence == null)
           {
-             paragraph.Inlines.Add(new Run("Here is a story about " + Tags.LookupFirst(node, null, "text") + ". Isn't that interesting? I thought so."));
+            // If there's a source code problem, put the error message on the screen.
+            paragraph.Inlines.Add(new Run(syntaxError));
           }
           else
           {
+            var text = "";
+            sequence.Reduce(Tags, node, ref text);
+
             var box = (ListBox)FindName("MapListBox");
             box.Items.Clear();
             AddToListBox(box, text, null);
-            foreach (var target in Tags.LookupAll(node, null, "target"))
+            foreach (var arrow in Tags.LookupAll(node, null, "arrow"))
             {
-              var pieces = target.Split('~');
-              AddToListBox(box, pieces[1], pieces[0]);
+              var arrowText = Tags.LookupFirst(arrow, null, "text");
+              var target = Tags.LookupFirst(arrow, null, "target");
+              AddToListBox(box, arrowText, target);
             }
           }
           // This lets the UI get to the WPF data. Yes, you've got to set it to null first, otherwise it won't redisplay anything.
@@ -232,14 +236,19 @@ namespace Game
       */
       InitializeComponent();
 
+      GameLog.Open("game.log");
+
       string graphml = System.IO.File.ReadAllText("map.boneyard-simplified.graphml");
       Tags = Static.GraphmlToTags(graphml, "map.boneyard-simplified");
-//      graphml = System.IO.File.ReadAllText("story.mitchell-simplified.graphml");
-//      Tags.UnionWith(Static.GraphmlToTags(graphml, "story.mitchell-simplified"));
+      //      graphml = System.IO.File.ReadAllText("story.mitchell-simplified.graphml");
+      //      Tags.UnionWith(Static.GraphmlToTags(graphml, "story.mitchell-simplified"));
+
+      GameLog.Add("START");
+
       Tags.Add("~", "p", "\r\n");
       ReactionList = new List<Reaction>();
 
-      SetScreenText("map.boneyard-simplified:n0");
+      SetScreenText("map.boneyard-simplified_n0");
       /*
         }
         catch (Exception e)

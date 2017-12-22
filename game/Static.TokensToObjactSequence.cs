@@ -5,7 +5,7 @@ namespace Game
 {
   public static partial class Static
   {
-    public static (ObjactSequence, string) TokensToObjactSequence(
+    public static (ObjectSequence, string) TokensToObjactSequence(
       List<Token> tokens)
     {
       Token pushedToken = null;
@@ -43,7 +43,7 @@ namespace Game
 
       // Start here
 
-      var result = new ObjactSequence();
+      var result = new ObjectSequence();
 
       while (true)
       {
@@ -51,7 +51,7 @@ namespace Game
 
         if (gottenToken.Type == Token.Text)
         {
-          result.Objacts.Add(new ObjactText(gottenToken.Value));
+          result.Objects.Add(new ObjectText(gottenToken.Value));
         }
         else if (gottenToken.Type == Token.Id)
         {
@@ -72,7 +72,7 @@ namespace Game
           {
             UngetToken();
           }
-          result.Objacts.Add(new ObjactLookup(name, label));
+          result.Objects.Add(new ObjectLookup(name, label));
         }
         else if (gottenToken.Type == Token.Tag)
         {
@@ -89,7 +89,7 @@ namespace Game
           GetToken();
           if (gottenToken.Type == Token.Period)
           {
-            // But if it's followed by a colon, it turns out to be the name.
+            // But if it's followed by a period, it turns out to be the name.
             name = label;
             GetToken();
 
@@ -100,13 +100,13 @@ namespace Game
           }
           else
           {
-            // If no colon, there's no name. Pretend we didn't get the colon.
+            // If no period, there's no name. Pretend we didn't get the colon.
             UngetToken();
           }
 
           // I'm not implementing the '=' yet.
 
-          result.Objacts.Add(new ObjactTag(name, label, ""));
+          result.Objects.Add(new ObjectTag(name, label, ""));
         }
         /*
         else if (GottenToken.Type == Token.If)

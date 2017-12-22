@@ -2,12 +2,12 @@
 
 namespace Game
 {
-  public class ObjactText : Objact
+  public class ObjectText : Game.Object
   {
     // This is the text.
     public string Text;
 
-    public ObjactText(
+    public ObjectText(
       string text)
     {
       Text = text;

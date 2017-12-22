@@ -2,7 +2,7 @@
 
 namespace Game
 {
-  public class ObjactLookup : Objact
+  public class ObjectLookup : Game.Object
   {
     // This is produced by code like this:
     //  This is a paragraph.[p]
@@ -14,7 +14,7 @@ namespace Game
     // Label is the label itself, ex "p", "first", "herosFirstName".
     public string Label;
 
-    public ObjactLookup(
+    public ObjectLookup(
       string specifiedName,
       string label)
     {

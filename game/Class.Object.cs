@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Game
 {
-  public abstract class Objact
+  public abstract class Object
   {
     public abstract void Reduce(
       Tags tags,
