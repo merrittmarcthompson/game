@@ -42,22 +42,26 @@ namespace Game
     */
     // The output is tags like this:
     /*
-      	map.test_n0:text=This is a room.
-	      map.test_n0:arrow=e0
-	      map.test_n0:arrow=e1
-	      map.test_e0:text=There is a door.
-	      map.test_e0:target=n1
-	      map.test_e1:text=There is a dog.
-	      map.test_e1:target=n2
-	      map.test_n1:text=
-	      map.test_n1:line=e2
-	      map.test_n2:text=Woof!
-        map.test_n2:line=n1
+      	map_test_n0.text=This is a room.
+	      map_test_n0.arrow=map_test_e0
+	      map_test_n0.arrow=map_test_e1
+	      map_test_e0.text=There is a door.
+	      map_test_e0.target=map_test_n1
+	      map_test_e1.text=There is a dog.
+	      map_test_e1.target=map_test_n2
+	      map_test_n1.text=
+	      map_test_n2.text=Woof!
     */
     public static Tags GraphmlToTags(
       string graphml,
       string uniquifier)
     {
+      string BuildId(
+        string graphmlId)
+      {
+        return Static.MakeIntoId(uniquifier + "_" + graphmlId);
+      }
+
       XNamespace g = "http://graphml.graphdrawing.org/xmlns";
       XNamespace y = "http://www.yworks.com/xml/graphml";
       XElement root = XElement.Parse(graphml);
@@ -73,7 +77,7 @@ namespace Game
 
       foreach (XElement node in nodes)
       {
-        result.Add(uniquifier + "_" + node.Attribute("id").Value, "text", node.Descendants(y + "NodeLabel").First().Value);
+        result.Add(BuildId(node.Attribute("id").Value), "sourceText", node.Descendants(y + "NodeLabel").First().Value);
       }
 
       // 2. Add the arrows.
@@ -88,9 +92,9 @@ namespace Game
         string targetNodeId = edge.Attribute("target").Value;
         string edgeId = edge.Attribute("id").Value;
         string edgeText = edge.Descendants(y + "EdgeLabel").DefaultIfEmpty(null)?.First()?.Value;
-        result.Add(uniquifier + "_" + sourceNodeId, "arrow", uniquifier + "_" + edgeId);
-        result.Add(uniquifier + "_" + edgeId, "text", edgeText);
-        result.Add(uniquifier + "_" + edgeId, "target", uniquifier + "_" + targetNodeId);
+        result.Add(BuildId(sourceNodeId), "arrow", BuildId(edgeId));
+        result.Add(BuildId(edgeId), "sourceText", edgeText);
+        result.Add(BuildId(edgeId), "target", BuildId(targetNodeId));
       }
 
       // 3. Set the groups based on the groups in the source graphml.
@@ -125,7 +129,7 @@ namespace Game
           where subNode.Attribute("yfiles.foldertype")?.Value != "group"
           select subNode.Attribute("id").Value;
 
-        result.Add(uniquifier + ":" + subNodes.First(), "group", groupId);
+        result.Add(BuildId(subNodes.First()), "group", groupId);
       }
       return result;
     }

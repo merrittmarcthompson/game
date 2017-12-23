@@ -69,7 +69,8 @@
     <Compile Include="Class.Token.cs" />
     <Compile Include="Class.TokenType.cs" />
     <Compile Include="Class.Tags.cs" />
-    <Compile Include="Class.GameLog.cs" />
+    <Compile Include="Class.Log.cs" />
+    <Compile Include="Static.MakeIntoId.cs" />
     <Compile Include="Static.RemoveBlanksAfterNewLines.cs" />
     <Compile Include="Static.RemoveExtraBlanks.cs" />
     <Compile Include="Static.MyNoCaseEquals.cs" />

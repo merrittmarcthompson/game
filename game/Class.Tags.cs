@@ -30,6 +30,12 @@ namespace Game
 
     private HashSet<Tag> Collection = new HashSet<Tag>();
 
+    public void Merge(
+      Tags otherTags)
+    {
+      Collection.UnionWith(otherTags.Collection);
+    }
+
     public void Add(
       string name,
       string label,
@@ -99,6 +105,14 @@ namespace Game
     {
       var selected = LookupTags(specifiedName, defaultName, label);
       Collection.RemoveWhere(tag => selected.Contains(tag));
+    }
+
+    public IEnumerable<(string, string, string)> All()
+    {
+      foreach (var tag in Collection)
+      {
+        yield return (tag.Name, tag.Label, tag.Value);
+      }
     }
   }
 }

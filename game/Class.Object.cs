@@ -74,20 +74,17 @@ namespace Game
   public class ObjectSubstitution : Game.Object
   {
     // This is produced by code like this:
-    //  This is a paragraph.[p]
-    //  His name was [first].
+    //  His name was [hero.first].
     //  [Lucy.herosFirstName] was Lucy's pet name for him.
 
-    // SpecifiedName is the explicitly specified name from the code, ex. "Lucy". It's null or "" if there is no explicit name.
-    public string SpecifiedName;
-    // Label is the label itself, ex "p", "first", "herosFirstName".
+    public string Name;
     public string Label;
 
     public ObjectSubstitution(
-      string specifiedName,
+      string Name,
       string label)
     {
-      SpecifiedName = specifiedName;
+      this.Name = Name;
       Label = label;
     }
 
@@ -100,18 +97,18 @@ namespace Game
 
   public class ObjectTag : Game.Object
   {
-    public string SpecifiedName;
+    public string Name;
     public string Label;
     public string Value;
     public bool Untag;
 
     public ObjectTag(
-      string specifiedName,
+      string name,
       string label,
       string value,
       bool untag)
     {
-      SpecifiedName = specifiedName;
+      Name = name;
       Label = label;
       Value = value;
       Untag = untag;
