@@ -3,7 +3,7 @@
 namespace Game
 {
   // Have a global log that can be written to as a side effect from anywhere without access to any class object.
-  public static class GameLog
+  public static class Log
   {
     private static StreamWriter Writer;
 

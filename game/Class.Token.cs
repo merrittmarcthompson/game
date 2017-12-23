@@ -13,6 +13,8 @@
     public static TokenType Equal = new TokenType("an equal sign");
     public static TokenType Period = new TokenType("a period");
     public static TokenType Tag = new TokenType("'tag'");
+    public static TokenType Untag = new TokenType("'untag'");
+    public static TokenType Name = new TokenType("'name'");
 
     public TokenType Type { get; set; }
     public string Value { get; set; }

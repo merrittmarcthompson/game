@@ -1,4 +1,39 @@
-﻿using System;
+﻿
+/* saved substitution code:
+
+    // The defaultName is the context that the Reduce is being run in, i.e. we reducing the text for a location node or story node. The name is the location or story ID. This is used when there is no explicit name specified.
+    string value = tags.LookupFirst(SpecifiedName, defaultName, Label);
+      if (value == null)
+      {
+        // Ex. "[{Lucy}? {}?:{hero's first name}]"
+        text += "[{" + SpecifiedName + "}? {" + defaultName + "}?:{" + Label + "}]";
+      }
+      else
+      {
+        text += value;
+      }
+*/
+
+/* saved tag/untag code:
+
+      // Get rid of any existing tags for the name and label.
+      tags.Remove(SpecifiedName, defaultName, Label);
+
+      // Create a new tag in the list. We're assuming there must be a defaultName.
+      string name = SpecifiedName;
+      if (name == null || name == "")
+      {
+        name = defaultName;
+      }
+      tags.Add(name, Label, Value);
+*/
+
+/* saved text code:
+
+      text += Text;
+
+*/
+using System;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
@@ -168,64 +203,55 @@ namespace Game
       // This node could be anything selected from the location pane--a stage, an object, a person, etc.
       string node)
     {
-      // One way or another, we're going to put a paragraph on the screen.
-      var paragraph = new Paragraph();
-      paragraph.FontSize = 13;
-      paragraph.LineHeight = 22;
+      /*
+          // One way or another, we're going to put a paragraph on the screen.
+          var paragraph = new Paragraph();
+          paragraph.FontSize = 13;
+          paragraph.LineHeight = 22;
 
-      if (Tags.LookupFirst(node, null, "isStage") == null)
-      {
-        // If they selected an object, tell a story about it.
-        paragraph.Inlines.Add(new Run("Here is a story about " + Tags.LookupFirst(node, null, "text") + ". Isn't that interesting? I thought so."));
-      }
-      else
-      {
-        // If they selected a stage, go to the stage. This is only temporary. We will have a story that does this.
-        (var tokens, var lexicalError) = Static.SourceTextToTokens(Tags.LookupFirst(node, null, "text"));
-
-        if (tokens == null)
-        {
-          // If there's a source code problem, put the error message on the screen.
-          paragraph.Inlines.Add(new Run(lexicalError));
-        }
-        else
-        {
-          (var sequence, var syntaxError) = Static.TokensToObjactSequence(tokens);
-          if (sequence == null)
+          if (Tags.LookupFirst(node, null, "isStage") == null)
           {
-            // If there's a source code problem, put the error message on the screen.
-            paragraph.Inlines.Add(new Run(syntaxError));
+            // If they selected an object, tell a story about it.
+            paragraph.Inlines.Add(new Run("Here is a story about " + Tags.LookupFirst(node, null, "text") + ". Isn't that interesting? I thought so."));
           }
           else
           {
-            var text = "";
-            sequence.Reduce(Tags, node, ref text);
-
-            var box = (ListBox)FindName("MapListBox");
-            box.Items.Clear();
-            AddToListBox(box, text, null);
-            foreach (var arrow in Tags.LookupAll(node, null, "arrow"))
+            // If they selected a stage, go to the stage. This is only temporary. We will have a story that does this.
+            var tokens = Static.SourceTextToTokens(Tags.LookupFirst(node, null, "text"));
+            if (tokens != null)
             {
-              var arrowText = Tags.LookupFirst(arrow, null, "text");
-              var target = Tags.LookupFirst(arrow, null, "target");
-              AddToListBox(box, arrowText, target);
+              var sequence = Static.TokensToObject(tokens);
+              if (sequence != null)
+              {
+                var text = "";
+                sequence.Traverse(Tags, node, ref text);
+
+                var box = (ListBox)FindName("MapListBox");
+                box.Items.Clear();
+                AddToListBox(box, text, null);
+                foreach (var arrow in Tags.LookupAll(node, null, "arrow"))
+                {
+                  var arrowText = Tags.LookupFirst(arrow, null, "text");
+                  var target = Tags.LookupFirst(arrow, null, "target");
+                  AddToListBox(box, arrowText, target);
+                }
+              }
+              // This lets the UI get to the WPF data. Yes, you've got to set it to null first, otherwise it won't redisplay anything.
+              DataContext = null;
+              DataContext = this;
             }
           }
-          // This lets the UI get to the WPF data. Yes, you've got to set it to null first, otherwise it won't redisplay anything.
-          DataContext = null;
-          DataContext = this;
-        }
-      }
 
-      FlowDocument document = new FlowDocument();
-      document.TextAlignment = TextAlignment.Left;
-      document.Blocks.Add(paragraph);
-      FlowDocumentScrollViewer viewer = (FlowDocumentScrollViewer)FindName("StoryViewer");
-      viewer.Document = document;
+          FlowDocument document = new FlowDocument();
+          document.TextAlignment = TextAlignment.Left;
+          document.Blocks.Add(paragraph);
+          FlowDocumentScrollViewer viewer = (FlowDocumentScrollViewer)FindName("StoryViewer");
+          viewer.Document = document;
 
-      ReactionList.Clear();
-      ReactionList.Add(new Reaction("It works!", "Here is a big one. Now is the time for all good men to come to the aid of their country"));
-      ReactionList.Add(new Reaction("Here's another one", "Hurray!"));
+          ReactionList.Clear();
+          ReactionList.Add(new Reaction("It works!", "Here is a big one. Now is the time for all good men to come to the aid of their country"));
+          ReactionList.Add(new Reaction("Here's another one", "Hurray!"));
+        */
     }
 
     public MainWindow()
@@ -236,26 +262,50 @@ namespace Game
       */
       InitializeComponent();
 
-      GameLog.Open("game.log");
+      Log.Open("game.log");
+      Log.Add("START");
 
       string graphml = System.IO.File.ReadAllText("map.boneyard-simplified.graphml");
       Tags = Static.GraphmlToTags(graphml, "map.boneyard-simplified");
-      //      graphml = System.IO.File.ReadAllText("story.mitchell-simplified.graphml");
-      //      Tags.UnionWith(Static.GraphmlToTags(graphml, "story.mitchell-simplified"));
 
-      GameLog.Add("START");
 
-      Tags.Add("~", "p", "\r\n");
-      ReactionList = new List<Reaction>();
-
-      SetScreenText("map.boneyard-simplified_n0");
-      /*
-        }
-        catch (Exception e)
+      var tokens = Static.SourceTextToTokens(@"[name bathroomDoor
+tag isDoor
+untag isOpen
+untag isLockable]
+The door is not ancient and is made
+of whitewashed oak. It is
+[if isOpen]open[else]closed[end].");
+      if (tokens != null)
+      {
+        var sequence = Static.TokensToObject(tokens);
+        if (sequence != null)
         {
-          MessageBox.Show(String.Format("{0}", e), "Exception caught");
+          sequence.Traverse((@object) =>
+          {
+            switch (@object)
+            {
+              case ObjectName name:
+                var test = name.Name;
+                // do the name thing here.
+                break;
+            }
+            return true;
+          });
         }
-      */
+
+        Tags.Add("~", "p", "\r\n");
+        ReactionList = new List<Reaction>();
+
+        SetScreenText("map.boneyard-simplified_n0");
+        /*
+          }
+          catch (Exception e)
+          {
+            MessageBox.Show(String.Format("{0}", e), "Exception caught");
+          }
+        */
+      }
     }
   }
 }

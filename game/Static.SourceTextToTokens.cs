@@ -5,7 +5,7 @@ namespace Game
 {
   public static partial class Static
   {
-    public static (List<Token>, string) SourceTextToTokens(
+    public static List<Token> SourceTextToTokens(
       string sourceText)
     {
       char pushedLetter = '\0';
@@ -88,7 +88,7 @@ namespace Game
             textAccumulator = "";
           }
           result.Add(new Token(Token.EndOfSourceText, "", lineNumber));
-          return (result, null);
+          return result;
         }
 
         switch (gottenLetter)
@@ -116,7 +116,7 @@ namespace Game
             if (!GetLetter())
             {
               result.Add(new Token(Token.EndOfSourceText, "", lineNumber));
-              return (result, null);
+              return result;
             }
 
             // Check for a [[ comment starter.
@@ -132,7 +132,7 @@ namespace Game
               {
                 // If it returns false, it means you've reached the end.
                 result.Add(new Token(Token.EndOfSourceText, "", lineNumber));
-                return (result, null);
+                return result;
               }
               // We got a text mode comment, so we break back out to the outer loop.
               break; // switch
@@ -151,7 +151,7 @@ namespace Game
               if (!GetLetter())
               {
                 result.Add(new Token(Token.EndOfSourceText, "", lineNumber));
-                return (result, null);
+                return result;
               }
 
               switch (gottenLetter)
@@ -182,19 +182,19 @@ namespace Game
                   if (!GetLetter())
                   {
                     result.Add(new Token(Token.EndOfSourceText, "", lineNumber));
-                    return (result, null);
+                    return result;
                   }
                   if (gottenLetter != '[')
                   {
-                    string syntaxError = String.Format("{0}: expected '[[' but got '[{1}'", lineNumber, gottenLetter);
-                    return (null, syntaxError);
+                    Log.Add (String.Format("{0}: expected '[[' but got '[{1}'", lineNumber, gottenLetter));
+                    return null;
                   }
 
                   if (!GetComment())
                   {
                     // If it returns false, it means you've reached the end.
                     result.Add(new Token(Token.EndOfSourceText, "", lineNumber));
-                    return (result, null);
+                    return result;
                   }
                   // Done skipping comment. Move on to the next token.
                   break;
@@ -202,8 +202,8 @@ namespace Game
                 default:
                   if (!Char.IsLetterOrDigit(gottenLetter))
                   {
-                    string syntaxError = String.Format("{0}: unexpected character '{1}'", lineNumber, gottenLetter);
-                    return (null, syntaxError);
+                    Log.Add(String.Format("line {0}: unexpected character '{1}' in\r\n{2}", lineNumber, gottenLetter, sourceText));
+                    return null;
                   }
 
                   string id = "";
@@ -216,29 +216,37 @@ namespace Game
                   } while (Char.IsLetterOrDigit(gottenLetter) || gottenLetter == '.');
 
                   UngetLetter();
-                  if (id.MyNoCaseEquals("if"))
+                  if (id == "if")
                   {
                     result.Add(new Token(Token.If, id, lineNumber));
                   }
-                  else if (id.MyNoCaseEquals("else"))
+                  else if (id == "else")
                   {
                     result.Add(new Token(Token.Else, id, lineNumber));
                   }
-                  else if (id.MyNoCaseEquals("or"))
+                  else if (id == "or")
                   {
                     result.Add(new Token(Token.Or, id, lineNumber));
                   }
-                  else if (id.MyNoCaseEquals("not"))
+                  else if (id == "not")
                   {
                     result.Add(new Token(Token.Not, id, lineNumber));
                   }
-                  else if (id.MyNoCaseEquals("end"))
+                  else if (id == "end")
                   {
                     result.Add(new Token(Token.End, id, lineNumber));
                   }
-                  else if (id.MyNoCaseEquals("tag"))
+                  else if (id == "tag")
                   {
                     result.Add(new Token(Token.Tag, id, lineNumber));
+                  }
+                  else if (id == "untag")
+                  {
+                    result.Add(new Token(Token.Untag, id, lineNumber));
+                  }
+                  else if (id == "name")
+                  {
+                    result.Add(new Token(Token.Name, id, lineNumber));
                   }
                   else
                   {
