@@ -398,7 +398,6 @@ namespace Game
       Tags.Merge(newStageTags);
 
 
-      Tags.Add("~", "p", "\r\n");
       ReactionList = new List<Reaction>();
 
       SetScreenText("map.boneyard-simplified_n0");

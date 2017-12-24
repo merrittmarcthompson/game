@@ -213,7 +213,7 @@ namespace Game
 
                     if (!GetLetter())
                       break;
-                  } while (Char.IsLetterOrDigit(gottenLetter) || gottenLetter == '.');
+                  } while (Char.IsLetterOrDigit(gottenLetter) || gottenLetter == '_');
 
                   UngetLetter();
                   if (id == "if")
@@ -248,9 +248,81 @@ namespace Game
                   {
                     result.Add(new Token(Token.Name, id, lineNumber));
                   }
+                  else if (id == "p")
+                  {
+                    result.Add(new Token(Token.Special, id, lineNumber));
+                  }
+                  else if (id == "First")
+                  {
+                    result.Add(new Token(Token.Special, id, lineNumber));
+                  }
+                  else if (id == "Last")
+                  {
+                    result.Add(new Token(Token.Special, id, lineNumber));
+                  }
+                  else if (id == "he")
+                  {
+                    result.Add(new Token(Token.Special, id, lineNumber));
+                  }
+                  else if (id == "He")
+                  {
+                    result.Add(new Token(Token.Special, id, lineNumber));
+                  }
+                  else if (id == "him")
+                  {
+                    result.Add(new Token(Token.Special, id, lineNumber));
+                  }
+                  else if (id == "Him")
+                  {
+                    result.Add(new Token(Token.Special, id, lineNumber));
+                  }
+                  else if (id == "his")
+                  {
+                    result.Add(new Token(Token.Special, id, lineNumber));
+                  }
+                  else if (id == "His")
+                  {
+                    result.Add(new Token(Token.Special, id, lineNumber));
+                  }
+                  else if (id == "himself")
+                  {
+                    result.Add(new Token(Token.Special, id, lineNumber));
+                  }
+                  else if (id == "Himself")
+                  {
+                    result.Add(new Token(Token.Special, id, lineNumber));
+                  }
+                  else if (id == "man")
+                  {
+                    result.Add(new Token(Token.Special, id, lineNumber));
+                  }
+                  else if (id == "Man")
+                  {
+                    result.Add(new Token(Token.Special, id, lineNumber));
+                  }
+                  else if (id == "boy")
+                  {
+                    result.Add(new Token(Token.Special, id, lineNumber));
+                  }
+                  else if (id == "Boy")
+                  {
+                    result.Add(new Token(Token.Special, id, lineNumber));
+                  }
+                  else if (id == "Mr")
+                  {
+                    result.Add(new Token(Token.Special, id, lineNumber));
+                  }
                   else
                   {
-                    result.Add(new Token(Token.Id, id, lineNumber));
+                    // Variables start with an uppercase letter.
+                    if (Char.IsUpper(id[0]))
+                    {
+                      result.Add(new Token(Token.Variable, id, lineNumber));
+                    }
+                    else
+                    {
+                      result.Add(new Token(Token.Id, id, lineNumber));
+                    }
                   }
                   break;
               }

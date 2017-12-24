@@ -1,4 +1,6 @@
-﻿namespace Game
+﻿using System;
+
+namespace Game
 {
   public static partial class Static
   {
@@ -9,7 +11,7 @@
       var result = "";
       foreach (var letter in text)
       {
-        if (letter >= 'a' && letter <= 'z' || letter >= 'A' && letter <= 'Z' || letter >= '0' && letter <= '9')
+        if (Char.IsLetterOrDigit(letter) || letter == '_')
         {
           result += letter;
         }

@@ -139,4 +139,20 @@ namespace Game
     }
   }
 
+  public class ObjectSpecial : Game.Object
+  {
+    public string Id;
+
+    public ObjectSpecial(
+      string id)
+    {
+      Id = id;
+    }
+
+    public override void Traverse(
+      Func<Game.Object, bool> examine)
+    {
+      examine(this);
+    }
+  }
 }

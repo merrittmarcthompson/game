@@ -15,6 +15,8 @@
     public static TokenType Tag = new TokenType("'tag'");
     public static TokenType Untag = new TokenType("'untag'");
     public static TokenType Name = new TokenType("'name'");
+    public static TokenType Variable = new TokenType("a variable");
+    public static TokenType Special = new TokenType("a special identifier");
 
     public TokenType Type { get; set; }
     public string Value { get; set; }

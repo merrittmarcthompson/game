@@ -157,6 +157,11 @@ namespace Game
           {
             result.Objects.Add(new ObjectText(gottenToken.Value));
           }
+          else if (gottenToken.Type == Token.Special)
+          {
+            // Ex. [p]
+            result.Objects.Add(new ObjectSpecial(gottenToken.Value));
+          }
           else if (gottenToken.Type == Token.Id)
           {
             // This can be:
