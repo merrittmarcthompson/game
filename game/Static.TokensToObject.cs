@@ -5,7 +5,7 @@ namespace Game
 {
   public static partial class Static
   {
-    public static ObjectSequence TokensToObject(
+    public static SequenceObject TokensToObject(
       List<Token> tokens)
     {
       Token pushedToken = null;
@@ -41,46 +41,113 @@ namespace Game
         return string.Format("line {0}: expected {1} but got '{2}'", actual.LineNumber, expected, actual.Value);
       }
 
-      (string name, string label, string value) GetTagSpecification()
+      string ExpectedIdOrVariable(
+        Token actual)
+      {
+        return string.Format("line {0}: expected an ID or variable but got '{1}'", actual.LineNumber, actual.Value);
+      }
+
+      TagSpec GetTagSpec(
+        bool allowEqual)
       {
         // You can get one of these:
-        //  tag [NAME :] LABEL-ID [= VALUE-ID]
-        //  tag [NAME :] LABEL-ID = TOKENS [END]
+        //  tag [ID|VARIABLE .] LABEL-ID {. LABEL-ID} [= ID|VARIABLE]
+        //  tag [ID|VARIABLE .] LABEL-ID [. LABEL_ID} = TOKENS [END]
         GetToken();
-        if (gottenToken.Type != Token.Id)
+        if (gottenToken.Type != Token.Id && gottenToken.Type != Token.Variable)
         {
-          Log.Add(Expected(Token.Id.Name, gottenToken));
-          return (null, null, null);
+          Log.Add(ExpectedIdOrVariable(gottenToken));
+          return null;
         }
 
         // Let's assume it's going to be the label with no name.
-        var label = gottenToken.Value;
-        var name = "";
+        var result = new TagSpec();
+        result.Name = "";
+        var tempLabel = gottenToken.Value;
         GetToken();
         if (gottenToken.Type == Token.Period)
         {
           // But if it's followed by a period, it turns out to be the name.
-          name = label;
+          result.Name = tempLabel;
           GetToken();
 
           // So the next ID must be the label.
           if (gottenToken.Type != Token.Id)
           {
             Log.Add(Expected(Token.Id.Name, gottenToken));
-            return (null, null, null);
+            return null;
           }
-          label = gottenToken.Value;
+          result.Labels.Add(gottenToken.Value);
+
+          // Let's see if there are any more labels.
+          GetToken();
+          while (gottenToken.Type == Token.Period)
+          {
+            GetToken();
+            if (gottenToken.Type != Token.Id)
+            {
+              Log.Add(Expected(Token.Id.Name, gottenToken));
+              return null;
+            }
+            result.Labels.Add(gottenToken.Value);
+          }
         }
         else
         {
-          // If no period, there's no name. Pretend we didn't get the colon.
-          UngetToken();
+          // There's just this one label.
+          result.Labels.Add(tempLabel);
         }
 
-        // I'm not implementing the '=' yet.
-        var value = "";
+        // We've already got a pending unidentified token at this point.
+        if (!allowEqual)
+        {
+          // Whatever it is, put it back for somebody else to look at.
+          UngetToken();
+        }
+        else
+        {
+          if (gottenToken.Type == Token.Equal)
+          {
+            GetToken();
+            if (gottenToken.Type != Token.Id && gottenToken.Type != Token.Variable)
+            {
+              Log.Add(ExpectedIdOrVariable(gottenToken));
+              return null;
+            }
+            result.Value = gottenToken.Value;
+          }
+          else
+          {
+            result.Value = "";
+            UngetToken();
+          }
+        }
 
-        return (name, label, value);
+        return result;
+      }
+
+      (List<bool>, List<TagSpec>) GetBooleanList()
+      {
+        var nots = new List<bool>();
+        var tagSpecs = new List<TagSpec>();
+        do
+        {
+          GetToken();
+          if (gottenToken.Type == Token.Not)
+          {
+            nots.Add(true);
+          }
+          else
+          {
+            nots.Add(false);
+            UngetToken();
+          }
+          var tagSpec = GetTagSpec(true);
+          tagSpecs.Add(tagSpec);
+          GetToken();
+        } while (gottenToken.Type == Token.Comma);
+        UngetToken();
+        return (nots, tagSpecs);
       }
 
       /* This flat 'if' sequence with 'or' (which is like 'elif' but more Englishy)
@@ -103,27 +170,14 @@ namespace Game
           else
             C
       */
-      ObjectIf GetIf()
+      IfObject GetIf()
       {
         // This is called after getting 'if' or 'or'.
         // First get the expression. It's like one of these:
         //   [if brave]
         //   [if not killedInspector]
-        var result = new ObjectIf();
-
-        GetToken();
-        if (gottenToken.Type == Token.Not)
-        {
-          result.Not = true;
-          GetToken();
-        }
-        else
-        {
-          result.Not = false;
-          UngetToken();
-        }
-
-        (result.Name, result.Label, result.Value) = GetTagSpecification();
+        var result = new IfObject();
+        (result.Nots, result.TagSpecs) = GetBooleanList();
 
         result.TrueSource = GetSequence();
 
@@ -145,9 +199,9 @@ namespace Game
         return result;
       }
 
-      ObjectSequence GetSequence()
+      SequenceObject GetSequence()
       {
-        var result = new ObjectSequence();
+        var result = new SequenceObject();
 
         while (true)
         {
@@ -155,36 +209,20 @@ namespace Game
 
           if (gottenToken.Type == Token.Text)
           {
-            result.Objects.Add(new ObjectText(gottenToken.Value));
+            result.Objects.Add(new TextObject(gottenToken.Value));
           }
           else if (gottenToken.Type == Token.Special)
           {
             // Ex. [p]
-            result.Objects.Add(new ObjectSpecial(gottenToken.Value));
+            result.Objects.Add(new SpecialObject(gottenToken.Value));
           }
           else if (gottenToken.Type == Token.Id)
           {
-            // This can be:
-            //  [NAME :] LABEL-ID
-            var label = gottenToken.Value;
-            var name = "";
-            GetToken();
-            if (gottenToken.Type == Token.Period)
-            {
-              name = label;
-              GetToken();
-              if (gottenToken.Type != Token.Id)
-              {
-                Log.Add(Expected(Token.Id.Name, gottenToken));
-                return null;
-              }
-              label = gottenToken.Value;
-            }
-            else
-            {
-              UngetToken();
-            }
-            result.Objects.Add(new ObjectSubstitution(name, label));
+            // This is a text substitution.
+            var tagSpec = GetTagSpec(false);
+            if (tagSpec == null)
+              return null;
+            result.Objects.Add(new SubstitutionObject(tagSpec));
           }
           else if (gottenToken.Type == Token.Name)
           {
@@ -195,19 +233,24 @@ namespace Game
               Log.Add(Expected(Token.Name.Name, gottenToken));
               return null;
             }
-            result.Objects.Add(new ObjectName(gottenToken.Value));
+            result.Objects.Add(new NameObject(gottenToken.Value));
           }
           else if (gottenToken.Type == Token.Tag || gottenToken.Type == Token.Untag)
           {
-            (var name, var label, var value) = GetTagSpecification();
-            if (name == null)
+            var tagSpec = GetTagSpec(true);
+            if (tagSpec == null)
               return null;
-            result.Objects.Add(new ObjectTag(name, label, value, gottenToken.Type == Token.Tag));
+            result.Objects.Add(new TagObject(tagSpec, gottenToken.Type == Token.Tag));
+          }
+          else if (gottenToken.Type == Token.When)
+          {
+            var whenObject = new WhenObject();
+            (whenObject.Nots, whenObject.TagSpecs) = GetBooleanList();
           }
           else if (gottenToken.Type == Token.If)
           {
-            var objectIf = GetIf();
-            result.Objects.Add(objectIf);
+            var ifObject = GetIf();
+            result.Objects.Add(ifObject);
 
             // The whole if/or case statement is terminated by 'end'.
             GetToken();

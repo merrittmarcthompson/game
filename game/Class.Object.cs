@@ -11,12 +11,10 @@ namespace Game
       Func<Game.Object, bool> examine);
   }
 
-  public class ObjectIf : Game.Object
+  public class IfObject : Game.Object
   {
-    public string Name;
-    public string Label;
-    public string Value;
-    public bool Not;
+    public List<TagSpec> TagSpecs;
+    public List<bool> Nots;
     public Game.Object TrueSource;
     public Game.Object FalseSource;
 
@@ -34,11 +32,23 @@ namespace Game
     }
   }
 
-  public class ObjectName : Game.Object
+  public class WhenObject : Game.Object
+  {
+    public List<TagSpec> TagSpecs = new List<TagSpec>();
+    public List<bool> Nots = new List<bool>();
+
+    public override void Traverse(
+      Func<Game.Object, bool> examine)
+    {
+      examine(this);
+    }
+  }
+
+  public class NameObject : Game.Object
   {
     public string Name;
 
-    public ObjectName(
+    public NameObject(
       string name)
     {
       Name = name;
@@ -51,12 +61,12 @@ namespace Game
     }
   }
 
-  public class ObjectSequence : Game.Object
+  public class SequenceObject : Game.Object
   {
     // This is the sequence of objects.
     public List<Game.Object> Objects { get; set; }
 
-    public ObjectSequence()
+    public SequenceObject()
     {
       Objects = new List<Game.Object>();
     }
@@ -69,23 +79,30 @@ namespace Game
         examine(@object);
       }
     }
+
+    public bool ContainsText()
+    {
+      foreach (var @object in Objects)
+      {
+        if (@object is TextObject)
+          return true;
+      }
+      return false;
+    }
   }
 
-  public class ObjectSubstitution : Game.Object
+  public class SubstitutionObject : Game.Object
   {
     // This is produced by code like this:
     //  His name was [hero.first].
     //  [Lucy.herosFirstName] was Lucy's pet name for him.
 
-    public string Name;
-    public string Label;
+    public TagSpec TagSpec;
 
-    public ObjectSubstitution(
-      string Name,
-      string label)
+    public SubstitutionObject(
+      TagSpec tagSpec)
     {
-      this.Name = Name;
-      Label = label;
+      TagSpec = tagSpec;
     }
 
     public override void Traverse(
@@ -95,22 +112,16 @@ namespace Game
     }
   }
 
-  public class ObjectTag : Game.Object
+  public class TagObject : Game.Object
   {
-    public string Name;
-    public string Label;
-    public string Value;
+    public TagSpec TagSpec;
     public bool Untag;
 
-    public ObjectTag(
-      string name,
-      string label,
-      string value,
+    public TagObject(
+      TagSpec tagSpec,
       bool untag)
     {
-      Name = name;
-      Label = label;
-      Value = value;
+      TagSpec = tagSpec;
       Untag = untag;
     }
 
@@ -121,12 +132,12 @@ namespace Game
     }
   }
 
-  public class ObjectText : Game.Object
+  public class TextObject : Game.Object
   {
     // This is the text.
     public string Text;
 
-    public ObjectText(
+    public TextObject(
       string text)
     {
       Text = text;
@@ -139,11 +150,11 @@ namespace Game
     }
   }
 
-  public class ObjectSpecial : Game.Object
+  public class SpecialObject : Game.Object
   {
     public string Id;
 
-    public ObjectSpecial(
+    public SpecialObject(
       string id)
     {
       Id = id;

@@ -6,6 +6,8 @@ namespace Game
   public static class Log
   {
     private static StreamWriter Writer;
+    private static string SourceText;
+    private static string FileName;
 
     public static void Open(
       string filename)
@@ -16,8 +18,24 @@ namespace Game
     public static void Add(
       string message)
     {
+      if (FileName != null)
+      {
+        Writer.Write(FileName + ": ");
+      }
       Writer.WriteLine(message);
+      if (SourceText != null)
+      {
+        Writer.WriteLine(SourceText);
+      }
       Writer.Flush();
+    }
+
+    public static void SetSourceInformation(
+      string fileName,
+      string sourceText)
+    {
+      FileName = fileName;
+      SourceText = sourceText;
     }
   }
 }

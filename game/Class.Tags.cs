@@ -41,7 +41,7 @@ namespace Game
       string label,
       string value)
     {
-      Collection.Add(new Tag(name, label, value));
+      Collection.Add(new Tag(name, label, value ?? ""));
     }
 
     private IEnumerable<Tag> LookupTags(

@@ -42,15 +42,18 @@ namespace Game
     */
     // The output is tags like this:
     /*
-      	map_test_n0.text=This is a room.
+      	map_test_n0.sourceText=This is a room.
+        map_test_n0.isNode=
 	      map_test_n0.arrow=map_test_e0
 	      map_test_n0.arrow=map_test_e1
-	      map_test_e0.text=There is a door.
+	      map_test_e0.sourceText=There is a door.
 	      map_test_e0.target=map_test_n1
-	      map_test_e1.text=There is a dog.
+	      map_test_e1.sourceText=There is a dog.
 	      map_test_e1.target=map_test_n2
-	      map_test_n1.text=
-	      map_test_n2.text=Woof!
+	      map_test_n1.sourceText=
+        map_test_n1.isNode=
+	      map_test_n2.sourceText=Woof!
+        map_test_n2.isNode=
     */
     public static Tags GraphmlToTags(
       string graphml,
@@ -77,7 +80,9 @@ namespace Game
 
       foreach (XElement node in nodes)
       {
-        result.Add(BuildId(node.Attribute("id").Value), "sourceText", node.Descendants(y + "NodeLabel").First().Value);
+        var id = BuildId(node.Attribute("id").Value);
+        result.Add(id, "sourceText", node.Descendants(y + "NodeLabel").First().Value);
+        result.Add(id, "isNode", "");
       }
 
       // 2. Add the arrows.

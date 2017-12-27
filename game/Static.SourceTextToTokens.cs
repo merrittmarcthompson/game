@@ -177,6 +177,10 @@ namespace Game
                   result.Add(new Token(Token.Period, ".", lineNumber));
                   break;
 
+                case ',':
+                  result.Add(new Token(Token.Comma, ",", lineNumber));
+                  break;
+
                 case '[':
                   // Must be a comment.
                   if (!GetLetter())
@@ -235,6 +239,10 @@ namespace Game
                   else if (id == "end")
                   {
                     result.Add(new Token(Token.End, id, lineNumber));
+                  }
+                  else if (id == "when")
+                  {
+                    result.Add(new Token(Token.When, id, lineNumber));
                   }
                   else if (id == "tag")
                   {
