@@ -107,15 +107,12 @@ namespace Game
       listBox.SelectedIndex = -1;
     }
 
-    private void AddToListBox(
-      ListBox box,
-      string text,
-      string node)
+    private void SetupTextBlock(
+      TextBlock block,
+      string text)
     {
       text = Static.RemoveExtraBlanks(text);
       text = Static.RemoveBlanksAfterNewLines(text);
-
-      TextBlock block = new TextBlock();
       var accumulator = "";
       for (var i = 0; i < text.Length;)
       {
@@ -189,8 +186,14 @@ namespace Game
       block.TextWrapping = TextWrapping.Wrap;
       block.Margin = new Thickness(10, 2, 10, 0);
       block.LineHeight = 20;
-      block.Tag = node;
+      //result.Tag = node;
+    }
 
+    private void AddToListBox(
+      ListBox box,
+      TextBlock block,
+      string node)
+    {
       DockPanel dockPanel = new DockPanel();
       dockPanel.Children.Add(block);
       DockPanel.SetDock(block, Dock.Left);
@@ -204,11 +207,13 @@ namespace Game
       // Display the current stage and active stories.
       var box = (ListBox)FindName("StageListBox");
       box.Items.Clear();
-      
-      AddToListBox(box, Engine.EvaluateItemText(Engine.CurrentStage), null);
+      var title = (TextBlock)FindName("StageListTitleText");
+      SetupTextBlock(title, Engine.EvaluateItemText(Engine.CurrentStage));
       foreach (var arrowName in Engine.MapArrowsFor(Engine.CurrentStage))
       {
-        AddToListBox(box, Engine.EvaluateItemText(arrowName), null);
+        var item = new TextBlock();
+        SetupTextBlock(item, Engine.EvaluateItemText(arrowName));
+        AddToListBox(box, item, null);
       }
 /*
       // One way or another, we're going to put a paragraph on the screen.
