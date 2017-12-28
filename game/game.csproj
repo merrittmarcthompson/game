@@ -70,14 +70,17 @@
     <Compile Include="Class.TokenType.cs" />
     <Compile Include="Class.Tags.cs" />
     <Compile Include="Class.Log.cs" />
-    <Compile Include="Class.TagSpec.cs" />
+    <Compile Include="Class.Expression.cs" />
+    <Compile Include="Class.StoryStatus.cs" />
+    <Compile Include="Class.NotExpression.cs" />
+    <Compile Include="Static.CastStory.cs" />
     <Compile Include="Static.MakeIntoId.cs" />
     <Compile Include="Static.RemoveBlanksAfterNewLines.cs" />
     <Compile Include="Static.RemoveExtraBlanks.cs" />
     <Compile Include="Static.MyNoCaseEquals.cs" />
     <Compile Include="Static.SourceTextToTokens.cs" />
     <Compile Include="Class.Object.cs" />
-    <Compile Include="Static.TokensToObject.cs" />
+    <Compile Include="Static.TokensToObjects.cs" />
     <Compile Include="Static.GraphmlToTags.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>

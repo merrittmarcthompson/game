@@ -260,11 +260,11 @@ namespace Game
                   {
                     result.Add(new Token(Token.Special, id, lineNumber));
                   }
-                  else if (id == "First")
+                  else if (id == "first")
                   {
                     result.Add(new Token(Token.Special, id, lineNumber));
                   }
-                  else if (id == "Last")
+                  else if (id == "last")
                   {
                     result.Add(new Token(Token.Special, id, lineNumber));
                   }

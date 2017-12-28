@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Game
@@ -45,74 +46,54 @@ namespace Game
     }
 
     private IEnumerable<Tag> LookupTags(
-      string specifiedName,
-      string defaultName,
-      string label)
-    {
-      // First try to find labels with the specified name (if given). For example, "Lucy.herosFirstName" has a specified name. If there is a specified name and you can't find the label, return an empty enumeration. The default name is irrelevant--it's only used when there's no specified name.
-      if (specifiedName != null && specifiedName != "")
-      {
-        return
-          from tag in Collection
-          where tag.Name == specifiedName && tag.Label == label
-          select tag;
-      }
-      // If there was no specified name, try to find labels with the default name (if given). For example, "used" might mean "n0::n4.used". If you don't find any, continue on and try with the global name.
-      if (defaultName != null && defaultName != "")
-      {
-        var selectedWithDefault =
-          from tag in Collection
-          where tag.Name == defaultName && tag.Label == label
-          select tag;
-        if (selectedWithDefault.Any())
-          return selectedWithDefault;
-      }
-      // If the default name fails, continue on to see if you can find it with the global name. For example, "First" coud mean "~.First".
-      var selectedWithGlobal =
-        from tag in Collection
-        where tag.Name == "~" && tag.Label == label
-        select tag;
-
-      // If it didn't find any, this will be an empty empty enumeration--not 'null'.
-      return selectedWithGlobal;
-    }
-
-    public IEnumerable<string> LookupAll(
-      string specifiedName,
-      string defaultName,
+      string name,
       string label)
     {
       return
-        from tag in LookupTags(specifiedName, defaultName, label)
+        from tag in Collection
+        where tag.Name == name && tag.Label == label
+        select tag;
+    }
+
+    public IEnumerable<string> LookupAll(
+      string name,
+      string label)
+    {
+      return
+        from tag in Collection
+        where tag.Name == name && tag.Label == label
         select tag.Value;
     }
 
     public string LookupFirst(
-      string specifiedName,
-      string defaultName,
+      string name,
       string label)
     {
-      var selected = LookupAll(specifiedName, defaultName, label);
+      var selected = LookupAll(name, label);
+      // LookupFirst can return either a string or null. If it's a boolean tag, ex. [tag hero.isShort], and it is set, then LookupFirst will return "", which means "true". If it isn't set, it will return null, which means "false".
       if (selected.Any())
         return selected.First();
       return null;
     }
 
     public void Remove(
-      string specifiedName,
-      string defaultName,
+      string name,
       string label)
     {
-      var selected = LookupTags(specifiedName, defaultName, label);
+      var selected = 
+        from tag in Collection
+        where tag.Name == name && tag.Label == label
+        select tag;
       Collection.RemoveWhere(tag => selected.Contains(tag));
     }
 
-    public IEnumerable<(string, string, string)> All()
+    public IEnumerable<(string, string)> LookupAllWithLabel(
+      string label)
     {
-      foreach (var tag in Collection)
-      {
-        yield return (tag.Name, tag.Label, tag.Value);
-      }
+      return
+        from tag in Collection
+        where tag.Label == label
+        select (tag.Name, tag.Value);
     }
   }
 }

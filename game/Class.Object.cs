@@ -13,8 +13,7 @@ namespace Game
 
   public class IfObject : Game.Object
   {
-    public List<TagSpec> TagSpecs;
-    public List<bool> Nots;
+    public List<NotExpression> NotExpressions;
     public Game.Object TrueSource;
     public Game.Object FalseSource;
 
@@ -34,8 +33,7 @@ namespace Game
 
   public class WhenObject : Game.Object
   {
-    public List<TagSpec> TagSpecs = new List<TagSpec>();
-    public List<bool> Nots = new List<bool>();
+    public List<NotExpression> NotExpressions;
 
     public override void Traverse(
       Func<Game.Object, bool> examine)
@@ -97,13 +95,7 @@ namespace Game
     //  His name was [hero.first].
     //  [Lucy.herosFirstName] was Lucy's pet name for him.
 
-    public TagSpec TagSpec;
-
-    public SubstitutionObject(
-      TagSpec tagSpec)
-    {
-      TagSpec = tagSpec;
-    }
+    public Expression Expression = new Expression();
 
     public override void Traverse(
       Func<Game.Object, bool> examine)
@@ -114,14 +106,14 @@ namespace Game
 
   public class TagObject : Game.Object
   {
-    public TagSpec TagSpec;
+    public Expression Expression;
     public bool Untag;
 
     public TagObject(
-      TagSpec tagSpec,
+      Expression expression,
       bool untag)
     {
-      TagSpec = tagSpec;
+      Expression = expression;
       Untag = untag;
     }
 

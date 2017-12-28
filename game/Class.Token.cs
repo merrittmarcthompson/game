@@ -40,7 +40,7 @@
     public override string ToString()
     {
       string result = Type.Name;
-      if (Type == Id || Type == Text)
+      if (Type == Id || Type == Text || Type == Variable)
       {
         result += " '" + Value + "'";
       }

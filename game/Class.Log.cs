@@ -30,11 +30,15 @@ namespace Game
       Writer.Flush();
     }
 
-    public static void SetSourceInformation(
-      string fileName,
-      string sourceText)
+    public static void SetSourceName(
+      string fileName)
     {
       FileName = fileName;
+    }
+
+    public static void SetSourceText(
+      string sourceText)
+    {
       SourceText = sourceText;
     }
   }
