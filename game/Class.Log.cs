@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Windows;
 
 namespace Game
 {
@@ -28,6 +29,14 @@ namespace Game
         Writer.WriteLine(SourceText);
       }
       Writer.Flush();
+    }
+
+    public static void Fail(
+      string message)
+    {
+      Add(message);
+      MessageBox.Show(message, "Game error");
+      Application.Current.Shutdown();
     }
 
     public static void SetSourceName(

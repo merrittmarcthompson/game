@@ -64,8 +64,7 @@ namespace Game
           // So the next ID must be the label.
           if (GottenToken.Type != Token.Id)
           {
-            Log.Add(Expected(Token.Id.Name, GottenToken));
-            return (null, null);
+            Log.Fail(Expected(Token.Id.Name, GottenToken));
           }
           resultLabels.Add(GottenToken.Value);
 
@@ -76,8 +75,7 @@ namespace Game
             GetToken();
             if (GottenToken.Type != Token.Id)
             {
-              Log.Add(Expected(Token.Id.Name, GottenToken));
-              return (null, null);
+              Log.Fail(Expected(Token.Id.Name, GottenToken));
             }
             resultLabels.Add(GottenToken.Value);
             GetToken();
@@ -105,8 +103,7 @@ namespace Game
         GetToken();
         if (GottenToken.Type != Token.Id && GottenToken.Type != Token.Variable)
         {
-          Log.Add(ExpectedIdOrVariable(GottenToken));
-          return null;
+          Log.Fail(ExpectedIdOrVariable(GottenToken));
         }
 
         // Handle the special case of 'VARIABLE ='.
@@ -121,8 +118,7 @@ namespace Game
             GetToken();
             if (GottenToken.Type != Token.Id && GottenToken.Type != Token.Variable)
             {
-              Log.Add(ExpectedIdOrVariable(GottenToken));
-              return null;
+              Log.Fail(ExpectedIdOrVariable(GottenToken));
             }
             (result.RightName, result.RightLabels) = GetLabels(GottenToken.Value);
             return result;
@@ -137,8 +133,7 @@ namespace Game
           GetToken();
           if (GottenToken.Type != Token.Id && GottenToken.Type != Token.Variable)
           {
-            Log.Add(ExpectedIdOrVariable(GottenToken));
-            return null;
+            Log.Fail(ExpectedIdOrVariable(GottenToken));
           }
           (result.RightName, result.RightLabels) = GetLabels(GottenToken.Value);
         }
@@ -250,8 +245,7 @@ namespace Game
             GetToken();
             if (GottenToken.Type != Token.Id)
             {
-              Log.Add(Expected(Token.Name.Name, GottenToken));
-              return null;
+              Log.Fail(Expected(Token.Name.Name, GottenToken));
             }
             result.Objects.Add(new NameObject(GottenToken.Value));
           }
@@ -277,7 +271,7 @@ namespace Game
             GetToken();
             if (GottenToken.Type != Token.End)
             {
-              Log.Add(Expected(Token.End.Name, GottenToken));
+              Log.Fail(Expected(Token.End.Name, GottenToken));
               return null;
             }
           }

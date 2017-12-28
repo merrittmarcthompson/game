@@ -21,7 +21,7 @@
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
-        <ListBox x:Name="MapListBox" HorizontalAlignment="Left" Height="687" Margin="10,10,0,0" VerticalAlignment="Top" Width="380" ScrollViewer.HorizontalScrollBarVisibility="Disabled" FontSize="13" BorderThickness="0" SelectionChanged="MapListControl_SelectionChanged" FontFamily="Georgia">
+        <ListBox x:Name="StageListBox" HorizontalAlignment="Left" Height="687" Margin="10,10,0,0" VerticalAlignment="Top" Width="380" ScrollViewer.HorizontalScrollBarVisibility="Disabled" FontSize="13" BorderThickness="0" SelectionChanged="MapListControl_SelectionChanged" FontFamily="Georgia">
         </ListBox>
 
     </Grid>

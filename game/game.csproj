@@ -73,7 +73,7 @@
     <Compile Include="Class.Expression.cs" />
     <Compile Include="Class.StoryStatus.cs" />
     <Compile Include="Class.NotExpression.cs" />
-    <Compile Include="Static.CastStory.cs" />
+    <Compile Include="Class.Engine.cs" />
     <Compile Include="Static.MakeIntoId.cs" />
     <Compile Include="Static.RemoveBlanksAfterNewLines.cs" />
     <Compile Include="Static.RemoveExtraBlanks.cs" />

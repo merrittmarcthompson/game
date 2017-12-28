@@ -11,6 +11,7 @@ namespace Game
       char pushedLetter = '\0';
       char gottenLetter;
       int letterIndex;
+      var specialIds = new List<string> { "p", "First", "Last", "he", "He", "him", "Him", "his", "His", "himself", "Himself", "man", "Man", "boy", "Boy", "Mr" };
 
       // Some local helper functions
 
@@ -190,8 +191,7 @@ namespace Game
                   }
                   if (gottenLetter != '[')
                   {
-                    Log.Add (String.Format("{0}: expected '[[' but got '[{1}'", lineNumber, gottenLetter));
-                    return null;
+                    Log.Fail (String.Format("{0}: expected '[[' but got '[{1}'", lineNumber, gottenLetter));
                   }
 
                   if (!GetComment())
@@ -206,8 +206,7 @@ namespace Game
                 default:
                   if (!Char.IsLetterOrDigit(gottenLetter))
                   {
-                    Log.Add(String.Format("line {0}: unexpected character '{1}' in\r\n{2}", lineNumber, gottenLetter, sourceText));
-                    return null;
+                    Log.Fail(String.Format("line {0}: unexpected character '{1}'", lineNumber, gottenLetter));
                   }
 
                   string id = "";
@@ -256,67 +255,7 @@ namespace Game
                   {
                     result.Add(new Token(Token.Name, id, lineNumber));
                   }
-                  else if (id == "p")
-                  {
-                    result.Add(new Token(Token.Special, id, lineNumber));
-                  }
-                  else if (id == "first")
-                  {
-                    result.Add(new Token(Token.Special, id, lineNumber));
-                  }
-                  else if (id == "last")
-                  {
-                    result.Add(new Token(Token.Special, id, lineNumber));
-                  }
-                  else if (id == "he")
-                  {
-                    result.Add(new Token(Token.Special, id, lineNumber));
-                  }
-                  else if (id == "He")
-                  {
-                    result.Add(new Token(Token.Special, id, lineNumber));
-                  }
-                  else if (id == "him")
-                  {
-                    result.Add(new Token(Token.Special, id, lineNumber));
-                  }
-                  else if (id == "Him")
-                  {
-                    result.Add(new Token(Token.Special, id, lineNumber));
-                  }
-                  else if (id == "his")
-                  {
-                    result.Add(new Token(Token.Special, id, lineNumber));
-                  }
-                  else if (id == "His")
-                  {
-                    result.Add(new Token(Token.Special, id, lineNumber));
-                  }
-                  else if (id == "himself")
-                  {
-                    result.Add(new Token(Token.Special, id, lineNumber));
-                  }
-                  else if (id == "Himself")
-                  {
-                    result.Add(new Token(Token.Special, id, lineNumber));
-                  }
-                  else if (id == "man")
-                  {
-                    result.Add(new Token(Token.Special, id, lineNumber));
-                  }
-                  else if (id == "Man")
-                  {
-                    result.Add(new Token(Token.Special, id, lineNumber));
-                  }
-                  else if (id == "boy")
-                  {
-                    result.Add(new Token(Token.Special, id, lineNumber));
-                  }
-                  else if (id == "Boy")
-                  {
-                    result.Add(new Token(Token.Special, id, lineNumber));
-                  }
-                  else if (id == "Mr")
+                  else if (specialIds.Contains(id))
                   {
                     result.Add(new Token(Token.Special, id, lineNumber));
                   }
