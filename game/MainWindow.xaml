@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="794" Width="1284.3">
     <Grid>
-        <FlowDocumentScrollViewer Name="StoryViewer" FontFamily="Georgia" FontSize="10" Margin="428,0,322,45" />
+        <TextBlock x:Name="StoryBlock" Margin="393,31,326,45"></TextBlock>
         <ListBox x:Name="ReactionListControl" HorizontalAlignment="Left" Height="687" Margin="973,31,0,0" VerticalAlignment="Top" Width="276" ItemsSource="{Binding ReactionList}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" FontSize="11" BorderThickness="0" SelectionChanged="ReactionListControl_SelectionChanged">
             <ListBox.ItemTemplate>
                 <DataTemplate>

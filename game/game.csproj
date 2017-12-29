@@ -71,7 +71,7 @@
     <Compile Include="Class.Tags.cs" />
     <Compile Include="Class.Log.cs" />
     <Compile Include="Class.Expression.cs" />
-    <Compile Include="Class.StoryStatus.cs" />
+    <Compile Include="Class.Story.cs" />
     <Compile Include="Class.NotExpression.cs" />
     <Compile Include="Class.Engine.cs" />
     <Compile Include="Static.MakeIntoId.cs" />

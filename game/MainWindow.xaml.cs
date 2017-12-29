@@ -1,41 +1,5 @@
-﻿
-/* saved substitution code:
-
-    // The defaultName is the context that the Reduce is being run in, i.e. we reducing the text for a location node or story node. The name is the location or story ID. This is used when there is no explicit name specified.
-    string value = tags.LookupFirst(SpecifiedName, defaultName, Label);
-      if (value == null)
-      {
-        // Ex. "[{Lucy}? {}?:{hero's first name}]"
-        text += "[{" + SpecifiedName + "}? {" + defaultName + "}?:{" + Label + "}]";
-      }
-      else
-      {
-        text += value;
-      }
-*/
-
-/* saved tag/untag code:
-
-      // Get rid of any existing tags for the name and label.
-      tags.Remove(SpecifiedName, defaultName, Label);
-
-      // Create a new tag in the list. We're assuming there must be a defaultName.
-      string name = SpecifiedName;
-      if (name == null || name == "")
-      {
-        name = defaultName;
-      }
-      tags.Add(name, Label, Value);
-*/
-
-/* saved text code:
-
-      text += Text;
-
-*/
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -212,20 +176,26 @@ namespace Game
          Log.Add(String.Format("TURN {0}", ++Turn));
          // Display the current stage.
          var title = (TextBlock)FindName("StageListTitleText");
-         SetupTextBlock(title, Engine.EvaluateItemText(Engine.CurrentStage));
+         SetupTextBlock(title, Engine.EvaluateItemText(Engine.CurrentStage, null));
 
          var box = (ListBox)FindName("StageListBox");
          box.Items.Clear();
          foreach (var arrowName in Engine.MapArrowsFor(Engine.CurrentStage))
          {
             var item = new TextBlock();
-            SetupTextBlock(item, Engine.EvaluateItemText(arrowName));
+            SetupTextBlock(item, Engine.EvaluateItemText(arrowName, null));
             string targetNode = Engine.GetMapTagValue(arrowName, "target");
             AddToListBox(box, item, targetNode);
          }
 
          // Display the active stories.
-         Engine.GetActiveStories();
+         var stories = Engine.GetActiveStories();
+         foreach (var story in stories)
+         {
+            var storyBlock = (TextBlock)FindName("StoryBlock");
+            //storyBlock.Inlines.Add(new Run("foo"));
+            SetupTextBlock(storyBlock, Engine.EvaluateItemText(story.CurrentNode, story.Variables));
+         }
 
          /*
                // One way or another, we're going to put a paragraph on the screen.

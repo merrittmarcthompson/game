@@ -232,7 +232,7 @@ namespace Game
             // Ex. [p]
             result.Objects.Add(new SpecialObject(GottenToken.Value));
           }
-          else if (GottenToken.Type == Token.Id)
+          else if (GottenToken.Type == Token.Id || GottenToken.Type == Token.Variable)
           {
             // This is a text substitution.
             var substitutionObject = new SubstitutionObject();
