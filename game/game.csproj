@@ -77,7 +77,6 @@
     <Compile Include="Static.MakeIntoId.cs" />
     <Compile Include="Static.RemoveBlanksAfterNewLines.cs" />
     <Compile Include="Static.RemoveExtraBlanks.cs" />
-    <Compile Include="Static.MyNoCaseEquals.cs" />
     <Compile Include="Static.SourceTextToTokens.cs" />
     <Compile Include="Class.Object.cs" />
     <Compile Include="Static.TokensToObjects.cs" />

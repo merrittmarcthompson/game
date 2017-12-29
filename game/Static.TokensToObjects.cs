@@ -251,10 +251,11 @@ namespace Game
           }
           else if (GottenToken.Type == Token.Tag || GottenToken.Type == Token.Untag)
           {
-            var tagSpec = GetExpression();
-            if (tagSpec == null)
+            bool isUntag = GottenToken.Type == Token.Untag;
+            var expression = GetExpression();
+            if (expression == null)
               return null;
-            result.Objects.Add(new TagObject(tagSpec, GottenToken.Type == Token.Tag));
+            result.Objects.Add(new TagObject(expression, isUntag));
           }
           else if (GottenToken.Type == Token.When)
           {
