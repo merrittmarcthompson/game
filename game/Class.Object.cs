@@ -27,7 +27,7 @@ namespace Game
       {
          foreach (var @object in Objects)
          {
-            examine(@object);
+            @object.Traverse(examine);
          }
       }
 

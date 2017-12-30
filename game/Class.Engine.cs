@@ -13,7 +13,7 @@ namespace Game
       private static List<string> ActiveArrows = new List<string>();
       private static string SelectedMapNodeName = "";
 
-      public static string CurrentStage;
+      public static string CurrentStageNodeName;
       public static string HeroFirstName { get; set; } = "John";
       public static string HeroLastName { get; set; } = "Smith";
       public static bool HeroIsMale { get; set; } = true;
@@ -403,7 +403,7 @@ namespace Game
          }
       }
 
-      private static Dictionary<string, string> CastStory(
+      private static Dictionary<string, string> Cast(
         List<NotExpression> notExpressions)
       {
          var variables = new Dictionary<string, string>();
@@ -483,16 +483,34 @@ namespace Game
 
          MapTags.Merge(GetStageTagsForNodes());
 
-         CurrentStage = MapTags.LookupFirst("hero", "stage");
-         if (CurrentStage == null)
+         CurrentStageNodeName = MapTags.LookupFirst("hero", "stage");
+         if (CurrentStageNodeName == null)
          {
             Log.Fail("Hero is not on any stage");
          }
       }
 
-      public static List<Story> GetActiveStories()
+      public static bool ReactionIsActive(
+         string arrowName)
       {
-         var stories = new List<Story>();
+         bool isActive = true;
+         Log.Add(String.Format("Is reaction {0} active:", arrowName));
+         SequenceObjects[arrowName].Traverse((@object) =>
+         {
+            if (!(@object is WhenObject whenObject))
+               return true;
+            if (Cast(whenObject.NotExpressions) == null)
+            {
+               isActive = false;
+            }
+            return true;
+         });
+         return isActive;
+      }
+
+      public static List<Continuation> GetActiveStories()
+      {
+         var stories = new List<Continuation>();
          Log.Add("Start casting");
          foreach (var arrowName in ActiveArrows)
          {
@@ -500,12 +518,12 @@ namespace Game
             {
                if (!(@object is WhenObject whenObject))
                   return true;
-               var variables = CastStory(whenObject.NotExpressions);
+               var variables = Cast(whenObject.NotExpressions);
                if (variables != null)
                {
-                  var story = new Story();
+                  var story = new Continuation();
                   story.Variables = variables;
-                  story.CurrentNode = StoryTags.LookupFirst(arrowName, "target");
+                  story.CurrentActionNodeName = StoryTags.LookupFirst(arrowName, "target");
                   stories.Add(story);
                }
                return true;
@@ -520,11 +538,24 @@ namespace Game
          return MapTags.LookupAll(nodeName, "arrow");
       }
 
+      public static IEnumerable<string> StoryArrowsFor(
+           string nodeName)
+      {
+         return StoryTags.LookupAll(nodeName, "arrow");
+      }
+
       public static string GetMapTagValue(
          string name,
          string label)
       {
          return MapTags.LookupFirst(name, label);
+      }
+
+      public static string GetStoryTagValue(
+         string name,
+         string label)
+      {
+         return StoryTags.LookupFirst(name, label);
       }
 
       public static void SelectMapNode(
@@ -556,7 +587,7 @@ namespace Game
                   accumulator += EvaluateLabelListFirst(substitutionObject.Expression.LeftName, substitutionObject.Expression.LeftLabels, variables);
                   break;
                case IfObject ifObject:
-                  return TryRecursively(0, ifObject.NotExpressions, new Dictionary<string, string>());
+                  return TryRecursively(0, ifObject.NotExpressions, variables);
                case SpecialObject specialObject:
                   if (specialObject.Id == "p")
                   {

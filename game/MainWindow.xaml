@@ -5,25 +5,16 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Game"
         mc:Ignorable="d"
-        Title="MainWindow" Height="794" Width="1284.3">
+        Title="MainWindow" Height="711.5" Width="1143.3">
     <Grid>
-        <TextBlock x:Name="StoryBlock" Margin="393,31,326,45"></TextBlock>
-        <ListBox x:Name="ReactionListControl" HorizontalAlignment="Left" Height="687" Margin="973,31,0,0" VerticalAlignment="Top" Width="276" ItemsSource="{Binding ReactionList}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" FontSize="11" BorderThickness="0" SelectionChanged="ReactionListControl_SelectionChanged">
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <DockPanel>
-                        <TextBlock TextWrapping="Wrap" DockPanel.Dock="Left" Margin="10,5" FontSize="12.5">
-                            <Run FontWeight="Bold" Text="{Binding Name}" />
-                            <Run Text=" / "/>
-                            <Run Text="{Binding Description}" />
-                        </TextBlock>
-                    </DockPanel>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
-        <ItemsControl Margin="22,19,888,-9">
-            <TextBlock x:Name="StageListTitleText" TextWrapping="Wrap" Margin="10,10,10,10" FontSize="13" FontFamily="Georgia"></TextBlock>
-            <ListBox x:Name="StageListBox" HorizontalAlignment="Left" Height="687" Margin="10,0,0,0" VerticalAlignment="Top" Width="345" ScrollViewer.HorizontalScrollBarVisibility="Disabled" FontSize="13" BorderThickness="0" SelectionChanged="MapListControl_SelectionChanged" FontFamily="Georgia"/>
+        <ItemsControl Margin="22,19,727,28" BorderThickness="0,0,1,0" BorderBrush="Black">
+            <TextBlock x:Name="StageListTitleText" TextWrapping="Wrap" Margin="20,20,20,5" FontSize="13" FontFamily="Georgia"/>
+            <ListBox x:Name="StageListBox" HorizontalAlignment="Left" Height="569" Margin="20,0,0,0" VerticalAlignment="Top" Width="342" ScrollViewer.HorizontalScrollBarVisibility="Disabled" FontSize="13" BorderThickness="0,1,0,0" BorderBrush="Black" SelectionChanged="MapListControl_SelectionChanged" FontFamily="Georgia"/>
         </ItemsControl>
+
+        <TextBlock x:Name="StoryBlock" Margin="429,43,296,28" FontSize="13" FontFamily="Georgia"></TextBlock>
+
+        <ListBox x:Name="ReactionListBox" HorizontalAlignment="Left" Height="610" Margin="839,43,0,0" VerticalAlignment="Top" Width="286" ScrollViewer.HorizontalScrollBarVisibility="Disabled"  SelectionChanged="ReactionListBox_SelectionChanged" BorderBrush="Black" BorderThickness="1,0,0,0" FontFamily="Segoe UI" FontSize="13"/>
+
     </Grid>
 </Window>
