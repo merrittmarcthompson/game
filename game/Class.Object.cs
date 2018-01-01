@@ -8,37 +8,27 @@ namespace Game
    public abstract class Object
    {
       public abstract void Traverse(
-        Func<Game.Object, bool> examine);
+        Func<Object, bool> examine);
       public abstract override string ToString();
    }
 
-   public class SequenceObject : Game.Object
+   public class SequenceObject : Object
    {
       // This is the sequence of objects.
-      public List<Game.Object> Objects { get; set; }
+      public List<Object> Objects { get; set; }
 
       public SequenceObject()
       {
-         Objects = new List<Game.Object>();
+         Objects = new List<Object>();
       }
 
       public override void Traverse(
-        Func<Game.Object, bool> examine)
+        Func<Object, bool> examine)
       {
          foreach (var @object in Objects)
          {
             @object.Traverse(examine);
          }
-      }
-
-      public bool ContainsText()
-      {
-         foreach (var @object in Objects)
-         {
-            if (@object is TextObject)
-               return true;
-         }
-         return false;
       }
 
       public override string ToString()
@@ -59,14 +49,14 @@ namespace Game
       }
    }
 
-   public class IfObject : Game.Object
+   public class IfObject : Object
    {
       public List<NotExpression> NotExpressions;
-      public Game.Object TrueSource;
-      public Game.Object FalseSource;
+      public Object TrueSource;
+      public Object FalseSource;
 
       public override void Traverse(
-        Func<Game.Object, bool> examine)
+        Func<Object, bool> examine)
       {
          if (examine(this))
          {
@@ -83,12 +73,12 @@ namespace Game
       }
    }
 
-   public class WhenObject : Game.Object
+   public class WhenObject : Object
    {
       public List<NotExpression> NotExpressions;
 
       public override void Traverse(
-        Func<Game.Object, bool> examine)
+        Func<Object, bool> examine)
       {
          examine(this);
       }
@@ -98,7 +88,7 @@ namespace Game
       }
    }
 
-   public class NameObject : Game.Object
+   public class NameObject : Object
    {
       public string Name;
 
@@ -109,7 +99,7 @@ namespace Game
       }
 
       public override void Traverse(
-        Func<Game.Object, bool> examine)
+        Func<Object, bool> examine)
       {
          examine(this);
       }
@@ -119,7 +109,24 @@ namespace Game
       }
    }
 
-   public class SubstitutionObject : Game.Object
+   public class StartObject : Object
+   {
+      public StartObject()
+      {
+      }
+
+      public override void Traverse(
+        Func<Object, bool> examine)
+      {
+         examine(this);
+      }
+      public override string ToString()
+      {
+         return "start";
+      }
+   }
+
+   public class SubstitutionObject : Object
    {
       // This is produced by code like this:
       //  His name was [hero.first].
@@ -128,7 +135,7 @@ namespace Game
       public Expression Expression = new Expression();
 
       public override void Traverse(
-        Func<Game.Object, bool> examine)
+        Func<Object, bool> examine)
       {
          examine(this);
       }
@@ -138,7 +145,7 @@ namespace Game
       }
    }
 
-   public class TagObject : Game.Object
+   public class TagObject : Object
    {
       public Expression Expression;
       public bool Untag;
@@ -152,7 +159,7 @@ namespace Game
       }
 
       public override void Traverse(
-        Func<Game.Object, bool> examine)
+        Func<Object, bool> examine)
       {
          examine(this);
       }
@@ -162,7 +169,7 @@ namespace Game
       }
    }
 
-   public class TextObject : Game.Object
+   public class TextObject : Object
    {
       // This is the text.
       public string Text;
@@ -174,7 +181,7 @@ namespace Game
       }
 
       public override void Traverse(
-        Func<Game.Object, bool> examine)
+        Func<Object, bool> examine)
       {
          examine(this);
       }
@@ -184,7 +191,7 @@ namespace Game
       }
    }
 
-   public class SpecialObject : Game.Object
+   public class SpecialObject : Object
    {
       public string Id;
 
@@ -195,7 +202,7 @@ namespace Game
       }
 
       public override void Traverse(
-        Func<Game.Object, bool> examine)
+        Func<Object, bool> examine)
       {
          examine(this);
       }

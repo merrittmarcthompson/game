@@ -9,7 +9,7 @@ namespace Game
    public partial class MainWindow : Window
    {
       private DateTime NextGoodClick = DateTime.Now;
-      private int Turn = 0;
+      private int Round = 0;
 
       private void SetupTextBlock(
         TextBlock block,
@@ -97,6 +97,18 @@ namespace Game
          block.LineHeight = 20;
       }
 
+      private void AddToListBox(
+        ListBox box,
+        TextBlock block,
+        System.Object info)
+      {
+         DockPanel dockPanel = new DockPanel();
+         dockPanel.Children.Add(block);
+         DockPanel.SetDock(block, Dock.Left);
+         dockPanel.Tag = info;
+         box.Items.Add(dockPanel);
+      }
+
       private void ReactionListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
       {
          // Get rid of key bounce.
@@ -109,13 +121,13 @@ namespace Game
          if (panel == null)
             return;
 
-         (var targetNode, var story) = (ValueTuple<string, Continuation>)panel.Tag;
+         var reaction = panel.Tag as Reaction;
+         reaction.isSelected = true; ;
 
-         story.CurrentActionNodeName = targetNode;
          SetupScreen();
       }
 
-      private void MapListControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+      private void StageListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
       {
          // Get rid of key bounce.
          if (DateTime.Now < NextGoodClick)
@@ -127,65 +139,58 @@ namespace Game
          if (panel == null)
             return;
 
-         // When you click on an item in the stage box, set its isSelected property, then see what stories are active based on that.
-         Engine.SelectMapNode(panel.Tag as string);
-         //Engine.ActivateStories();
+         // When you click on an item in the stage box, set its isSelected property. That will have an effect on the next shift, possibly producing a new stage or a new story node.
+         Engine.SetTag(panel.Tag as string, "isSelected", null);
 
          // Show the current stage and stories.
          SetupScreen();
       }
 
-      private void AddToListBox(
-        ListBox box,
-        TextBlock block,
-        System.Object info)
-      {
-         DockPanel dockPanel = new DockPanel();
-         dockPanel.Children.Add(block);
-         DockPanel.SetDock(block, Dock.Left);
-         dockPanel.Tag = info;
-         box.Items.Add(dockPanel);
-      }
-      /* We want to have "continuation points". This is a point where a story can be continued.
-         To start out, we make a continuation point for every starting node of every story.
-         Whenever we move to a different story node, we destroy the old continuation point and add a new one for the different node (unless it's a starting node, in which case we keep the old continuation point).
-         Whenever we set up the screen, we scan all the continuation points and present all the ones which can be cast.
-         A continuation point can be cast when at least one of its arrows can be cast.
-      */
       private void SetupScreen()
       {
-         Log.Add(String.Format("TURN {0}", ++Turn));
-         // Display the current stage.
+         Log.Add(String.Format("ROUND {0}", ++Round));
+
+         // Shift continuations to their next node based on changes in the previous round (or the first time, from initialization).
+         var continuations = Engine.ShiftContinuations();
+
+         // Display the current stage, which may be different this round based on changes that occurred during the shift, i.e. tag changes.
          var title = (TextBlock)FindName("StageListTitleText");
-         SetupTextBlock(title, Engine.EvaluateItemText(Engine.CurrentStageNodeName, null), false);
+         var heroStage = Engine.GetTag("hero", "stage");
+         if (heroStage == null)
+         {
+            Log.Fail("Hero is not on any stage");
+         }
+
+         SetupTextBlock(title, Engine.EvaluateItemText(heroStage, null, false), false);
 
          var stageListBox = (ListBox)FindName("StageListBox");
          stageListBox.Items.Clear();
-         foreach (var arrowName in Engine.MapArrowsFor(Engine.CurrentStageNodeName))
+         foreach (var arrowName in Engine.TagsFor(heroStage, "arrow"))
          {
             var item = new TextBlock();
-            SetupTextBlock(item, Engine.EvaluateItemText(arrowName, null), true);
-            string targetNode = Engine.GetMapTagValue(arrowName, "target");
+            SetupTextBlock(item, Engine.EvaluateItemText(arrowName, null, false), true);
+            string targetNode = Engine.GetTag(arrowName, "target");
             AddToListBox(stageListBox, item, targetNode);
          }
 
-         // Display the active stories.
-         var stories = Engine.GetActiveStories();
-         foreach (var story in stories)
+         // Display the active continuation points.
+         foreach (var continuation in continuations)
          {
-            var storyBlock = (TextBlock)FindName("StoryBlock");
-            SetupTextBlock(storyBlock, Engine.EvaluateItemText(story.CurrentActionNodeName, story.Variables), false);
-            // Display the reactions.
+            var storyArea = (ItemsControl)FindName("StoryArea");
+            var storyBlock = new TextBlock();
+            SetupTextBlock(storyBlock, Engine.EvaluateItemText(continuation.NodeName, continuation.Variables, true), false);
+            storyArea.Items.Add(storyBlock);
+
+            // Display the reactions for each continuation.
             var reactionListBox = (ListBox)FindName("ReactionListBox");
             reactionListBox.Items.Clear();
-            foreach (var arrowName in Engine.StoryArrowsFor(story.CurrentActionNodeName))
+            foreach (var reaction in continuation.Reactions)
             {
-               if (Engine.ReactionIsActive(arrowName))
+               if (reaction.isPlayerOption)
                {
                   var item = new TextBlock();
-                  SetupTextBlock(item, Engine.EvaluateItemText(arrowName, story.Variables), true);
-                  string targetAction = Engine.GetStoryTagValue(arrowName, "target");
-                  AddToListBox(reactionListBox, item, (targetAction, story));
+                  SetupTextBlock(item, Engine.EvaluateItemText(reaction.ArrowName, continuation.Variables, false), true);
+                  AddToListBox(reactionListBox, item, reaction);
                }
             }
          }

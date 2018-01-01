@@ -52,7 +52,7 @@ namespace Game
          Collection.Add(new Tag(name, label, value ?? ""));
       }
 
-      public IEnumerable<string> LookupAll(
+      public IEnumerable<string> AllWithNameAndLabel(
         string name,
         string label)
       {
@@ -62,11 +62,11 @@ namespace Game
            select tag.Value;
       }
 
-      public string LookupFirst(
+      public string FirstWithNameAndLabel(
         string name,
         string label)
       {
-         var selected = LookupAll(name, label);
+         var selected = AllWithNameAndLabel(name, label);
          // LookupFirst can return either a string or null. If it's a boolean tag, ex. [tag hero.isShort], and it is set, then LookupFirst will return "", which means "true". If it isn't set, it will return null, which means "false".
          if (selected.Any())
             return selected.First();
@@ -96,7 +96,7 @@ namespace Game
          Collection.RemoveWhere(tag => selected.Contains(tag));
       }
 
-      public IEnumerable<(string, string)> LookupAllWithLabel(
+      public IEnumerable<(string, string)> AllWithLabel(
         string label)
       {
          return
@@ -105,7 +105,7 @@ namespace Game
            select (tag.Name, tag.Value);
       }
 
-      public IEnumerable<(string, string)> LookupAllWithName(
+      public IEnumerable<(string, string)> AllWithName(
          string name)
       {
          return

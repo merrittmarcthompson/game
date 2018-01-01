@@ -9,11 +9,12 @@
     <Grid>
         <ItemsControl Margin="22,19,727,28" BorderThickness="0,0,1,0" BorderBrush="Black">
             <TextBlock x:Name="StageListTitleText" TextWrapping="Wrap" Margin="20,20,20,5" FontSize="13" FontFamily="Georgia"/>
-            <ListBox x:Name="StageListBox" HorizontalAlignment="Left" Height="569" Margin="20,0,0,0" VerticalAlignment="Top" Width="342" ScrollViewer.HorizontalScrollBarVisibility="Disabled" FontSize="13" BorderThickness="0,1,0,0" BorderBrush="Black" SelectionChanged="MapListControl_SelectionChanged" FontFamily="Georgia"/>
+            <ListBox x:Name="StageListBox" HorizontalAlignment="Left" Height="569" Margin="20,0,0,0" VerticalAlignment="Top" Width="342" ScrollViewer.HorizontalScrollBarVisibility="Disabled" FontSize="13" BorderThickness="0,1,0,0" BorderBrush="Black" SelectionChanged="StageListBox_SelectionChanged" FontFamily="Georgia"/>
         </ItemsControl>
 
-        <TextBlock x:Name="StoryBlock" Margin="429,43,296,28" FontSize="13" FontFamily="Georgia"></TextBlock>
-
+        <ItemsControl x:Name="StoryArea" Margin="413,43,301,28">
+        </ItemsControl>
+        
         <ListBox x:Name="ReactionListBox" HorizontalAlignment="Left" Height="610" Margin="839,43,0,0" VerticalAlignment="Top" Width="286" ScrollViewer.HorizontalScrollBarVisibility="Disabled"  SelectionChanged="ReactionListBox_SelectionChanged" BorderBrush="Black" BorderThickness="1,0,0,0" FontFamily="Segoe UI" FontSize="13"/>
 
     </Grid>
