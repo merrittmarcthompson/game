@@ -11,7 +11,8 @@ namespace Game
       private static Tags MapTags = new Tags();
       private static Tags StoryTags = new Tags();
       private static Dictionary<string, SequenceObject> SequenceObjects = new Dictionary<string, SequenceObject>();
-      private static List<Continuation> Continuations = new List<Continuation>();
+
+      public static List<Continuation> Continuations = new List<Continuation>();
 
       private static SequenceObject CompileSourceText(
         string sourceText)
@@ -38,11 +39,12 @@ namespace Game
       }
 
       private static List<Reaction> BuildReactionsFor(
-         string nodeName)
+         string nodeName,
+         Tags tags)
       {
          var newReactions = new List<Reaction>();
          // Find all the reactions for the shifted continuation's node where all the when expressions evaluate. Build a reaction object for each.
-         foreach (var arrowName in StoryTags.AllWithNameAndLabel(nodeName, "arrow"))
+         foreach (var arrowName in tags.AllWithNameAndLabel(nodeName, "arrow"))
          {
             var variables = new Dictionary<string, string>();
             // If there are no when directives, it always succeeds.
@@ -89,19 +91,19 @@ namespace Game
       private static void PreprocessStory(
         Tags fileBaseTags)
       {
-         // Find all the story nodes where stories can start. Make a continuation for each one. That means that the player can "continue" from the beginning of that story. Later, as they play through a story, we will add more continuation nodes to represent their position in the story.
+         // Find all the story nodes where stories can start for this source file. Make a continuation for each one. That means that the player can "continue" from the beginning of that story. Later, as they play through a story, we will add more continuation nodes to represent their position in the story.
          foreach ((var nodeName, _) in fileBaseTags.AllWithLabel("isNode"))
          {
             var sequenceObject = SequenceObjects[nodeName];
             sequenceObject.Traverse((@object) =>
             {
                // Add continuations for nodes with [start].
-               if (!(@object is SubstitutionObject startObject))
+               if (!(@object is StartObject startObject))
                   return true;
                var continuation = new Continuation();
                continuation.NodeName = nodeName;
                continuation.IsStart = true;
-               continuation.Reactions = BuildReactionsFor(nodeName);
+               continuation.Reactions = BuildReactionsFor(nodeName, fileBaseTags);
                Continuations.Add(continuation);
                return true;
             });
@@ -517,6 +519,70 @@ namespace Game
 
          MapTags.Merge(GetStageTagsForNodes());
       }
+      /* Let's imagine there is no player, but there is this:
+            - A hungry guy sitting next to a counter on which there is a plate of food.
+            - A guy behind the counter.
+         There are also two stories:
+            #1 When a guy is next to a plate of food and he's hungry, he should eat the food and make the plate empty.
+            #2 When a guy is behind a counter and there's an empty plate on it, he should pick it up and put it in the dishwasher.
+         The program should:
+            - Scan all the stories.
+            - It should find that the first story is satisfied, so it should make the plate empty. 
+            - It should then scan all the stories again.
+            - This time it finds that the second story is satisfied, so it should have the counter man pick up the plate and clean it.
+         This should happen over and over. That's the whole program. 
+         There some questions, though:
+            - How does the player see these things happen?
+            - How does this keep from running on and on quickly, without any breaks for the player to do things?
+            - How does player reaction selection relate to this?
+         Seems like after every scan, the program should present the new situation, ex.:
+            - Scan all the stories.
+            - It should find that the first story is satisfied, so it should make the plate empty. 
+          >>- It should stop and show the text for the "man eats food" node.
+            - It should then scan all the stories again.
+            - This time it finds that the second story is satisfied, so it should have the counter man pick up the plate and clean it.
+          >>- It should stop and show the text for the "counter man picks up plate and cleans it" node.
+         Seems like there should be a player "do nothing" option that allows you to let a cycle of these things happen without doing anything.
+         That answers the first two questions.
+         Let's imagine that the player is the hungry man. Let's say he walks away.
+         That makes the 'move' story run and then it stops and shows you where you are now. That fits fine in our loop scheme.
+         Let's imagine that the player is the hungry man. He can eat the food if he chooses. Or maybe he's on a diet. It's up to him.
+         In any case, he has one option: "Eat the food". It's implicit that he can walk away via the stage UI.
+         This is the same story as #1 above, except that there's a player option attached.
+         Maybe it's like this:
+            - Scan all the stories.
+            - It should find that the first story COULD BE satisfied IF THE PLAYER CHOSE THE OPTION.
+            - Instead of showing the "man eats food" text, it stops and shows the option and its parent node.
+            - Let's say you don't pick it. You pick "do nothing".
+            - It should then scan all the stories again.
+            - It again finds that the first story could be satisfied if you choose.
+            - It stops and shows the option again.
+            - Finally you pick the option.
+            - Now the first story is satisfied and it makes the plate empty.
+            - It stops and shows the text for "man eats food".
+         So the loop is like this:
+            Scan all the stories:
+               If the story has no user option and the 'when' can be satisfied:
+                  Execute the target node and move to the target node.
+               Else if it has a user option and the 'when' can be satisfied:
+                  Show the current node.
+                  Show the reactions.
+            Show all the target nodes and wait for the user to select something.
+            If there are reactions and the user picks one:
+               Execute the target node and move to the target node.
+            Go back to the start.
+         So we've got a subroutine that does this:
+            For every continuation point:
+               if it has no user option and the 'when' can be satisfied:
+                  Execute the target node and move to the target node.
+               Else if it has a user option and the 'when' can be satisfied:
+                  Add it to a list of nodes to display and their reactions.
+            Return the list of nodes to display and their reactions.
+         We call that from the UI loop. It then displays the nodes and reactions.
+         If the UI detects the choice of a reaction it calls this subroutine, which is also called from the one above:
+            Execute the target node and move to the target node.
+         We don't keep reactions in the continuations. There are separate "stuff to display" objects for that.
+         */
 
       /* We want to have "continuation points". This is a point where a story can be continued.
          To start out, we make a continuation point for every starting node of every story.
@@ -575,7 +641,7 @@ namespace Game
                Go back to step 1.
       */
 
-      public static List<Continuation> ShiftContinuations()
+      public static void ShiftContinuations()
       {
          // ShiftContinuations means to move the active continuations to new positions based on their when expressions.
          // Go over the list of active continuations we made in initialization or on the previous iteration. If there was a previous iteration, there is now a different state.
@@ -584,7 +650,7 @@ namespace Game
          foreach (var continuation in Continuations)
          {
             // At this point, there are four cases:
-            if (!MapTags.AllWithNameAndLabel(continuation.NodeName, "arrow").Any())
+            if (!StoryTags.AllWithNameAndLabel(continuation.NodeName, "arrow").Any())
             {
                // a. This continuation's node has no arrows. In that case, we've reached the end of the story pass, so destroy this continuation.
                removedContinuations.Add(continuation);
@@ -598,7 +664,7 @@ namespace Game
             }
             else
             {
-               reaction = continuation.Reactions.Where((aReaction) => aReaction.isSelected).First();
+               reaction = continuation.Reactions.Where((aReaction) => aReaction.isSelected).FirstOrDefault();
                if (reaction == null)
                {
                   // c. This continuation's node has one or more player option arrows, but none has been marked selected by the player. In that case, ignore it.
@@ -612,7 +678,7 @@ namespace Game
             newContinuation.NodeName = StoryTags.FirstWithNameAndLabel(reaction.ArrowName, "target");
             // It executes in the same context as the old continuation.
             newContinuation.Variables = continuation.Variables;
-            newContinuation.Reactions = BuildReactionsFor(newContinuation.NodeName);
+            newContinuation.Reactions = BuildReactionsFor(newContinuation.NodeName, StoryTags);
             if (!continuation.IsStart)
             {
                removedContinuations.Add(continuation);
@@ -621,7 +687,14 @@ namespace Game
          }
          Continuations.RemoveAll((continuation) => removedContinuations.Contains(continuation));
          Continuations.AddRange(addedContinuations);
-         return addedContinuations;
+      }
+
+      public static void RebuildContinuations()
+      {
+         foreach (var continuation in Continuations)
+         {
+            continuation.Reactions = BuildReactionsFor(continuation.NodeName, StoryTags);
+         }
       }
 
       public static IEnumerable<string> TagsFor(

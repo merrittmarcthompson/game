@@ -122,8 +122,12 @@ namespace Game
             return;
 
          var reaction = panel.Tag as Reaction;
-         reaction.isSelected = true; ;
+         reaction.isSelected = true;
 
+         // Now that we've broken the blockage of selecting the next reaction, move to the node the reaction arrow points to.
+         Engine.ShiftContinuations();
+
+         // Show the current stage and stories.
          SetupScreen();
       }
 
@@ -142,6 +146,10 @@ namespace Game
          // When you click on an item in the stage box, set its isSelected property. That will have an effect on the next shift, possibly producing a new stage or a new story node.
          Engine.SetTag(panel.Tag as string, "isSelected", null);
 
+         // When you make a stage selection, it seems like you should immediately rebuild all the continuations to reflect it.
+         // There's no shift yet. The shift has nothing to do with stage selection. The only thing that triggers shift is picking a reaction. That moves you to the next node.
+         Engine.RebuildContinuations();
+
          // Show the current stage and stories.
          SetupScreen();
       }
@@ -149,9 +157,6 @@ namespace Game
       private void SetupScreen()
       {
          Log.Add(String.Format("ROUND {0}", ++Round));
-
-         // Shift continuations to their next node based on changes in the previous round (or the first time, from initialization).
-         var continuations = Engine.ShiftContinuations();
 
          // Display the current stage, which may be different this round based on changes that occurred during the shift, i.e. tag changes.
          var title = (TextBlock)FindName("StageListTitleText");
@@ -174,7 +179,7 @@ namespace Game
          }
 
          // Display the active continuation points.
-         foreach (var continuation in continuations)
+         foreach (var continuation in Engine.Continuations)
          {
             var storyArea = (ItemsControl)FindName("StoryArea");
             var storyBlock = new TextBlock();
