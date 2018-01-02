@@ -38,56 +38,6 @@ namespace Game
          }
       }
 
-      private static List<Reaction> BuildReactionsFor(
-         string nodeName,
-         Tags tags)
-      {
-         var newReactions = new List<Reaction>();
-         // Find all the reactions for the shifted continuation's node where all the when expressions evaluate. Build a reaction object for each.
-         foreach (var arrowName in tags.AllWithNameAndLabel(nodeName, "arrow"))
-         {
-            var variables = new Dictionary<string, string>();
-            // If there are no when directives, it always succeeds.
-            bool allSucceeded = true;
-            bool isPlayerOption = false;
-            SequenceObjects[arrowName].Traverse((@object) =>
-            {
-               switch (@object)
-               {
-                  case WhenObject whenObject:
-                     // We allow multiple when directives. Just do them in order. Accumulate all the variables together.
-                     if (!TryRecursively(0, whenObject.NotExpressions, variables))
-                     {
-                        allSucceeded = false;
-                     }
-                     break;
-                  // If there's anything to build a reaction option string, we're going to display it in the reaction list.
-                  case IfObject ifObject:
-                  case SubstitutionObject substitutionObject:
-                  case SpecialObject specialObject:
-                     isPlayerOption = true;
-                     break;
-                  case TextObject textObject:
-                     if (!String.IsNullOrWhiteSpace(textObject.Text))
-                     {
-                        isPlayerOption = true;
-                     }
-                     break;
-               }
-               return true;
-            });
-            if (allSucceeded)
-            {
-               var newReaction = new Reaction();
-               newReaction.ArrowName = arrowName;
-               newReaction.isSelected = false;
-               newReaction.isPlayerOption = isPlayerOption;
-               newReactions.Add(newReaction);
-            }
-         }
-         return newReactions;
-      }
-
       private static void PreprocessStory(
         Tags fileBaseTags)
       {
@@ -103,11 +53,9 @@ namespace Game
                var continuation = new Continuation();
                continuation.NodeName = nodeName;
                continuation.IsStart = true;
-               continuation.Reactions = BuildReactionsFor(nodeName, fileBaseTags);
                Continuations.Add(continuation);
                return true;
             });
-
          }
       }
 
@@ -571,7 +519,8 @@ namespace Game
             If there are reactions and the user picks one:
                Execute the target node and move to the target node.
             Go back to the start.
-         So we've got a subroutine that does this:
+
+         So we've got an UpdateContinuations subroutine that does this:
             For every continuation point:
                if it has no user option and the 'when' can be satisfied:
                   Execute the target node and move to the target node.
@@ -579,122 +528,100 @@ namespace Game
                   Add it to a list of nodes to display and their reactions.
             Return the list of nodes to display and their reactions.
          We call that from the UI loop. It then displays the nodes and reactions.
-         If the UI detects the choice of a reaction it calls this subroutine, which is also called from the one above:
+         If the UI detects the choice of a reaction it calls this ShiftContinuation subroutine, which is also called from the one above:
             Execute the target node and move to the target node.
          We don't keep reactions in the continuations. There are separate "stuff to display" objects for that.
          */
 
-      /* We want to have "continuation points". This is a point where a story can be continued.
-         To start out, we make a continuation point for every starting node of every story.
-         Whenever we move to a different story node, we destroy the old continuation point and add a new one for the different node (unless it's a starting node, in which case we keep the old continuation point).
-         Whenever we set up the screen, we scan all the continuation points and present all the ones which can be cast.
-         A continuation point can be cast when at least one of its arrows can be cast.
-
-         The player has picked a reaction from a continuation.
-         The when directive isn't important any more. We already looked at that when we built the continuation to decide whether the reaction should go into the continuation. He's already picked it; we can't back out now.
-         Seems like the picked reaction plus any unconditional reactions all have to be "executed" at this point.
-         This occurs for all the pending continuations, not just the one the player is looking at. This allows characters far away from the hero to do things when he isn't looking.
-         So essentially, we are giving everybody a "turn" at this point.
-         This should occur not just when you pick a reaction. It also has to happen when you select a location.
-         The hero has multiple options to pick from, but other characters must have only one option.
-         The act of picking a reaction turns the hero into an ordinary character--there is now one option where before there were many.
-         So the main loop is like this:
-
-            0. Initialization.
-
-               Before we go into the loop, we have to prime the pump.
-               Add all the starting continuations to the list.
-               Our next step will be to shift some of them to their target nodes.
-               This gets the starting continuations off of the start nodes, which have no descriptions and can't be displayed.
-
-            1. Shift to new continuations.
-
-               This means to move the active continuations to new positions based on their when expressions.
-               Go over the list of active continuations we made in initialization or on the previous iteration. If there was a previous iteration, there is now a different state:
-                  - The tags were executed.
-                  - The player has selected either a stage item or a reaction list item.
-               Based on the new state, if any of the continuation's arrows evaluate:
-                  Create a new continuation the evaluated arrow.
-                  Destroy old continuation (unless it's a starting continuation).
-               We now have a new set of continuations.
-               Find all the currently active continuations, that is, ones that are or can be cast.
-                  This includes generating the current reactions for them.
-               While creating the description, execute all the tags in the description. This starts changing the state for the next round. This lets "everybody take a turn".
-
-            2. Show how it is now.
-
-               Display the description and the reactions to choose from.
-                  Some of these will have a description, but no reactions, for example, for actions that other characters take.
-               Also display the stage.
-
-            3. Let the player change one of the selection states.
-
-               Wait for the player to choose from either the stage or the reaction list.
-               Set isSelected on the stage item (if chosen).
-               Set isSelected on the player reaction (if chosen):
-                  Every reaction that has a player choice essentially has an additional, invisible expression:
-                     when ..., "this arrow was selected by the player"
-                  So this happens normally as part of the when evaluation process.
-                  So arrows like this become "blocked" until the player selects an option.
-                  If the arrow could be executed, except for the blockage, you add the option to the reaction list for the player.
-                  Though blocked continuations are different. Even though their condition fails, they are still active.
-               Go back to step 1.
-      */
-
-      public static void ShiftContinuations()
+      public static void ShiftContinuationByChoice(
+         string chosenArrowName,
+         Continuation continuation)
       {
-         // ShiftContinuations means to move the active continuations to new positions based on their when expressions.
-         // Go over the list of active continuations we made in initialization or on the previous iteration. If there was a previous iteration, there is now a different state.
+         var newContinuation = new Continuation();
+         newContinuation.IsStart = false;
+         newContinuation.NodeName = StoryTags.FirstWithNameAndLabel(chosenArrowName, "target");
+         newContinuation.Variables = continuation.Variables;
+         if (!continuation.IsStart)
+         {
+            Continuations.Remove(continuation);
+         }
+         Continuations.Add(newContinuation);
+      }
+
+      public static Description UpdateContinuations()
+      {
+         var description = new Description();
+         description.Text = "";
          var removedContinuations = new List<Continuation>();
          var addedContinuations = new List<Continuation>();
          foreach (var continuation in Continuations)
          {
-            // At this point, there are four cases:
-            if (!StoryTags.AllWithNameAndLabel(continuation.NodeName, "arrow").Any())
+            foreach (var arrowName in StoryTags.AllWithNameAndLabel(continuation.NodeName, "arrow"))
             {
-               // a. This continuation's node has no arrows. In that case, we've reached the end of the story pass, so destroy this continuation.
-               removedContinuations.Add(continuation);
-               continue;
-            }
-            Reaction reaction;
-            if (continuation.Reactions.Count() == 1 && !continuation.Reactions[0].isPlayerOption)
-            {
-               // b. This continuation's node has one arrow which has no player option. This is for non-player actions. In that case, automatically move to the node the arrow points to. The when expressions were already evaluated when we added this reaction to the list.
-               reaction = continuation.Reactions[0];
-            }
-            else
-            {
-               reaction = continuation.Reactions.Where((aReaction) => aReaction.isSelected).FirstOrDefault();
-               if (reaction == null)
+               // Continue with any previous variables from earlier in the story.
+               var variables = continuation.Variables;
+               // If there are no when directives, it always succeeds.
+               var allSucceeded = true;
+               var reactionText = "";
+               SequenceObjects[arrowName].Traverse((@object) =>
                {
-                  // c. This continuation's node has one or more player option arrows, but none has been marked selected by the player. In that case, ignore it.
-                  continue;
+                  switch (@object)
+                  {
+                     case WhenObject whenObject:
+                        // We allow multiple when directives. Just do them in order. Accumulate all the variables together.
+                        if (!TryRecursively(0, whenObject.NotExpressions, variables))
+                        {
+                           allSucceeded = false;
+                        }
+                        break;
+                     // If there's anything to build a reaction option string, we're going to display it in the reaction list.
+                     case TextObject textObject:
+                        reactionText += textObject.Text;
+                        break;
+                     case SubstitutionObject substitutionObject:
+                        reactionText += EvaluateLabelListFirst(substitutionObject.Expression.LeftName, substitutionObject.Expression.LeftLabels, variables);
+                        break;
+                     case IfObject ifObject:
+                        return TryRecursively(0, ifObject.NotExpressions, variables);
+                     case SpecialObject specialObject:
+                        reactionText += GetSpecialText(specialObject.Id);
+                        break;
+                  }
+                  return true;
+               });
+               if (allSucceeded)
+               {
+                  if (!String.IsNullOrWhiteSpace(reactionText))
+                  {
+                     // Add to player options for display here...
+                     description.Continuation = continuation;
+                     var reaction = new Description.Reaction();
+                     reaction.Text = reactionText;
+                     reaction.ArrowName = arrowName;
+                     description.Reactions.Add(reaction);
+                  }
+                  else
+                  {
+                     var newContinuation = new Continuation();
+                     newContinuation.IsStart = false;
+                     newContinuation.NodeName = StoryTags.FirstWithNameAndLabel(arrowName, "target");
+                     // The story now has any additional variables defined in the when expressions.
+                     newContinuation.Variables = variables;
+                     description.Text += EvaluateItemText(continuation.NodeName, variables, true) + "\r\n";
+                     if (!continuation.IsStart)
+                     {
+                        removedContinuations.Add(continuation);
+                     }
+                     addedContinuations.Add(newContinuation);
+                     // This assumes there's only one arrow for auto-move.
+                     break;
+                  }
                }
-               // d. This continuation's node has one or more player option arrows, and one of them was marked selected by the player. In that case, move to the node the arrow points to. The expressions were already evaluated earlier when we decided whether we should allow the player to choose it.
             }
-            // Move to the reaction target node.
-            var newContinuation = new Continuation();
-            newContinuation.IsStart = false;
-            newContinuation.NodeName = StoryTags.FirstWithNameAndLabel(reaction.ArrowName, "target");
-            // It executes in the same context as the old continuation.
-            newContinuation.Variables = continuation.Variables;
-            newContinuation.Reactions = BuildReactionsFor(newContinuation.NodeName, StoryTags);
-            if (!continuation.IsStart)
-            {
-               removedContinuations.Add(continuation);
-            }
-            addedContinuations.Add(newContinuation);
          }
-         Continuations.RemoveAll((continuation) => removedContinuations.Contains(continuation));
+         Continuations.RemoveAll(continuation => removedContinuations.Contains(continuation));
          Continuations.AddRange(addedContinuations);
-      }
-
-      public static void RebuildContinuations()
-      {
-         foreach (var continuation in Continuations)
-         {
-            continuation.Reactions = BuildReactionsFor(continuation.NodeName, StoryTags);
-         }
+         return description;
       }
 
       public static IEnumerable<string> TagsFor(
@@ -720,10 +647,88 @@ namespace Game
          MapTags.Add(itemName, itemLabel, itemValue);
       }
 
+      private static string GetSpecialText(
+         string specialId)
+      {
+         if (specialId == "p")
+         {
+            return "\r\n";
+         }
+         else if (specialId == "First")
+         {
+            return MapTags.FirstWithNameAndLabel("hero", "first");
+         }
+         else if (specialId == "Last")
+         {
+            return MapTags.FirstWithNameAndLabel("hero", "last");
+         }
+         else
+         {
+            bool heroIsMale = MapTags.FirstWithNameAndLabel("hero", "isMale") != null;
+            if (specialId == "he")
+            {
+               return heroIsMale ? "he" : "she";
+            }
+            else if (specialId == "He")
+            {
+               return heroIsMale ? "He" : "She";
+            }
+            else if (specialId == "him")
+            {
+               return heroIsMale ? "him" : "her";
+            }
+            else if (specialId == "Him")
+            {
+               return heroIsMale ? "Him" : "Her";
+            }
+            else if (specialId == "his")
+            {
+               return heroIsMale ? "his" : "her";
+            }
+            else if (specialId == "His")
+            {
+               return heroIsMale ? "His" : "Her";
+            }
+            else if (specialId == "himself")
+            {
+               return heroIsMale ? "himself" : "herself";
+            }
+            else if (specialId == "Himself")
+            {
+               return heroIsMale ? "Himself" : "Herself";
+            }
+            else if (specialId == "man")
+            {
+               return heroIsMale ? "man" : "woman";
+            }
+            else if (specialId == "Man")
+            {
+               return heroIsMale ? "Man" : "Woman";
+            }
+            else if (specialId == "boy")
+            {
+               return heroIsMale ? "boy" : "girl";
+            }
+            else if (specialId == "Boy")
+            {
+               return heroIsMale ? "Boy" : "Girl";
+            }
+            else if (specialId == "Mr")
+            {
+               return heroIsMale ? "Mr." : "Ms";
+            }
+            else
+            {
+               Log.Fail(String.Format("Unknown special ID {0}.", specialId));
+               return "";
+            }
+         }
+      }
+
       public static string EvaluateItemText(
-        string itemName,
-        Dictionary<string, string> variables,
-        bool executeTags)
+     string itemName,
+     Dictionary<string, string> variables,
+     bool executeTags)
       {
          // The item is a node or arrow.
          if (variables == null)
@@ -743,6 +748,9 @@ namespace Game
                   break;
                case IfObject ifObject:
                   return TryRecursively(0, ifObject.NotExpressions, variables);
+               case SpecialObject specialObject:
+                  accumulator += GetSpecialText(specialObject.Id);
+                  break;
                case TagObject tagObject:
                   if (!executeTags)
                      break;
@@ -773,76 +781,6 @@ namespace Game
                      }
                      var rightValue = MapTags.FirstWithNameAndLabel(rightName, rightLabel);
                      MapTags.Add(leftName, leftLabel, rightValue);
-                  }
-                  break;
-               case SpecialObject specialObject:
-                  if (specialObject.Id == "p")
-                  {
-                     accumulator += "\r\n";
-                  }
-                  else if (specialObject.Id == "First")
-                  {
-                     accumulator += MapTags.FirstWithNameAndLabel("hero", "first");
-                  }
-                  else if (specialObject.Id == "Last")
-                  {
-                     accumulator += MapTags.FirstWithNameAndLabel("hero", "last");
-                  }
-                  else
-                  {
-                     bool heroIsMale = MapTags.FirstWithNameAndLabel("hero", "isMale") != null;
-                     if (specialObject.Id == "he")
-                     {
-                        accumulator += heroIsMale ? "he" : "she";
-                     }
-                     else if (specialObject.Id == "He")
-                     {
-                        accumulator += heroIsMale ? "He" : "She";
-                     }
-                     else if (specialObject.Id == "him")
-                     {
-                        accumulator += heroIsMale ? "him" : "her";
-                     }
-                     else if (specialObject.Id == "Him")
-                     {
-                        accumulator += heroIsMale ? "Him" : "Her";
-                     }
-                     else if (specialObject.Id == "his")
-                     {
-                        accumulator += heroIsMale ? "his" : "her";
-                     }
-                     else if (specialObject.Id == "His")
-                     {
-                        accumulator += heroIsMale ? "His" : "Her";
-                     }
-                     else if (specialObject.Id == "himself")
-                     {
-                        accumulator += heroIsMale ? "himself" : "herself";
-                     }
-                     else if (specialObject.Id == "Himself")
-                     {
-                        accumulator += heroIsMale ? "Himself" : "Herself";
-                     }
-                     else if (specialObject.Id == "man")
-                     {
-                        accumulator += heroIsMale ? "man" : "woman";
-                     }
-                     else if (specialObject.Id == "Man")
-                     {
-                        accumulator += heroIsMale ? "Man" : "Woman";
-                     }
-                     else if (specialObject.Id == "boy")
-                     {
-                        accumulator += heroIsMale ? "boy" : "girl";
-                     }
-                     else if (specialObject.Id == "Boy")
-                     {
-                        accumulator += heroIsMale ? "Boy" : "Girl";
-                     }
-                     else if (specialObject.Id == "Mr")
-                     {
-                        accumulator += heroIsMale ? "Mr." : "Ms";
-                     }
                   }
                   break;
             }

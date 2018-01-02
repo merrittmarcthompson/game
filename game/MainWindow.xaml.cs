@@ -121,11 +121,8 @@ namespace Game
          if (panel == null)
             return;
 
-         var reaction = panel.Tag as Reaction;
-         reaction.isSelected = true;
-
-         // Now that we've broken the blockage of selecting the next reaction, move to the node the reaction arrow points to.
-         Engine.ShiftContinuations();
+         (var description, var reaction) = panel.Tag as Tuple<Description, Description.Reaction>;
+         Engine.ShiftContinuationByChoice(reaction.ArrowName, description.Continuation);
 
          // Show the current stage and stories.
          SetupScreen();
@@ -146,10 +143,6 @@ namespace Game
          // When you click on an item in the stage box, set its isSelected property. That will have an effect on the next shift, possibly producing a new stage or a new story node.
          Engine.SetTag(panel.Tag as string, "isSelected", null);
 
-         // When you make a stage selection, it seems like you should immediately rebuild all the continuations to reflect it.
-         // There's no shift yet. The shift has nothing to do with stage selection. The only thing that triggers shift is picking a reaction. That moves you to the next node.
-         Engine.RebuildContinuations();
-
          // Show the current stage and stories.
          SetupScreen();
       }
@@ -157,6 +150,8 @@ namespace Game
       private void SetupScreen()
       {
          Log.Add(String.Format("ROUND {0}", ++Round));
+
+         var description = Engine.UpdateContinuations();
 
          // Display the current stage, which may be different this round based on changes that occurred during the shift, i.e. tag changes.
          var title = (TextBlock)FindName("StageListTitleText");
@@ -178,26 +173,17 @@ namespace Game
             AddToListBox(stageListBox, item, targetNode);
          }
 
-         // Display the active continuation points.
-         foreach (var continuation in Engine.Continuations)
+         var storyArea = (ItemsControl)FindName("StoryArea");
+         var storyBlock = new TextBlock();
+         SetupTextBlock(storyBlock, description.Text, false);
+         storyArea.Items.Add(storyBlock);
+         var reactionListBox = (ListBox)FindName("ReactionListBox");
+         reactionListBox.Items.Clear();
+         foreach (var reaction in description.Reactions)
          {
-            var storyArea = (ItemsControl)FindName("StoryArea");
-            var storyBlock = new TextBlock();
-            SetupTextBlock(storyBlock, Engine.EvaluateItemText(continuation.NodeName, continuation.Variables, true), false);
-            storyArea.Items.Add(storyBlock);
-
-            // Display the reactions for each continuation.
-            var reactionListBox = (ListBox)FindName("ReactionListBox");
-            reactionListBox.Items.Clear();
-            foreach (var reaction in continuation.Reactions)
-            {
-               if (reaction.isPlayerOption)
-               {
-                  var item = new TextBlock();
-                  SetupTextBlock(item, Engine.EvaluateItemText(reaction.ArrowName, continuation.Variables, false), true);
-                  AddToListBox(reactionListBox, item, reaction);
-               }
-            }
+            var item = new TextBlock();
+            SetupTextBlock(item, reaction.Text, true);
+            AddToListBox(reactionListBox, item, (description, reaction));
          }
       }
 
