@@ -12,7 +12,7 @@
             <ListBox x:Name="StageListBox" HorizontalAlignment="Left" Height="569" Margin="20,0,0,0" VerticalAlignment="Top" Width="342" ScrollViewer.HorizontalScrollBarVisibility="Disabled" FontSize="13" BorderThickness="0,1,0,0" BorderBrush="Black" SelectionChanged="StageListBox_SelectionChanged" FontFamily="Georgia"/>
         </ItemsControl>
 
-        <ItemsControl x:Name="StoryArea" Margin="413,43,301,28">
+        <ItemsControl x:Name="StoryArea" Margin="413,43,301,28" FontFamily="Georgia" FontSize="13">
         </ItemsControl>
         
         <ListBox x:Name="ReactionListBox" HorizontalAlignment="Left" Height="610" Margin="839,43,0,0" VerticalAlignment="Top" Width="286" ScrollViewer.HorizontalScrollBarVisibility="Disabled"  SelectionChanged="ReactionListBox_SelectionChanged" BorderBrush="Black" BorderThickness="1,0,0,0" FontFamily="Segoe UI" FontSize="13"/>

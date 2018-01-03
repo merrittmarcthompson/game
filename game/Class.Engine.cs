@@ -541,6 +541,7 @@ namespace Game
          newContinuation.IsStart = false;
          newContinuation.NodeName = StoryTags.FirstWithNameAndLabel(chosenArrowName, "target");
          newContinuation.Variables = continuation.Variables;
+         EvaluateItemText(newContinuation.NodeName, newContinuation.Variables, true);
          if (!continuation.IsStart)
          {
             Continuations.Remove(continuation);
@@ -574,7 +575,6 @@ namespace Game
                            allSucceeded = false;
                         }
                         break;
-                     // If there's anything to build a reaction option string, we're going to display it in the reaction list.
                      case TextObject textObject:
                         reactionText += textObject.Text;
                         break;
@@ -593,7 +593,7 @@ namespace Game
                {
                   if (!String.IsNullOrWhiteSpace(reactionText))
                   {
-                     // Add to player options for display here...
+                     // Because of this player option, we are blocked and can't shift to the next node.
                      description.Continuation = continuation;
                      var reaction = new Description.Reaction();
                      reaction.Text = reactionText;
@@ -605,9 +605,45 @@ namespace Game
                      var newContinuation = new Continuation();
                      newContinuation.IsStart = false;
                      newContinuation.NodeName = StoryTags.FirstWithNameAndLabel(arrowName, "target");
-                     // The story now has any additional variables defined in the when expressions.
                      newContinuation.Variables = variables;
-                     description.Text += EvaluateItemText(continuation.NodeName, variables, true) + "\r\n";
+                     description.Text += EvaluateItemText(newContinuation.NodeName, variables, true) + "\r\n";
+                     description.Continuation = newContinuation;
+                     foreach (var newNodeArrowName in StoryTags.AllWithNameAndLabel(newContinuation.NodeName, "arrow"))
+                     {
+                        allSucceeded = true;
+                        reactionText = "";
+                        SequenceObjects[newNodeArrowName].Traverse((@object) =>
+                        {
+                           switch (@object)
+                           {
+                              case WhenObject whenObject:
+                                 if (!TryRecursively(0, whenObject.NotExpressions, variables))
+                                 {
+                                    allSucceeded = false;
+                                 }
+                                 break;
+                              case TextObject textObject:
+                                 reactionText += textObject.Text;
+                                 break;
+                              case SubstitutionObject substitutionObject:
+                                 reactionText += EvaluateLabelListFirst(substitutionObject.Expression.LeftName, substitutionObject.Expression.LeftLabels, variables);
+                                 break;
+                              case IfObject ifObject:
+                                 return TryRecursively(0, ifObject.NotExpressions, variables);
+                              case SpecialObject specialObject:
+                                 reactionText += GetSpecialText(specialObject.Id);
+                                 break;
+                           }
+                           return true;
+                        });
+                        if (allSucceeded && !String.IsNullOrWhiteSpace(reactionText))
+                        {
+                           var newReaction = new Description.Reaction();
+                           newReaction.ArrowName = newNodeArrowName;
+                           newReaction.Text = reactionText;
+                           description.Reactions.Add(newReaction);
+                        }
+                     }
                      if (!continuation.IsStart)
                      {
                         removedContinuations.Add(continuation);
@@ -645,6 +681,13 @@ namespace Game
       {
          MapTags.Remove(itemName, itemLabel);
          MapTags.Add(itemName, itemLabel, itemValue);
+      }
+
+      public static void ResetTag(
+         string itemName,
+         string itemLabel)
+      {
+         MapTags.Remove(itemName, itemLabel);
       }
 
       private static string GetSpecialText(

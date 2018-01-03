@@ -121,7 +121,7 @@ namespace Game
          if (panel == null)
             return;
 
-         (var description, var reaction) = panel.Tag as Tuple<Description, Description.Reaction>;
+         (var description, var reaction) = (ValueTuple<Description, Description.Reaction>)panel.Tag;
          Engine.ShiftContinuationByChoice(reaction.ArrowName, description.Continuation);
 
          // Show the current stage and stories.
@@ -145,6 +145,8 @@ namespace Game
 
          // Show the current stage and stories.
          SetupScreen();
+
+         Engine.ResetTag(panel.Tag as string, "isSelected");
       }
 
       private void SetupScreen()
