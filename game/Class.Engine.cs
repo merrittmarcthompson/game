@@ -219,6 +219,10 @@ namespace Game
          List<string> labels,
          Dictionary<string, string> variables)
       {
+         if (name == null)
+         {
+            return (null, null);
+         }
          // For example, 'OtherSide.target.isOpen'. This function will return whatever OtherSide.target is as the name and 'isOpen' as the label.
          if (IsVariable(name))
          {
@@ -546,7 +550,56 @@ namespace Game
          {
             Continuations.Remove(continuation);
          }
+         else
+         {
+            continuation.Variables = new Dictionary<string, string>();
+         }
          Continuations.Add(newContinuation);
+      }
+
+      private static Description BuildDescription(
+         Continuation continuation)
+      {
+         var description = new Description();
+         description.Continuation = continuation;
+         description.Text += EvaluateItemText(continuation.NodeName, continuation.Variables, true) + "\r\n";
+         foreach (var newNodeArrowName in StoryTags.AllWithNameAndLabel(continuation.NodeName, "arrow"))
+         {
+            var allSucceeded = true;
+            var reactionText = "";
+            SequenceObjects[newNodeArrowName].Traverse((@object) =>
+            {
+               switch (@object)
+               {
+                  case WhenObject whenObject:
+                     if (!TryRecursively(0, whenObject.NotExpressions, continuation.Variables))
+                     {
+                        allSucceeded = false;
+                     }
+                     break;
+                  case TextObject textObject:
+                     reactionText += textObject.Text;
+                     break;
+                  case SubstitutionObject substitutionObject:
+                     reactionText += EvaluateLabelListFirst(substitutionObject.Expression.LeftName, substitutionObject.Expression.LeftLabels, continuation.Variables);
+                     break;
+                  case IfObject ifObject:
+                     return TryRecursively(0, ifObject.NotExpressions, continuation.Variables);
+                  case SpecialObject specialObject:
+                     reactionText += GetSpecialText(specialObject.Id);
+                     break;
+               }
+               return true;
+            });
+            if (allSucceeded && !String.IsNullOrWhiteSpace(reactionText))
+            {
+               var newReaction = new Description.Reaction();
+               newReaction.ArrowName = newNodeArrowName;
+               newReaction.Text = reactionText;
+               description.Reactions.Add(newReaction);
+            }
+         }
+         return description;
       }
 
       public static Description UpdateContinuations()
@@ -557,8 +610,11 @@ namespace Game
          var addedContinuations = new List<Continuation>();
          foreach (var continuation in Continuations)
          {
+            Continuation resultContinuation = null;
+            var arrowCount = 0;
             foreach (var arrowName in StoryTags.AllWithNameAndLabel(continuation.NodeName, "arrow"))
             {
+               ++arrowCount;
                // Continue with any previous variables from earlier in the story.
                var variables = continuation.Variables;
                // If there are no when directives, it always succeeds.
@@ -591,68 +647,36 @@ namespace Game
                });
                if (allSucceeded)
                {
-                  if (!String.IsNullOrWhiteSpace(reactionText))
+                  if (String.IsNullOrWhiteSpace(reactionText))
                   {
-                     // Because of this player option, we are blocked and can't shift to the next node.
-                     description.Continuation = continuation;
-                     var reaction = new Description.Reaction();
-                     reaction.Text = reactionText;
-                     reaction.ArrowName = arrowName;
-                     description.Reactions.Add(reaction);
-                  }
-                  else
-                  {
+                     // make this call the shift function at some point...
                      var newContinuation = new Continuation();
                      newContinuation.IsStart = false;
                      newContinuation.NodeName = StoryTags.FirstWithNameAndLabel(arrowName, "target");
                      newContinuation.Variables = variables;
-                     description.Text += EvaluateItemText(newContinuation.NodeName, variables, true) + "\r\n";
-                     description.Continuation = newContinuation;
-                     foreach (var newNodeArrowName in StoryTags.AllWithNameAndLabel(newContinuation.NodeName, "arrow"))
-                     {
-                        allSucceeded = true;
-                        reactionText = "";
-                        SequenceObjects[newNodeArrowName].Traverse((@object) =>
-                        {
-                           switch (@object)
-                           {
-                              case WhenObject whenObject:
-                                 if (!TryRecursively(0, whenObject.NotExpressions, variables))
-                                 {
-                                    allSucceeded = false;
-                                 }
-                                 break;
-                              case TextObject textObject:
-                                 reactionText += textObject.Text;
-                                 break;
-                              case SubstitutionObject substitutionObject:
-                                 reactionText += EvaluateLabelListFirst(substitutionObject.Expression.LeftName, substitutionObject.Expression.LeftLabels, variables);
-                                 break;
-                              case IfObject ifObject:
-                                 return TryRecursively(0, ifObject.NotExpressions, variables);
-                              case SpecialObject specialObject:
-                                 reactionText += GetSpecialText(specialObject.Id);
-                                 break;
-                           }
-                           return true;
-                        });
-                        if (allSucceeded && !String.IsNullOrWhiteSpace(reactionText))
-                        {
-                           var newReaction = new Description.Reaction();
-                           newReaction.ArrowName = newNodeArrowName;
-                           newReaction.Text = reactionText;
-                           description.Reactions.Add(newReaction);
-                        }
-                     }
+                     EvaluateItemText(newContinuation.NodeName, variables, true);
                      if (!continuation.IsStart)
                      {
                         removedContinuations.Add(continuation);
                      }
                      addedContinuations.Add(newContinuation);
+                     resultContinuation = newContinuation;
                      // This assumes there's only one arrow for auto-move.
                      break;
                   }
                }
+            }
+            if (arrowCount == 0)
+            {
+               resultContinuation = continuation;
+            }
+            if (resultContinuation != null)
+            {
+               description = BuildDescription(resultContinuation);
+            }
+            if (arrowCount == 0)
+            {
+               removedContinuations.Add(continuation);
             }
          }
          Continuations.RemoveAll(continuation => removedContinuations.Contains(continuation));
@@ -823,6 +847,7 @@ namespace Game
                         break;
                      }
                      var rightValue = MapTags.FirstWithNameAndLabel(rightName, rightLabel);
+                     MapTags.Remove(leftName, leftLabel);
                      MapTags.Add(leftName, leftLabel, rightValue);
                   }
                   break;

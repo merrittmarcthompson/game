@@ -178,6 +178,7 @@ namespace Game
          var storyArea = (ItemsControl)FindName("StoryArea");
          var storyBlock = new TextBlock();
          SetupTextBlock(storyBlock, description.Text, false);
+         storyArea.Items.Clear();
          storyArea.Items.Add(storyBlock);
          var reactionListBox = (ListBox)FindName("ReactionListBox");
          reactionListBox.Items.Clear();
