@@ -471,209 +471,144 @@ namespace Game
 
          MapTags.Merge(GetStageTagsForNodes());
       }
-      /* Let's imagine there is no player, but there is this:
-            - A hungry guy sitting next to a counter on which there is a plate of food.
-            - A guy behind the counter.
-         There are also two stories:
-            #1 When a guy is next to a plate of food and he's hungry, he should eat the food and make the plate empty.
-            #2 When a guy is behind a counter and there's an empty plate on it, he should pick it up and put it in the dishwasher.
-         The program should:
-            - Scan all the stories.
-            - It should find that the first story is satisfied, so it should make the plate empty. 
-            - It should then scan all the stories again.
-            - This time it finds that the second story is satisfied, so it should have the counter man pick up the plate and clean it.
-         This should happen over and over. That's the whole program. 
-         There some questions, though:
-            - How does the player see these things happen?
-            - How does this keep from running on and on quickly, without any breaks for the player to do things?
-            - How does player reaction selection relate to this?
-         Seems like after every scan, the program should present the new situation, ex.:
-            - Scan all the stories.
-            - It should find that the first story is satisfied, so it should make the plate empty. 
-          >>- It should stop and show the text for the "man eats food" node.
-            - It should then scan all the stories again.
-            - This time it finds that the second story is satisfied, so it should have the counter man pick up the plate and clean it.
-          >>- It should stop and show the text for the "counter man picks up plate and cleans it" node.
-         Seems like there should be a player "do nothing" option that allows you to let a cycle of these things happen without doing anything.
-         That answers the first two questions.
-         Let's imagine that the player is the hungry man. Let's say he walks away.
-         That makes the 'move' story run and then it stops and shows you where you are now. That fits fine in our loop scheme.
-         Let's imagine that the player is the hungry man. He can eat the food if he chooses. Or maybe he's on a diet. It's up to him.
-         In any case, he has one option: "Eat the food". It's implicit that he can walk away via the stage UI.
-         This is the same story as #1 above, except that there's a player option attached.
-         Maybe it's like this:
-            - Scan all the stories.
-            - It should find that the first story COULD BE satisfied IF THE PLAYER CHOSE THE OPTION.
-            - Instead of showing the "man eats food" text, it stops and shows the option and its parent node.
-            - Let's say you don't pick it. You pick "do nothing".
-            - It should then scan all the stories again.
-            - It again finds that the first story could be satisfied if you choose.
-            - It stops and shows the option again.
-            - Finally you pick the option.
-            - Now the first story is satisfied and it makes the plate empty.
-            - It stops and shows the text for "man eats food".
-         So the loop is like this:
-            Scan all the stories:
-               If the story has no user option and the 'when' can be satisfied:
-                  Execute the target node and move to the target node.
-               Else if it has a user option and the 'when' can be satisfied:
-                  Show the current node.
-                  Show the reactions.
-            Show all the target nodes and wait for the user to select something.
-            If there are reactions and the user picks one:
-               Execute the target node and move to the target node.
-            Go back to the start.
 
-         So we've got an UpdateContinuations subroutine that does this:
-            For every continuation point:
-               if it has no user option and the 'when' can be satisfied:
-                  Execute the target node and move to the target node.
-               Else if it has a user option and the 'when' can be satisfied:
-                  Add it to a list of nodes to display and their reactions.
-            Return the list of nodes to display and their reactions.
-         We call that from the UI loop. It then displays the nodes and reactions.
-         If the UI detects the choice of a reaction it calls this ShiftContinuation subroutine, which is also called from the one above:
-            Execute the target node and move to the target node.
-         We don't keep reactions in the continuations. There are separate "stuff to display" objects for that.
-         */
-
-      public static void ShiftContinuationByChoice(
-         string chosenArrowName,
-         Continuation continuation)
+      private static (bool, string) EvaluateStoryArrow(
+         string arrowName,
+         Dictionary<string, string> variables)
       {
-         var newContinuation = new Continuation();
-         newContinuation.IsStart = false;
-         newContinuation.NodeName = StoryTags.FirstWithNameAndLabel(chosenArrowName, "target");
-         newContinuation.Variables = continuation.Variables;
-         EvaluateItemText(newContinuation.NodeName, newContinuation.Variables, true);
-         if (!continuation.IsStart)
+         // When there are no when directives, it always succeeds.
+         var allSucceeded = true;
+         var optionText = "";
+         SequenceObjects[arrowName].Traverse((@object) =>
          {
-            Continuations.Remove(continuation);
-         }
-         else
-         {
-            continuation.Variables = new Dictionary<string, string>();
-         }
-         Continuations.Add(newContinuation);
+            switch (@object)
+            {
+               case WhenObject whenObject:
+                  if (!TryRecursively(0, whenObject.NotExpressions, variables))
+                  {
+                     allSucceeded = false;
+                  }
+                  break;
+               case TextObject textObject:
+                  optionText += textObject.Text;
+                  break;
+               case SubstitutionObject substitutionObject:
+                  optionText += EvaluateLabelListFirst(substitutionObject.Expression.LeftName, substitutionObject.Expression.LeftLabels, variables);
+                  break;
+               case IfObject ifObject:
+                  return TryRecursively(0, ifObject.NotExpressions, variables);
+               case SpecialObject specialObject:
+                  optionText += GetSpecialText(specialObject.Id);
+                  break;
+            }
+            return true;
+         });
+         return (allSucceeded, optionText);
       }
 
-      private static Description BuildDescription(
+      private static Description AddToDescription(
+         Description description,
          Continuation continuation)
       {
-         var description = new Description();
-         description.Continuation = continuation;
          description.Text += EvaluateItemText(continuation.NodeName, continuation.Variables, true) + "\r\n";
-         foreach (var newNodeArrowName in StoryTags.AllWithNameAndLabel(continuation.NodeName, "arrow"))
+         foreach (var arrowName in StoryTags.AllWithNameAndLabel(continuation.NodeName, "arrow"))
          {
-            var allSucceeded = true;
-            var reactionText = "";
-            SequenceObjects[newNodeArrowName].Traverse((@object) =>
+            (var allSucceeded, var optionText) = EvaluateStoryArrow(arrowName, continuation.Variables);
+            if (allSucceeded && !String.IsNullOrWhiteSpace(optionText))
             {
-               switch (@object)
-               {
-                  case WhenObject whenObject:
-                     if (!TryRecursively(0, whenObject.NotExpressions, continuation.Variables))
-                     {
-                        allSucceeded = false;
-                     }
-                     break;
-                  case TextObject textObject:
-                     reactionText += textObject.Text;
-                     break;
-                  case SubstitutionObject substitutionObject:
-                     reactionText += EvaluateLabelListFirst(substitutionObject.Expression.LeftName, substitutionObject.Expression.LeftLabels, continuation.Variables);
-                     break;
-                  case IfObject ifObject:
-                     return TryRecursively(0, ifObject.NotExpressions, continuation.Variables);
-                  case SpecialObject specialObject:
-                     reactionText += GetSpecialText(specialObject.Id);
-                     break;
-               }
-               return true;
-            });
-            if (allSucceeded && !String.IsNullOrWhiteSpace(reactionText))
-            {
-               var newReaction = new Description.Reaction();
-               newReaction.ArrowName = newNodeArrowName;
-               newReaction.Text = reactionText;
-               description.Reactions.Add(newReaction);
+               var newOption = new Description.Option();
+               newOption.ArrowName = arrowName;
+               newOption.Text = optionText;
+               newOption.Continuation = continuation;
+               description.Options.Add(newOption);
             }
          }
          return description;
       }
 
+      private static (Continuation, Continuation) ShiftContinuationToArrowTarget(
+         string arrowName,
+         Continuation continuation)
+      {
+         Continuation removedContinuation = null;
+         var newContinuation = new Continuation();
+         newContinuation.IsStart = false;
+         newContinuation.NodeName = StoryTags.FirstWithNameAndLabel(arrowName, "target");
+         newContinuation.Variables = continuation.Variables;
+         EvaluateItemText(newContinuation.NodeName, newContinuation.Variables, true);
+         if (continuation.IsStart)
+         {
+            // Keep it, but clear it for its next use.
+            continuation.Variables = new Dictionary<string, string>();
+         }
+         else
+         {
+            removedContinuation = continuation;
+         }
+         return (newContinuation, removedContinuation);
+      }
+
+      public static void ShiftContinuationByChoice(
+         Description.Option option)
+      {
+         (var newContinuation, var removedContinuation) = ShiftContinuationToArrowTarget(option.ArrowName, option.Continuation);
+         if (removedContinuation != null)
+         {
+            Continuations.Remove(option.Continuation);
+         }
+         Continuations.Add(newContinuation);
+      }
+
+      private static string SelectBestArrow(
+         Dictionary<string, string> reasons)
+      {
+         // Put cool algorithm here when we figure it out.
+         return reasons.First().Key;
+      }
+
       public static Description UpdateContinuations()
       {
          var description = new Description();
-         description.Text = "";
          var removedContinuations = new List<Continuation>();
          var addedContinuations = new List<Continuation>();
+         // Go over every possible description. We are going to ignore some or all of these.
          foreach (var continuation in Continuations)
          {
-            Continuation resultContinuation = null;
+            var arrowReasons = new Dictionary<string, string>();
+            var continuationHasPlayerOptions = false;
             var arrowCount = 0;
             foreach (var arrowName in StoryTags.AllWithNameAndLabel(continuation.NodeName, "arrow"))
             {
                ++arrowCount;
-               // Continue with any previous variables from earlier in the story.
-               var variables = continuation.Variables;
-               // If there are no when directives, it always succeeds.
-               var allSucceeded = true;
-               var reactionText = "";
-               SequenceObjects[arrowName].Traverse((@object) =>
+               (var allSucceeded, var optionText) = EvaluateStoryArrow(arrowName, continuation.Variables);
+               if (!allSucceeded)
+                  continue; // to next arrow
+               // We always have to add the arrow, even if there was no reason specified for the arrow due to '&& !arrowReasons.Any()' condition below.
+               arrowReasons.Add(arrowName, "put the real reason here later when we've figured that out");
+               if (!String.IsNullOrWhiteSpace(optionText))
                {
-                  switch (@object)
-                  {
-                     case WhenObject whenObject:
-                        // We allow multiple when directives. Just do them in order. Accumulate all the variables together.
-                        if (!TryRecursively(0, whenObject.NotExpressions, variables))
-                        {
-                           allSucceeded = false;
-                        }
-                        break;
-                     case TextObject textObject:
-                        reactionText += textObject.Text;
-                        break;
-                     case SubstitutionObject substitutionObject:
-                        reactionText += EvaluateLabelListFirst(substitutionObject.Expression.LeftName, substitutionObject.Expression.LeftLabels, variables);
-                        break;
-                     case IfObject ifObject:
-                        return TryRecursively(0, ifObject.NotExpressions, variables);
-                     case SpecialObject specialObject:
-                        reactionText += GetSpecialText(specialObject.Id);
-                        break;
-                  }
-                  return true;
-               });
-               if (allSucceeded)
-               {
-                  if (String.IsNullOrWhiteSpace(reactionText))
-                  {
-                     // make this call the shift function at some point...
-                     var newContinuation = new Continuation();
-                     newContinuation.IsStart = false;
-                     newContinuation.NodeName = StoryTags.FirstWithNameAndLabel(arrowName, "target");
-                     newContinuation.Variables = variables;
-                     EvaluateItemText(newContinuation.NodeName, variables, true);
-                     if (!continuation.IsStart)
-                     {
-                        removedContinuations.Add(continuation);
-                     }
-                     addedContinuations.Add(newContinuation);
-                     resultContinuation = newContinuation;
-                     // This assumes there's only one arrow for auto-move.
-                     break;
-                  }
+                  continuationHasPlayerOptions = true;
                }
             }
-            if (arrowCount == 0)
+            if (arrowCount > 0 && !arrowReasons.Any())
             {
-               resultContinuation = continuation;
+               // No successful arrows means there's no way to move forward with this story right now.
+               continue; // to next continuation
             }
-            if (resultContinuation != null)
+            var describedContinuation = continuation;
+            if (arrowCount > 0 && !continuationHasPlayerOptions)
             {
-               description = BuildDescription(resultContinuation);
+               // There are no player options so we can move forward automatically.
+               var bestArrowName = SelectBestArrow(arrowReasons);
+               (var newContinuation, var removedContinuation) = ShiftContinuationToArrowTarget(bestArrowName, continuation);
+               if (removedContinuation != null)
+               {
+                  removedContinuations.Add(continuation);
+               }
+               addedContinuations.Add(newContinuation);
+               describedContinuation = newContinuation;
             }
+            AddToDescription(description, describedContinuation);
             if (arrowCount == 0)
             {
                removedContinuations.Add(continuation);

@@ -121,8 +121,8 @@ namespace Game
          if (panel == null)
             return;
 
-         (var description, var reaction) = (ValueTuple<Description, Description.Reaction>)panel.Tag;
-         Engine.ShiftContinuationByChoice(reaction.ArrowName, description.Continuation);
+         var option = panel.Tag as Description.Option;
+         Engine.ShiftContinuationByChoice(option);
 
          // Show the current stage and stories.
          SetupScreen();
@@ -182,11 +182,11 @@ namespace Game
          storyArea.Items.Add(storyBlock);
          var reactionListBox = (ListBox)FindName("ReactionListBox");
          reactionListBox.Items.Clear();
-         foreach (var reaction in description.Reactions)
+         foreach (var reaction in description.Options)
          {
             var item = new TextBlock();
             SetupTextBlock(item, reaction.Text, true);
-            AddToListBox(reactionListBox, item, (description, reaction));
+            AddToListBox(reactionListBox, item, reaction);
          }
       }
 
