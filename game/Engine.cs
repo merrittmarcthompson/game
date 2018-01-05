@@ -18,10 +18,10 @@ namespace Game
         string sourceText)
       {
          // Compile the text to an object sequence.
-         var tokens = Static.SourceTextToTokens(sourceText);
+         var tokens = Transform.SourceTextToTokens(sourceText);
          if (tokens == null)
             return null;
-         return Static.TokensToObjects(tokens);
+         return Transform.TokensToObjects(tokens);
       }
 
       private static void AddToSequenceObjects(
@@ -38,24 +38,17 @@ namespace Game
          }
       }
 
-      private static void PreprocessStory(
-        Tags fileBaseTags)
+      private static void CreateStartingContinuations(
+        Tags storyFileTags)
       {
          // Find all the story nodes where stories can start for this source file. Make a continuation for each one. That means that the player can "continue" from the beginning of that story. Later, as they play through a story, we will add more continuation nodes to represent their position in the story.
-         foreach ((var nodeName, _) in fileBaseTags.AllWithLabel("isNode"))
+         foreach ((var nodeName, _) in storyFileTags.AllWithLabel("start"))
          {
-            var sequenceObject = SequenceObjects[nodeName];
-            sequenceObject.Traverse((@object) =>
-            {
-               // Add continuations for nodes with [start].
-               if (!(@object is StartObject startObject))
-                  return true;
-               var continuation = new Continuation();
-               continuation.NodeName = nodeName;
-               continuation.IsStart = true;
-               Continuations.Add(continuation);
-               return true;
-            });
+            // Add continuations for nodes tagged with start.
+            var continuation = new Continuation();
+            continuation.NodeName = nodeName;
+            continuation.IsStart = true;
+            Continuations.Add(continuation);
          }
       }
 
@@ -121,7 +114,7 @@ namespace Game
          }
       }
 
-      private static Tags PreprocessMap(
+      private static Tags TagItems(
          Tags fileBaseTags)
       {
          // Execute the object text for maps.
@@ -130,7 +123,33 @@ namespace Game
          {
             var sequenceObject = SequenceObjects[itemName];
 
-            // Next make all the implicit tag names (ex. [if isLarge]) explicit (ex. [if map_test_n1.isLarge]).
+            // Execute all the tag directives. This is more limited than the full tagging done in story nodes.
+            sequenceObject.Traverse((@object) =>
+            {
+               if (!(@object is TagObject tagObject))
+                  return true;
+               // [untag label] is just a comment in a map file. There's nothing in the tags to start with, so everything is untagged.
+               if (tagObject.Untag)
+                  return true;
+               // Only do tags with no explicit name, i.e. ones that tag the object itself.
+               if (tagObject.Expression.LeftName != "")
+                  return true;
+               if (tagObject.Expression.LeftLabels.Count != 1)
+               {
+                  Log.Fail("expected only one label in a item tag specification");
+               }
+               if (tagObject.Expression.RightLabels.Count > 0)
+               {
+                  fileNewTags.Add(itemName, tagObject.Expression.LeftLabels[0], tagObject.Expression.RightLabels[0]);
+               }
+               else
+               {
+                  fileNewTags.Add(itemName, tagObject.Expression.LeftLabels[0], "");
+               }
+               return true;
+            });
+
+            // Make all the implicit tag names (ex. [if isLarge]) explicit (ex. [if map_test_n1.isLarge]).
             sequenceObject.Traverse((@object) =>
             {
                switch (@object)
@@ -160,29 +179,6 @@ namespace Game
                         }
                      }
                      break;
-               }
-               return true;
-            });
-
-            // Next execute all the tag directives. This is more limited than the full tagging done in story nodes.
-            sequenceObject.Traverse((@object) =>
-            {
-               if (!(@object is TagObject tagObject))
-                  return true;
-               // [untag name.label] is just a comment in a map file. There's nothing in the tags to start with, so everything is untagged.
-               if (tagObject.Untag)
-                  return true;
-               if (tagObject.Expression.LeftLabels.Count != 1)
-               {
-                  Log.Fail("expected only one label in a map tag specification");
-               }
-               if (tagObject.Expression.RightLabels.Count > 0)
-               {
-                  fileNewTags.Add(tagObject.Expression.LeftName, tagObject.Expression.LeftLabels[0], tagObject.Expression.RightLabels[0]);
-               }
-               else
-               {
-                  fileNewTags.Add(tagObject.Expression.LeftName, tagObject.Expression.LeftLabels[0], "");
                }
                return true;
             });
@@ -449,7 +445,7 @@ namespace Game
             string graphml = System.IO.File.ReadAllText(sourcePath);
 
             // Translate the graphml boxes and arrows to tags.
-            var fileBaseTags = Static.GraphmlToTags(graphml, Path.GetFileNameWithoutExtension(sourceName));
+            var fileBaseTags = Transform.GraphmlToTags(graphml, Path.GetFileNameWithoutExtension(sourceName));
 
             // Compile the directives embedded in the source text of each box and arrow to create a list of object 'text' tags and a SequenceObjects table that relates them to the actual object code.
             AddToSequenceObjects(fileBaseTags);
@@ -458,14 +454,16 @@ namespace Game
             if (isMap)
             {
                RenameBaseTags(fileBaseTags);
-               fileNewTags = PreprocessMap(fileBaseTags);
+               fileNewTags = TagItems(fileBaseTags);
                MapTags.Merge(fileBaseTags);
                MapTags.Merge(fileNewTags);
             }
             else
             {
-               PreprocessStory(fileBaseTags);
+               fileNewTags = TagItems(fileBaseTags);
+               CreateStartingContinuations(fileNewTags);
                StoryTags.Merge(fileBaseTags);
+               StoryTags.Merge(fileNewTags);
             }
          }
 
@@ -728,9 +726,9 @@ namespace Game
       }
 
       public static string EvaluateItemText(
-     string itemName,
-     Dictionary<string, string> variables,
-     bool executeTags)
+        string itemName,
+        Dictionary<string, string> variables,
+        bool executeTags)
       {
          // The item is a node or arrow.
          if (variables == null)

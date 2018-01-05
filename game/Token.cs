@@ -15,7 +15,6 @@
       public static TokenType Name = new TokenType("'name'");
       public static TokenType Not = new TokenType("'not'");
       public static TokenType Or = new TokenType("'or'");
-      public static TokenType Start = new TokenType("'start'");
       public static TokenType Tag = new TokenType("'tag'");
       public static TokenType Untag = new TokenType("'untag'");
       public static TokenType When = new TokenType("'when'");

@@ -1,6 +1,6 @@
 ﻿namespace Game
 {
-   public static partial class Static
+   public static partial class Transform
    {
       public static string RemoveExtraBlanks(
         string text)

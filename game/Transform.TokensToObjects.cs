@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Game
 {
-   public static partial class Static
+   public static partial class Transform
    {
       public static SequenceObject TokensToObjects(
         List<Token> tokens)
@@ -248,11 +248,6 @@ namespace Game
                      Log.Fail(Expected(Token.Name.Name, GottenToken));
                   }
                   result.Objects.Add(new NameObject(GottenToken.Value));
-               }
-               else if (GottenToken.Type == Token.Start)
-               {
-                  // [start]
-                  result.Objects.Add(new StartObject());
                }
                else if (GottenToken.Type == Token.Tag || GottenToken.Type == Token.Untag)
                {

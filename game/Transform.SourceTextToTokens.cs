@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Game
 {
-   public static partial class Static
+   public static partial class Transform
    {
       public static List<Token> SourceTextToTokens(
         string sourceText)
@@ -254,10 +254,6 @@ namespace Game
                            else if (id == "name")
                            {
                               result.Add(new Token(Token.Name, id, lineNumber));
-                           }
-                           else if (id == "start")
-                           {
-                              result.Add(new Token(Token.Start, id, lineNumber));
                            }
                            else if (specialIds.Contains(id))
                            {

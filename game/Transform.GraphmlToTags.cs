@@ -4,7 +4,7 @@ using System.Xml.Linq;
 
 namespace Game
 {
-   public static partial class Static
+   public static partial class Transform
    {
       // Convert map.*.graphml-type content into a dictionary of locations. The keys are the graphml node IDs.
       // The overall structure of the graphml is like this:
@@ -62,7 +62,7 @@ namespace Game
          string BuildId(
            string graphmlId)
          {
-            return Static.MakeIntoId(uniquifier + "_" + graphmlId);
+            return Transform.IntoId(uniquifier + "_" + graphmlId);
          }
 
          XNamespace g = "http://graphml.graphdrawing.org/xmlns";

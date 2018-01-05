@@ -2,10 +2,10 @@
 
 namespace Game
 {
-   public static partial class Static
+   public static partial class Transform
    {
       // ex. change "map.boneyard-simplified" into "map_boneyard_simplified".
-      public static string MakeIntoId(
+      public static string IntoId(
         string text)
       {
          var result = "";

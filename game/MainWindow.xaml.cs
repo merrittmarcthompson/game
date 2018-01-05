@@ -17,8 +17,8 @@ namespace Game
         bool isListItem)
       {
          block.Inlines.Clear();
-         text = Static.RemoveExtraBlanks(text);
-         text = Static.RemoveBlanksAfterNewLines(text);
+         text = Transform.RemoveExtraBlanks(text);
+         text = Transform.RemoveBlanksAfterNewLines(text);
          var accumulator = "";
          for (var i = 0; i < text.Length;)
          {
