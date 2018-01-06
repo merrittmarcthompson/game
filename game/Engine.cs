@@ -381,6 +381,33 @@ namespace Game
          MapTags.Remove(itemName, itemLabel);
       }
 
+      public static string GetHeroStageDescription()
+      {
+         var heroStage = Engine.GetTag("hero", "stage");
+         if (heroStage == null)
+         {
+            Log.Fail("Hero is not on any stage");
+         }
+         return EvaluateItemText(heroStage, null, false);
+      }
+
+      public static IEnumerable<(string nodeText, string targetName)> HeroStageContents()
+      {
+         var heroStage = Engine.GetTag("hero", "stage");
+         if (heroStage == null)
+         {
+            Log.Fail("Hero is not on any stage");
+         }
+         foreach (var name in MapTags.AllWithLabelAndValue("stage", heroStage))
+         {
+            var description = EvaluateItemText(name, null, false);
+            if (String.IsNullOrWhiteSpace(description))
+               continue;
+            yield return (description, name);
+         }
+
+      }
+
       private static string GetSpecialText(
          string specialId)
       {

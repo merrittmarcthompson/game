@@ -155,26 +155,28 @@ namespace Game
 
          var description = Engine.UpdateContinuations();
 
-         // Display the current stage, which may be different this round based on changes that occurred during the shift, i.e. tag changes.
          var title = (TextBlock)FindName("StageListTitleText");
-         var heroStage = Engine.GetTag("hero", "stage");
-         if (heroStage == null)
-         {
-            Log.Fail("Hero is not on any stage");
-         }
+         SetupTextBlock(title, Engine.GetHeroStageDescription(), false);
 
-         SetupTextBlock(title, Engine.EvaluateItemText(heroStage, null, false), false);
+//         SetupTextBlock(title, Engine.EvaluateItemText(heroStage, null, false), false);
 
          var stageListBox = (ListBox)FindName("StageListBox");
          stageListBox.Items.Clear();
-         foreach (var arrowName in Engine.TagsFor(heroStage, "arrow"))
+         foreach ((var nodeText, var targetName) in Engine.HeroStageContents())
+         {
+            var block = new TextBlock();
+            SetupTextBlock(block, nodeText, true);
+            AddToListBox(stageListBox, block, targetName);
+         }
+         /*
+            foreach (var arrowName in Engine.TagsFor(heroStage, "arrow"))
          {
             var item = new TextBlock();
             SetupTextBlock(item, Engine.EvaluateItemText(arrowName, null, false), true);
             string targetNode = Engine.GetTag(arrowName, "target");
             AddToListBox(stageListBox, item, targetNode);
          }
-
+         */
          var storyArea = (ItemsControl)FindName("StoryArea");
          var storyBlock = new TextBlock();
          SetupTextBlock(storyBlock, description.Text, false);

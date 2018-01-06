@@ -52,6 +52,16 @@ namespace Game
          Collection.Add(new Tag(name, label, value ?? ""));
       }
 
+      public IEnumerable<string> AllWithLabelAndValue(
+         string label,
+         string value)
+      {
+         return
+            from tag in Collection
+            where tag.Label == label && tag.Value == value
+            select tag.Name;
+      }
+
       public IEnumerable<string> AllWithNameAndLabel(
         string name,
         string label)
