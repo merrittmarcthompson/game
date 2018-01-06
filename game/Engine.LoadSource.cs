@@ -34,7 +34,7 @@ namespace Game
          }
 
          void RenameBaseTags(
-         Tags fileBaseTags)
+            Tags fileBaseTags)
          {
             // First make a list of all the tags that have to be renamed.
             var oldToNewList = new Dictionary<string, string>();

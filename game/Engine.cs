@@ -10,8 +10,7 @@ namespace Game
       private static Tags MapTags = new Tags();
       private static Tags StoryTags = new Tags();
       private static Dictionary<string, SequenceObject> SequenceObjects = new Dictionary<string, SequenceObject>();
-
-      public static List<Continuation> Continuations = new List<Continuation>();
+      private static List<Continuation> Continuations = new List<Continuation>();
 
       private static bool IsVariable(
         string name)

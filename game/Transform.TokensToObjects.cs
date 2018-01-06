@@ -286,7 +286,16 @@ namespace Game
          }
 
          // Start here
-         return GetSequence();
+         var sequenceObject = GetSequence();
+         if (sequenceObject == null)
+            return null;
+         GetToken();
+         if (GottenToken.Type != Token.EndOfSourceText)
+         {
+            Log.Fail(Expected(Token.EndOfSourceText.Name, GottenToken));
+            return null;
+         }
+         return sequenceObject;
       }
    }
 }
