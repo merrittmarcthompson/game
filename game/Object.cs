@@ -15,20 +15,18 @@ namespace Game
    public class SequenceObject : Object
    {
       // This is the sequence of objects.
-      public List<Object> Objects { get; set; }
-
-      public SequenceObject()
-      {
-         Objects = new List<Object>();
-      }
+      public List<Object> Objects { get; set; } = new List<Object>();
+      public string SourceText = null;
 
       public override void Traverse(
         Func<Object, bool> examine)
       {
+         Log.SetSourceText(SourceText);
          foreach (var @object in Objects)
          {
             @object.Traverse(examine);
          }
+         Log.SetSourceText(null);
       }
 
       public override string ToString()

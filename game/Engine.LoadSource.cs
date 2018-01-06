@@ -16,7 +16,7 @@ namespace Game
             var tokens = Transform.SourceTextToTokens(sourceText);
             if (tokens == null)
                return null;
-            return Transform.TokensToObjects(tokens);
+            return Transform.TokensToObjects(tokens, sourceText);
          }
 
          void AddTextsForSourceTexts(
@@ -183,12 +183,12 @@ namespace Game
          {
             Tags newTags = new Tags();
             // Mark items for what stage they are on. Only things that are directly pointed to by the stage are on the stage. If a person is on the stage and there's change in his pocket, the change isn't on the stage. But if he takes the money out of his pocket and drops it, the money is now on the stage (that would be done by the 'drop' story).
-            foreach ((var nodeName, var nodeValue) in MapTags.AllWithLabel("isStage"))
+            foreach ((var nodeName, var nodeValue) in Tags.AllWithLabel("isStage"))
             {
-               foreach (var arrowName in MapTags.AllWithNameAndLabel(nodeName, "arrow"))
+               foreach (var arrowName in Tags.AllWithNameAndLabel(nodeName, "arrow"))
                {
-                  var subordinateNode = MapTags.FirstWithNameAndLabel(arrowName as string, "target");
-                  if (MapTags.FirstWithNameAndLabel(subordinateNode as string, "isStage") == null)
+                  var subordinateNode = Tags.FirstWithNameAndLabel(arrowName as string, "target");
+                  if (Tags.FirstWithNameAndLabel(subordinateNode as string, "isStage") == null)
                   {
                      newTags.Add(subordinateNode as string, "stage", nodeName);
                   }
@@ -254,19 +254,17 @@ namespace Game
             {
                RenameBaseTags(fileBaseTags);
                fileNewTags = TagItems(fileBaseTags);
-               MapTags.Merge(fileBaseTags);
-               MapTags.Merge(fileNewTags);
             }
             else
             {
                fileNewTags = TagItems(fileBaseTags);
                CreateStartingContinuations(fileNewTags);
-               StoryTags.Merge(fileBaseTags);
-               StoryTags.Merge(fileNewTags);
             }
+            Tags.Merge(fileBaseTags);
+            Tags.Merge(fileNewTags);
          }
 
-         MapTags.Merge(GetStageTagsForNodes());
+         Tags.Merge(GetStageTagsForNodes());
       }
    }
 }

@@ -6,7 +6,8 @@ namespace Game
    public static partial class Transform
    {
       public static SequenceObject TokensToObjects(
-        List<Token> tokens)
+        List<Token> tokens,
+        string sourceText)
       {
          Token PushedToken = null;
          Token GottenToken;
@@ -315,6 +316,7 @@ namespace Game
             Log.Fail(Expected(Token.EndOfSourceText.Name, GottenToken));
             return null;
          }
+         sequenceObject.SourceText = sourceText;
          return sequenceObject;
       }
    }

@@ -7,8 +7,7 @@ namespace Game
    public static partial class Engine
    {
       // It's all about these global variables.
-      private static Tags MapTags = new Tags();
-      private static Tags StoryTags = new Tags();
+      private static Tags Tags = new Tags();
       private static List<Continuation> Continuations = new List<Continuation>();
 
       private static bool IsVariable(
@@ -21,6 +20,10 @@ namespace Game
          object value,
          Dictionary<string, object> variables)
       {
+         if (value == null)
+         {
+            Log.Fail("value is null");
+         }
          if (value is string)
             return value as string;
          return EvaluateText(value, variables, false);
@@ -54,7 +57,7 @@ namespace Game
             if (label == labels[labels.Count() - 1])
                break;
             // Otherwise, get the value make it the next name.
-            lastValue = MapTags.FirstWithNameAndLabel(name, label);
+            lastValue = Tags.FirstWithNameAndLabel(name, label);
             // If we can't find any part along the way, fail. 'null' means that it was never tagged, which is different from being tagged with no value (ex. [tag hero.isShort]), which has the value "".
             if (lastValue == null)
                return (null, null);
@@ -72,9 +75,10 @@ namespace Game
          (var lastName, var lastLabel) = EvaluateLabelListGetLastNameAndLabel(name, labels, variables);
          if (lastName != null)
          {
-            return MapTags.AllWithNameAndLabel(lastName, lastLabel);
+            // Don't convert this to strings here. Do that as late as possible to make sure there are no old values in them.
+            return Tags.AllWithNameAndLabel(lastName, lastLabel);
          }
-         return Enumerable.Empty<string>();
+         return Enumerable.Empty<object>();
       }
 
       private static object EvaluateLabelListFirst(
@@ -85,7 +89,8 @@ namespace Game
          (var lastName, var lastLabel) = EvaluateLabelListGetLastNameAndLabel(name, labels, variables);
          if (lastName == null)
             return null;
-         return MapTags.FirstWithNameAndLabel(lastName, lastLabel);
+         // Don't convert this to a string here. Do that as late as possible to make sure there are no old values in it.
+         return Tags.FirstWithNameAndLabel(lastName, lastLabel);
       }
 
       private static bool EvaluateExpression(
@@ -103,7 +108,7 @@ namespace Game
 
          // Otherwise, compare to right side.
          var rightValue = EvaluateLabelListFirst(notExpression.Expression.RightName, notExpression.Expression.RightLabels, variables);
-         return leftValue == rightValue != notExpression.Not;
+         return ValueString(leftValue, variables) == ValueString(rightValue, variables) != notExpression.Not;
       }
 
       private static bool TryRecursively(
@@ -160,7 +165,7 @@ namespace Game
             // Iteration cases are followed by labels to test:
             if (notExpression.Expression.LeftLabels.Any())
             {
-               foreach ((var candidateName, var value) in MapTags.AllWithLabel("isNode"))
+               foreach ((var candidateName, var value) in Tags.AllWithLabel("isNode"))
                {
                   // Set the variable to each node name in the tags, then evaluate the whole expression.
                   variables[notExpression.Expression.LeftName] = candidateName;
@@ -214,7 +219,7 @@ namespace Game
          // When there are no when directives, it always succeeds.
          var allSucceeded = true;
          var optionText = "";
-         var arrowText = StoryTags.FirstWithNameAndLabel(arrowName, "text");
+         var arrowText = Tags.FirstWithNameAndLabel(arrowName, "text");
          (arrowText as SequenceObject).Traverse((@object) =>
          {
             switch (@object)
@@ -229,7 +234,7 @@ namespace Game
                   optionText += textObject.Text;
                   break;
                case SubstitutionObject substitutionObject:
-                  optionText += EvaluateLabelListFirst(substitutionObject.Expression.LeftName, substitutionObject.Expression.LeftLabels, variables);
+                  optionText += ValueString(EvaluateLabelListFirst(substitutionObject.Expression.LeftName, substitutionObject.Expression.LeftLabels, variables), variables);
                   break;
                case IfObject ifObject:
                   return TryRecursively(0, ifObject.NotExpressions, variables);
@@ -246,8 +251,8 @@ namespace Game
          Description description,
          Continuation continuation)
       {
-         description.Text += EvaluateText(continuation.NodeName, continuation.Variables, true) + "\r\n";
-         foreach (var arrowNameObject in StoryTags.AllWithNameAndLabel(continuation.NodeName, "arrow"))
+         description.Text += EvaluateItemText(continuation.NodeName, continuation.Variables, true) + "\r\n";
+         foreach (var arrowNameObject in Tags.AllWithNameAndLabel(continuation.NodeName, "arrow"))
          {
             var arrowName = ValueString(arrowNameObject, continuation.Variables);
             (var allSucceeded, var optionText) = EvaluateStoryArrow(arrowName, continuation.Variables);
@@ -270,9 +275,9 @@ namespace Game
          Continuation removedContinuation = null;
          var newContinuation = new Continuation();
          newContinuation.IsStart = false;
-         newContinuation.NodeName = ValueString(StoryTags.FirstWithNameAndLabel(arrowName, "target"), continuation.Variables);
+         newContinuation.NodeName = ValueString(Tags.FirstWithNameAndLabel(arrowName, "target"), continuation.Variables);
          newContinuation.Variables = continuation.Variables;
-         EvaluateText(newContinuation.NodeName, newContinuation.Variables, true);
+         EvaluateItemText(newContinuation.NodeName, newContinuation.Variables, true);
          if (continuation.IsStart)
          {
             // Keep it, but clear it for its next use.
@@ -314,7 +319,7 @@ namespace Game
             var arrowReasons = new Dictionary<string, string>();
             var continuationHasPlayerOptions = false;
             var arrowCount = 0;
-            foreach (var arrowNameObject in StoryTags.AllWithNameAndLabel(continuation.NodeName, "arrow"))
+            foreach (var arrowNameObject in Tags.AllWithNameAndLabel(continuation.NodeName, "arrow"))
             {
                var arrowName = ValueString(arrowNameObject, continuation.Variables);
                ++arrowCount;
@@ -361,33 +366,34 @@ namespace Game
          string itemName,
          bool set)
       {
-         MapTags.Remove(itemName, "isSelected");
+         Tags.Remove(itemName, "isSelected");
          if (set)
          {
-            MapTags.Add(itemName, "isSelected", "");
+            Tags.Add(itemName, "isSelected", "");
          }
       }
 
       public static string GetHeroStageDescription()
       {
-         var heroStage = MapTags.FirstWithNameAndLabel("hero", "stage");
+         var heroStage = Tags.FirstWithNameAndLabel("hero", "stage");
          if (heroStage == null)
          {
             Log.Fail("Hero is not on any stage");
          }
-         return EvaluateText(heroStage, null, false);
+         return EvaluateItemText(heroStage, null, false);
       }
 
       public static IEnumerable<(string nodeText, string targetName)> HeroStageContents()
       {
-         var heroStage = MapTags.FirstWithNameAndLabel("hero", "stage");
+         var heroStage = Tags.FirstWithNameAndLabel("hero", "stage");
          if (heroStage == null)
          {
             Log.Fail("Hero is not on any stage");
          }
-         foreach (var name in MapTags.AllWithLabelAndValue("stage", heroStage))
+
+         foreach (var name in Tags.AllWithLabelAndValue("stage", heroStage))
          {
-            var description = EvaluateText(name, null, false);
+            var description = EvaluateItemText(name, null, false);
             if (String.IsNullOrWhiteSpace(description))
                continue;
             yield return (description, name);
@@ -405,15 +411,15 @@ namespace Game
          }
          else if (specialId == "First")
          {
-            return ValueString(MapTags.FirstWithNameAndLabel("hero", "first"), variables);
+            return ValueString(Tags.FirstWithNameAndLabel("hero", "first"), variables);
          }
          else if (specialId == "Last")
          {
-            return ValueString(MapTags.FirstWithNameAndLabel("hero", "last"), variables);
+            return ValueString(Tags.FirstWithNameAndLabel("hero", "last"), variables);
          }
          else
          {
-            bool heroIsMale = MapTags.FirstWithNameAndLabel("hero", "isMale") != null;
+            bool heroIsMale = Tags.FirstWithNameAndLabel("hero", "isMale") != null;
             if (specialId == "he")
             {
                return heroIsMale ? "he" : "she";
@@ -474,7 +480,15 @@ namespace Game
          }
       }
 
-      public static string EvaluateText(
+      private static string EvaluateItemText(
+         object nodeName,
+        Dictionary<string, object> variables,
+        bool executeTags)
+      {
+         return EvaluateText(Tags.FirstWithNameAndLabel(nodeName as string, "text"), variables, executeTags);
+      }
+
+      private static string EvaluateText(
         object value,
         Dictionary<string, object> variables,
         bool executeTags)
@@ -485,8 +499,7 @@ namespace Game
             variables = new Dictionary<string, object>();
          }
          string accumulator = "";
-         var text = MapTags.FirstWithNameAndLabel(value as string, "text");
-         (text as SequenceObject).Traverse((@object) =>
+         (value as SequenceObject).Traverse((@object) =>
          {
             switch (@object)
             {
@@ -494,7 +507,7 @@ namespace Game
                   accumulator += textObject.Text;
                   break;
                case SubstitutionObject substitutionObject:
-                  accumulator += EvaluateLabelListFirst(substitutionObject.Expression.LeftName, substitutionObject.Expression.LeftLabels, variables);
+                  accumulator += ValueString(EvaluateLabelListFirst(substitutionObject.Expression.LeftName, substitutionObject.Expression.LeftLabels, variables), variables);
                   break;
                case IfObject ifObject:
                   return TryRecursively(0, ifObject.NotExpressions, variables);
@@ -512,31 +525,31 @@ namespace Game
                      (var rightName, var rightLabel) = EvaluateLabelListGetLastNameAndLabel(tagObject.Expression.RightName, tagObject.Expression.RightLabels, variables);
                      if (rightName == null)
                      {
-                        MapTags.Remove(leftName, leftLabel);
+                        Tags.Remove(leftName, leftLabel);
                         break;
                      }
-                     var rightValue = MapTags.FirstWithNameAndLabel(rightName, rightLabel);
-                     MapTags.Remove(leftName, leftLabel, rightValue);
+                     var rightValue = Tags.FirstWithNameAndLabel(rightName, rightLabel);
+                     Tags.Remove(leftName, leftLabel, rightValue);
                   }
                   else
                   {
                      (var leftName, var leftLabel) = EvaluateLabelListGetLastNameAndLabel(tagObject.Expression.LeftName, tagObject.Expression.LeftLabels, variables);
                      if (leftName == null)
                         break;
-                     MapTags.Remove(leftName, leftLabel);
+                     Tags.Remove(leftName, leftLabel);
                      if (tagObject.RightText != null)
                      {
-                        MapTags.Add(leftName, leftLabel, tagObject.RightText);
+                        Tags.Add(leftName, leftLabel, tagObject.RightText);
                         break;
                      }
                      (var rightName, var rightLabel) = EvaluateLabelListGetLastNameAndLabel(tagObject.Expression.RightName, tagObject.Expression.RightLabels, variables);
                      if (rightName == null)
                      {
-                        MapTags.Add(leftName, leftLabel, "");
+                        Tags.Add(leftName, leftLabel, "");
                         break;
                      }
-                     var rightValue = MapTags.FirstWithNameAndLabel(rightName, rightLabel);
-                     MapTags.Add(leftName, leftLabel, rightValue);
+                     var rightValue = Tags.FirstWithNameAndLabel(rightName, rightLabel);
+                     Tags.Add(leftName, leftLabel, rightValue);
                   }
                   break;
             }

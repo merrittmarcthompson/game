@@ -58,7 +58,7 @@ namespace Game
       {
          return
             from tag in Collection
-            where tag.Label == label && tag.Value == value
+            where tag.Label == label && tag.Value.Equals(value)
             select tag.Name;
       }
 
