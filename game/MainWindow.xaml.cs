@@ -90,10 +90,10 @@ namespace Game
          }
 
          block.TextWrapping = TextWrapping.Wrap;
-         //if (isListItem)
-         //{
-            block.Margin = new Thickness(5, 2.5, 5, 2.5);
-         //}
+         if (isListItem)
+         {
+            block.Margin = new Thickness(5, 2.5, 5, 1);
+         }
          block.LineHeight = 20;
       }
 

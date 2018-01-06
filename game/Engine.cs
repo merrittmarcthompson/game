@@ -26,7 +26,7 @@ namespace Game
          }
          if (value is string)
             return value as string;
-         return EvaluateText(value, variables, false);
+         return EvaluateText(value, variables);
       }
 
       private static (string, string) EvaluateLabelListGetLastNameAndLabel(
@@ -222,28 +222,15 @@ namespace Game
          var arrowText = Tags.FirstWithNameAndLabel(arrowName, "text");
          (arrowText as SequenceObject).Traverse((@object) =>
          {
-            switch (@object)
+            if (!(@object is WhenObject whenObject))
+               return true;
+            if (!TryRecursively(0, whenObject.NotExpressions, variables))
             {
-               case WhenObject whenObject:
-                  if (!TryRecursively(0, whenObject.NotExpressions, variables))
-                  {
-                     allSucceeded = false;
-                  }
-                  break;
-               case TextObject textObject:
-                  optionText += textObject.Text;
-                  break;
-               case SubstitutionObject substitutionObject:
-                  optionText += ValueString(EvaluateLabelListFirst(substitutionObject.Expression.LeftName, substitutionObject.Expression.LeftLabels, variables), variables);
-                  break;
-               case IfObject ifObject:
-                  return TryRecursively(0, ifObject.NotExpressions, variables);
-               case SpecialObject specialObject:
-                  optionText += GetSpecialText(specialObject.Id, variables);
-                  break;
+               allSucceeded = false;
             }
             return true;
          });
+         optionText = EvaluateItemText(arrowName, variables);
          return (allSucceeded, optionText);
       }
 
@@ -251,7 +238,7 @@ namespace Game
          Description description,
          Continuation continuation)
       {
-         description.Text += EvaluateItemText(continuation.NodeName, continuation.Variables, true) + "\r\n";
+         description.Text += EvaluateItemText(continuation.NodeName, continuation.Variables) + "\r\n";
          foreach (var arrowNameObject in Tags.AllWithNameAndLabel(continuation.NodeName, "arrow"))
          {
             var arrowName = ValueString(arrowNameObject, continuation.Variables);
@@ -277,7 +264,7 @@ namespace Game
          newContinuation.IsStart = false;
          newContinuation.NodeName = ValueString(Tags.FirstWithNameAndLabel(arrowName, "target"), continuation.Variables);
          newContinuation.Variables = continuation.Variables;
-         EvaluateItemText(newContinuation.NodeName, newContinuation.Variables, true);
+         EvaluateItemTags(newContinuation.NodeName, newContinuation.Variables);
          if (continuation.IsStart)
          {
             // Keep it, but clear it for its next use.
@@ -380,7 +367,7 @@ namespace Game
          {
             Log.Fail("Hero is not on any stage");
          }
-         return EvaluateItemText(heroStage, null, false);
+         return EvaluateItemText(heroStage, null);
       }
 
       public static IEnumerable<(string nodeText, string targetName)> HeroStageContents()
@@ -393,12 +380,11 @@ namespace Game
 
          foreach (var name in Tags.AllWithLabelAndValue("stage", heroStage))
          {
-            var description = EvaluateItemText(name, null, false);
+            var description = EvaluateItemText(name, null);
             if (String.IsNullOrWhiteSpace(description))
                continue;
             yield return (description, name);
          }
-
       }
 
       private static string GetSpecialText(
@@ -482,18 +468,15 @@ namespace Game
 
       private static string EvaluateItemText(
          object nodeName,
-        Dictionary<string, object> variables,
-        bool executeTags)
+        Dictionary<string, object> variables)
       {
-         return EvaluateText(Tags.FirstWithNameAndLabel(nodeName as string, "text"), variables, executeTags);
+         return EvaluateText(Tags.FirstWithNameAndLabel(nodeName as string, "text"), variables);
       }
 
       private static string EvaluateText(
         object value,
-        Dictionary<string, object> variables,
-        bool executeTags)
+        Dictionary<string, object> variables)
       {
-         // The item is a node or arrow.
          if (variables == null)
          {
             variables = new Dictionary<string, object>();
@@ -514,9 +497,26 @@ namespace Game
                case SpecialObject specialObject:
                   accumulator += GetSpecialText(specialObject.Id, variables);
                   break;
+            }
+            return true;
+         });
+         return accumulator;
+      }
+
+      private static void EvaluateItemTags(
+        object nodeName,
+        Dictionary<string, object> variables)
+      {
+         if (variables == null)
+         {
+            variables = new Dictionary<string, object>();
+         }
+         var text = Tags.FirstWithNameAndLabel(nodeName as string, "text");
+         (text as SequenceObject).Traverse((@object) =>
+         {
+            switch (@object)
+            {
                case TagObject tagObject:
-                  if (!executeTags)
-                     break;
                   if (tagObject.Untag)
                   {
                      (var leftName, var leftLabel) = EvaluateLabelListGetLastNameAndLabel(tagObject.Expression.LeftName, tagObject.Expression.LeftLabels, variables);
@@ -555,7 +555,6 @@ namespace Game
             }
             return true;
          });
-         return accumulator;
       }
    }
 }
