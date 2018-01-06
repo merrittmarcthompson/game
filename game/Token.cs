@@ -9,6 +9,7 @@
       public static TokenType Special = new TokenType("a special identifier");
       public static TokenType Text = new TokenType("text");
 
+      public static TokenType As = new TokenType("'as'");
       public static TokenType End = new TokenType("'end'");
       public static TokenType Else = new TokenType("'else'");
       public static TokenType If = new TokenType("'if'");

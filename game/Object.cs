@@ -131,13 +131,16 @@ namespace Game
    public class TagObject : Object
    {
       public Expression Expression;
+      public SequenceObject RightText;
       public bool Untag;
 
       public TagObject(
         Expression expression,
+        SequenceObject rightText,
         bool untag)
       {
          Expression = expression;
+         RightText = rightText;
          Untag = untag;
       }
 

@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace Game
 {
@@ -98,7 +98,6 @@ namespace Game
             // You can get one of these:
             //  [ID|VARIABLE .] LABEL-ID {. LABEL-ID} [= [ID|VARIABLE .] LABEL-ID {. LABEL-ID}]
             //  VARIABLE = [ID|VARIABLE .] LABEL-ID {. LABEL-ID}]
-            //  [ID|VARIABLE .] LABEL-ID [. LABEL_ID} = TOKENS [END]
             var result = new Expression();
             GetToken();
             if (GottenToken.Type != Token.Id && GottenToken.Type != Token.Variable)
@@ -255,7 +254,28 @@ namespace Game
                   var expression = GetExpression();
                   if (expression == null)
                      return null;
-                  result.Objects.Add(new TagObject(expression, isUntag));
+                  SequenceObject asSequenceObject = null;
+                  if (expression.RightName == null && !expression.RightLabels.Any())
+                  {
+                     // I.e. there wasn't any '='
+                     GetToken();
+                     if (GottenToken.Type == Token.As)
+                     {
+                        asSequenceObject = GetSequence();
+                        if (asSequenceObject == null)
+                           return null;
+                        GetToken();
+                        if (GottenToken.Type != Token.End)
+                        {
+                           Log.Fail(Expected(Token.End.Name, GottenToken));
+                        }
+                     }
+                     else
+                     {
+                        UngetToken();
+                     }
+                  }
+                  result.Objects.Add(new TagObject(expression, asSequenceObject, isUntag));
                }
                else if (GottenToken.Type == Token.When)
                {

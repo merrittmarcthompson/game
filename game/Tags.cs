@@ -10,12 +10,12 @@ namespace Game
       {
          public string Name { get; set; }
          public string Label { get; set; }
-         public string Value { get; set; }
+         public object Value { get; set; }
 
          public Tag(
            string name,
            string label,
-           string value)
+           object value)
          {
             Name = name;
             Label = label;
@@ -31,7 +31,7 @@ namespace Game
 
       private HashSet<Tag> Collection = new HashSet<Tag>();
 
-      public IEnumerable<(string, string, string)> All()
+      public IEnumerable<(string, string, object)> All()
       {
          return
             from tag in Collection
@@ -47,14 +47,14 @@ namespace Game
       public void Add(
         string name,
         string label,
-        string value)
+        object value)
       {
          Collection.Add(new Tag(name, label, value ?? ""));
       }
 
       public IEnumerable<string> AllWithLabelAndValue(
          string label,
-         string value)
+         object value)
       {
          return
             from tag in Collection
@@ -62,7 +62,7 @@ namespace Game
             select tag.Name;
       }
 
-      public IEnumerable<string> AllWithNameAndLabel(
+      public IEnumerable<object> AllWithNameAndLabel(
         string name,
         string label)
       {
@@ -72,7 +72,7 @@ namespace Game
            select tag.Value;
       }
 
-      public string FirstWithNameAndLabel(
+      public object FirstWithNameAndLabel(
         string name,
         string label)
       {
@@ -97,7 +97,7 @@ namespace Game
       public void Remove(
         string name,
         string label,
-        string value)
+        object value)
       {
          var selected =
            from tag in Collection
@@ -106,7 +106,7 @@ namespace Game
          Collection.RemoveWhere(tag => selected.Contains(tag));
       }
 
-      public IEnumerable<(string, string)> AllWithLabel(
+      public IEnumerable<(string, object)> AllWithLabel(
         string label)
       {
          return
@@ -115,7 +115,7 @@ namespace Game
            select (tag.Name, tag.Value);
       }
 
-      public IEnumerable<(string, string)> AllWithName(
+      public IEnumerable<(string, object)> AllWithName(
          string name)
       {
          return

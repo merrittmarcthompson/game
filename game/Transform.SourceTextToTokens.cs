@@ -255,6 +255,10 @@ namespace Game
                            {
                               result.Add(new Token(Token.Name, id, lineNumber));
                            }
+                           else if (id == "as")
+                           {
+                              result.Add(new Token(Token.As, id, lineNumber));
+                           }
                            else if (specialIds.Contains(id))
                            {
                               result.Add(new Token(Token.Special, id, lineNumber));

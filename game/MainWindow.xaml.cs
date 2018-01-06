@@ -141,12 +141,12 @@ namespace Game
             return;
 
          // When you click on an item in the stage box, set its isSelected property. That will have an effect on the next shift, possibly producing a new stage or a new story node.
-         Engine.SetTag(panel.Tag as string, "isSelected", null);
+         Engine.SelectItem(panel.Tag as string, true);
 
          // Show the current stage and stories.
          SetupScreen();
 
-         Engine.ResetTag(panel.Tag as string, "isSelected");
+         Engine.SelectItem(panel.Tag as string, false);
       }
 
       private void SetupScreen()
@@ -157,9 +157,6 @@ namespace Game
 
          var title = (TextBlock)FindName("StageListTitleText");
          SetupTextBlock(title, Engine.GetHeroStageDescription(), false);
-
-//         SetupTextBlock(title, Engine.EvaluateItemText(heroStage, null, false), false);
-
          var stageListBox = (ListBox)FindName("StageListBox");
          stageListBox.Items.Clear();
          foreach ((var nodeText, var targetName) in Engine.HeroStageContents())
@@ -168,15 +165,6 @@ namespace Game
             SetupTextBlock(block, nodeText, true);
             AddToListBox(stageListBox, block, targetName);
          }
-         /*
-            foreach (var arrowName in Engine.TagsFor(heroStage, "arrow"))
-         {
-            var item = new TextBlock();
-            SetupTextBlock(item, Engine.EvaluateItemText(arrowName, null, false), true);
-            string targetNode = Engine.GetTag(arrowName, "target");
-            AddToListBox(stageListBox, item, targetNode);
-         }
-         */
          var storyArea = (ItemsControl)FindName("StoryArea");
          var storyBlock = new TextBlock();
          SetupTextBlock(storyBlock, description.Text, false);

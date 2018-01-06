@@ -19,18 +19,20 @@ namespace Game
             return Transform.TokensToObjects(tokens);
          }
 
-         void AddToSequenceObjects(
+         void AddTextsForSourceTexts(
            Tags fileBaseTags)
          {
+            var newTextTags = new Tags();
             foreach ((var itemName, var itemValue) in fileBaseTags.AllWithLabel("sourceText"))
             {
-               Log.SetSourceText(itemValue);
-               var sequenceObject = CompileSourceText(itemValue);
+               Log.SetSourceText(itemValue as string);
+               var sequenceObject = CompileSourceText(itemValue as string);
                Log.SetSourceText(null);
                if (sequenceObject == null)
                   continue;
-               SequenceObjects[itemName] = sequenceObject;
+               newTextTags.Add(itemName, "text", sequenceObject);
             }
+            fileBaseTags.Merge(newTextTags);
          }
 
          void RenameBaseTags(
@@ -38,19 +40,13 @@ namespace Game
          {
             // First make a list of all the tags that have to be renamed.
             var oldToNewList = new Dictionary<string, string>();
-            foreach ((var oldItemName, _) in fileBaseTags.AllWithLabel("sourceText"))
+            foreach ((var oldItemName, var text) in fileBaseTags.AllWithLabel("text"))
             {
-               // If it has a sourceText tag, we made an object for it earlier.
-               var sequenceObject = SequenceObjects[oldItemName];
-               sequenceObject.Traverse((@object) =>
+               (text as SequenceObject).Traverse((@object) =>
                {
                   if (!(@object is NameObject nameObject))
                      return true;
                   oldToNewList[oldItemName] = nameObject.Name;
-
-               // Fix the SequenceObjects table right now while we're at it.
-               SequenceObjects[nameObject.Name] = SequenceObjects[oldItemName];
-                  SequenceObjects.Remove(oldItemName);
                   return true;
                });
             }
@@ -69,14 +65,14 @@ namespace Game
             Tags tagsToRevalue = new Tags();
             foreach ((var itemName, var itemValue) in fileBaseTags.AllWithLabel("arrow"))
             {
-               if (oldToNewList.ContainsKey(itemValue))
+               if (oldToNewList.ContainsKey(itemValue as string))
                {
                   tagsToRevalue.Add(itemName, "arrow", itemValue);
                }
             }
             foreach ((var itemName, var itemValue) in fileBaseTags.AllWithLabel("target"))
             {
-               if (oldToNewList.ContainsKey(itemValue))
+               if (oldToNewList.ContainsKey(itemValue as string))
                {
                   tagsToRevalue.Add(itemName, "target", itemValue);
                }
@@ -91,7 +87,7 @@ namespace Game
             foreach ((var oldName, var oldLabel, var oldValue) in tagsToRevalue.All())
             {
                fileBaseTags.Remove(oldName, oldLabel, oldValue);
-               fileBaseTags.Add(oldName, oldLabel, oldToNewList[oldValue]);
+               fileBaseTags.Add(oldName, oldLabel, oldToNewList[oldValue as string]);
             }
          }
 
@@ -100,26 +96,28 @@ namespace Game
          {
             // Execute the object text for maps.
             var fileNewTags = new Tags();
-            foreach ((var itemName, var itemValue) in fileBaseTags.AllWithLabel("sourceText"))
+            foreach ((var itemName, var itemValue) in fileBaseTags.AllWithLabel("text"))
             {
-               var sequenceObject = SequenceObjects[itemName];
-
                // Execute all the tag directives. This is more limited than the full tagging done in story nodes.
-               sequenceObject.Traverse((@object) =>
+               (itemValue as SequenceObject).Traverse((@object) =>
                {
                   if (!(@object is TagObject tagObject))
                      return true;
-               // [untag label] is just a comment in a map file. There's nothing in the tags to start with, so everything is untagged.
-               if (tagObject.Untag)
+                  // [untag label] is just a comment in a map file. There's nothing in the tags to start with, so everything is untagged.
+                  if (tagObject.Untag)
                      return true;
-               // Only do tags with no explicit name, i.e. ones that tag the object itself.
-               if (tagObject.Expression.LeftName != "")
+                  // Only do tags with no explicit name, i.e. ones that tag the object itself.
+                  if (tagObject.Expression.LeftName != "")
                      return true;
                   if (tagObject.Expression.LeftLabels.Count != 1)
                   {
                      Log.Fail("expected only one label in a item tag specification");
                   }
-                  if (tagObject.Expression.RightLabels.Count > 0)
+                  if (tagObject.RightText != null)
+                  {
+                     fileNewTags.Add(itemName, tagObject.Expression.LeftLabels[0], tagObject.RightText);
+                  }
+                  else if (tagObject.Expression.RightLabels.Count > 0)
                   {
                      fileNewTags.Add(itemName, tagObject.Expression.LeftLabels[0], tagObject.Expression.RightLabels[0]);
                   }
@@ -131,7 +129,7 @@ namespace Game
                });
 
                // Make all the implicit tag names (ex. [if isLarge]) explicit (ex. [if map_test_n1.isLarge]).
-               sequenceObject.Traverse((@object) =>
+               (itemValue as SequenceObject).Traverse((@object) =>
                {
                   switch (@object)
                   {
@@ -184,15 +182,15 @@ namespace Game
          Tags GetStageTagsForNodes()
          {
             Tags newTags = new Tags();
-            // Mark items for what stage they are on.
+            // Mark items for what stage they are on. Only things that are directly pointed to by the stage are on the stage. If a person is on the stage and there's change in his pocket, the change isn't on the stage. But if he takes the money out of his pocket and drops it, the money is now on the stage (that would be done by the 'drop' story).
             foreach ((var nodeName, var nodeValue) in MapTags.AllWithLabel("isStage"))
             {
                foreach (var arrowName in MapTags.AllWithNameAndLabel(nodeName, "arrow"))
                {
-                  var subordinateNode = MapTags.FirstWithNameAndLabel(arrowName, "target");
-                  if (MapTags.FirstWithNameAndLabel(subordinateNode, "isStage") == null)
+                  var subordinateNode = MapTags.FirstWithNameAndLabel(arrowName as string, "target");
+                  if (MapTags.FirstWithNameAndLabel(subordinateNode as string, "isStage") == null)
                   {
-                     newTags.Add(subordinateNode, "stage", nodeName);
+                     newTags.Add(subordinateNode as string, "stage", nodeName);
                   }
                }
             }
@@ -249,7 +247,7 @@ namespace Game
             var fileBaseTags = Transform.GraphmlToTags(graphml, Path.GetFileNameWithoutExtension(sourceName));
 
             // Compile the directives embedded in the source text of each box and arrow to create a list of object 'text' tags and a SequenceObjects table that relates them to the actual object code.
-            AddToSequenceObjects(fileBaseTags);
+            AddTextsForSourceTexts(fileBaseTags);
 
             Tags fileNewTags;
             if (isMap)
