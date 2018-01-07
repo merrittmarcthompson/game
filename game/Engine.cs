@@ -10,6 +10,183 @@ namespace Game
       private static Tags Tags = new Tags();
       private static List<Continuation> Continuations = new List<Continuation>();
 
+      private static string GetSpecialText(
+         string specialId,
+         Dictionary<string, object> variables)
+      {
+         if (specialId == "p")
+         {
+            return "\r\n";
+         }
+         else if (specialId == "First")
+         {
+            return ValueString(Tags.FirstWithNameAndLabel("hero", "first"), variables);
+         }
+         else if (specialId == "Last")
+         {
+            return ValueString(Tags.FirstWithNameAndLabel("hero", "last"), variables);
+         }
+         else
+         {
+            bool heroIsMale = Tags.FirstWithNameAndLabel("hero", "isMale") != null;
+            if (specialId == "he")
+            {
+               return heroIsMale ? "he" : "she";
+            }
+            else if (specialId == "He")
+            {
+               return heroIsMale ? "He" : "She";
+            }
+            else if (specialId == "him")
+            {
+               return heroIsMale ? "him" : "her";
+            }
+            else if (specialId == "Him")
+            {
+               return heroIsMale ? "Him" : "Her";
+            }
+            else if (specialId == "his")
+            {
+               return heroIsMale ? "his" : "her";
+            }
+            else if (specialId == "His")
+            {
+               return heroIsMale ? "His" : "Her";
+            }
+            else if (specialId == "himself")
+            {
+               return heroIsMale ? "himself" : "herself";
+            }
+            else if (specialId == "Himself")
+            {
+               return heroIsMale ? "Himself" : "Herself";
+            }
+            else if (specialId == "man")
+            {
+               return heroIsMale ? "man" : "woman";
+            }
+            else if (specialId == "Man")
+            {
+               return heroIsMale ? "Man" : "Woman";
+            }
+            else if (specialId == "boy")
+            {
+               return heroIsMale ? "boy" : "girl";
+            }
+            else if (specialId == "Boy")
+            {
+               return heroIsMale ? "Boy" : "Girl";
+            }
+            else if (specialId == "Mr")
+            {
+               return heroIsMale ? "Mr." : "Ms";
+            }
+            else
+            {
+               Log.Fail(String.Format("Unknown special ID {0}.", specialId));
+               return "";
+            }
+         }
+      }
+
+      private static string EvaluateItemText(
+         object nodeName,
+        Dictionary<string, object> variables)
+      {
+         return EvaluateText(Tags.FirstWithNameAndLabel(nodeName as string, "text"), variables);
+      }
+
+      private static string EvaluateText(
+        object value,
+        Dictionary<string, object> variables)
+      {
+         if (variables == null)
+         {
+            variables = new Dictionary<string, object>();
+         }
+         string accumulator = "";
+         (value as SequenceObject).Traverse((@object) =>
+         {
+            switch (@object)
+            {
+               case TextObject textObject:
+                  accumulator += textObject.Text;
+                  break;
+               case SubstitutionObject substitutionObject:
+                  accumulator += ValueString(EvaluateLabelListFirst(substitutionObject.Expression.LeftName, substitutionObject.Expression.LeftLabels, variables), variables);
+                  break;
+               case IfObject ifObject:
+                  return TryRecursively(0, ifObject.NotExpressions, variables);
+               case SpecialObject specialObject:
+                  accumulator += GetSpecialText(specialObject.Id, variables);
+                  break;
+            }
+            return true;
+         });
+         return accumulator;
+      }
+
+      private static void EvaluateItemTags(
+        object nodeName,
+        Dictionary<string, object> variables)
+      {
+         if (variables == null)
+         {
+            variables = new Dictionary<string, object>();
+         }
+         var text = Tags.FirstWithNameAndLabel(nodeName as string, "text");
+         (text as SequenceObject).Traverse((@object) =>
+         {
+            switch (@object)
+            {
+               case TagObject tagObject:
+                  if (tagObject.Untag)
+                  {
+                     (var leftName, var leftLabel) = EvaluateLabelListGetLastNameAndLabel(tagObject.Expression.LeftName, tagObject.Expression.LeftLabels, variables);
+                     if (leftName == null)
+                        break;
+                     (var rightName, var rightLabel) = EvaluateLabelListGetLastNameAndLabel(tagObject.Expression.RightName, tagObject.Expression.RightLabels, variables);
+                     if (rightName == null)
+                     {
+                        Tags.Remove(leftName, leftLabel);
+                        break;
+                     }
+                     var rightValue = Tags.FirstWithNameAndLabel(rightName, rightLabel);
+                     Tags.Remove(leftName, leftLabel, rightValue);
+                  }
+                  else
+                  {
+                     (var leftName, var leftLabel) = EvaluateLabelListGetLastNameAndLabel(tagObject.Expression.LeftName, tagObject.Expression.LeftLabels, variables);
+                     if (leftName == null)
+                        break;
+                     Tags.Remove(leftName, leftLabel);
+                     if (tagObject.RightText != null)
+                     {
+                        Tags.Add(leftName, leftLabel, tagObject.RightText);
+                        break;
+                     }
+                     (var rightName, var rightLabel) = EvaluateLabelListGetLastNameAndLabel(tagObject.Expression.RightName, tagObject.Expression.RightLabels, variables);
+                     if (rightName == null)
+                     {
+                        Tags.Add(leftName, leftLabel, "");
+                        break;
+                     }
+                     var rightValue = Tags.FirstWithNameAndLabel(rightName, rightLabel);
+                     Tags.Add(leftName, leftLabel, rightValue);
+                  }
+                  break;
+            }
+            return true;
+         });
+      }
+
+      private static string SelectBestArrow(
+         Dictionary<string, string> reasons)
+      {
+         // Put cool algorithm here when we figure it out.
+         return reasons.First().Key;
+      }
+
       private static bool IsVariable(
         string name)
       {
@@ -288,13 +465,6 @@ namespace Game
          Continuations.Add(newContinuation);
       }
 
-      private static string SelectBestArrow(
-         Dictionary<string, string> reasons)
-      {
-         // Put cool algorithm here when we figure it out.
-         return reasons.First().Key;
-      }
-
       public static Description UpdateContinuations()
       {
          var description = new Description();
@@ -385,176 +555,6 @@ namespace Game
                continue;
             yield return (description, name);
          }
-      }
-
-      private static string GetSpecialText(
-         string specialId,
-         Dictionary<string, object> variables)
-      {
-         if (specialId == "p")
-         {
-            return "\r\n";
-         }
-         else if (specialId == "First")
-         {
-            return ValueString(Tags.FirstWithNameAndLabel("hero", "first"), variables);
-         }
-         else if (specialId == "Last")
-         {
-            return ValueString(Tags.FirstWithNameAndLabel("hero", "last"), variables);
-         }
-         else
-         {
-            bool heroIsMale = Tags.FirstWithNameAndLabel("hero", "isMale") != null;
-            if (specialId == "he")
-            {
-               return heroIsMale ? "he" : "she";
-            }
-            else if (specialId == "He")
-            {
-               return heroIsMale ? "He" : "She";
-            }
-            else if (specialId == "him")
-            {
-               return heroIsMale ? "him" : "her";
-            }
-            else if (specialId == "Him")
-            {
-               return heroIsMale ? "Him" : "Her";
-            }
-            else if (specialId == "his")
-            {
-               return heroIsMale ? "his" : "her";
-            }
-            else if (specialId == "His")
-            {
-               return heroIsMale ? "His" : "Her";
-            }
-            else if (specialId == "himself")
-            {
-               return heroIsMale ? "himself" : "herself";
-            }
-            else if (specialId == "Himself")
-            {
-               return heroIsMale ? "Himself" : "Herself";
-            }
-            else if (specialId == "man")
-            {
-               return heroIsMale ? "man" : "woman";
-            }
-            else if (specialId == "Man")
-            {
-               return heroIsMale ? "Man" : "Woman";
-            }
-            else if (specialId == "boy")
-            {
-               return heroIsMale ? "boy" : "girl";
-            }
-            else if (specialId == "Boy")
-            {
-               return heroIsMale ? "Boy" : "Girl";
-            }
-            else if (specialId == "Mr")
-            {
-               return heroIsMale ? "Mr." : "Ms";
-            }
-            else
-            {
-               Log.Fail(String.Format("Unknown special ID {0}.", specialId));
-               return "";
-            }
-         }
-      }
-
-      private static string EvaluateItemText(
-         object nodeName,
-        Dictionary<string, object> variables)
-      {
-         return EvaluateText(Tags.FirstWithNameAndLabel(nodeName as string, "text"), variables);
-      }
-
-      private static string EvaluateText(
-        object value,
-        Dictionary<string, object> variables)
-      {
-         if (variables == null)
-         {
-            variables = new Dictionary<string, object>();
-         }
-         string accumulator = "";
-         (value as SequenceObject).Traverse((@object) =>
-         {
-            switch (@object)
-            {
-               case TextObject textObject:
-                  accumulator += textObject.Text;
-                  break;
-               case SubstitutionObject substitutionObject:
-                  accumulator += ValueString(EvaluateLabelListFirst(substitutionObject.Expression.LeftName, substitutionObject.Expression.LeftLabels, variables), variables);
-                  break;
-               case IfObject ifObject:
-                  return TryRecursively(0, ifObject.NotExpressions, variables);
-               case SpecialObject specialObject:
-                  accumulator += GetSpecialText(specialObject.Id, variables);
-                  break;
-            }
-            return true;
-         });
-         return accumulator;
-      }
-
-      private static void EvaluateItemTags(
-        object nodeName,
-        Dictionary<string, object> variables)
-      {
-         if (variables == null)
-         {
-            variables = new Dictionary<string, object>();
-         }
-         var text = Tags.FirstWithNameAndLabel(nodeName as string, "text");
-         (text as SequenceObject).Traverse((@object) =>
-         {
-            switch (@object)
-            {
-               case TagObject tagObject:
-                  if (tagObject.Untag)
-                  {
-                     (var leftName, var leftLabel) = EvaluateLabelListGetLastNameAndLabel(tagObject.Expression.LeftName, tagObject.Expression.LeftLabels, variables);
-                     if (leftName == null)
-                        break;
-                     (var rightName, var rightLabel) = EvaluateLabelListGetLastNameAndLabel(tagObject.Expression.RightName, tagObject.Expression.RightLabels, variables);
-                     if (rightName == null)
-                     {
-                        Tags.Remove(leftName, leftLabel);
-                        break;
-                     }
-                     var rightValue = Tags.FirstWithNameAndLabel(rightName, rightLabel);
-                     Tags.Remove(leftName, leftLabel, rightValue);
-                  }
-                  else
-                  {
-                     (var leftName, var leftLabel) = EvaluateLabelListGetLastNameAndLabel(tagObject.Expression.LeftName, tagObject.Expression.LeftLabels, variables);
-                     if (leftName == null)
-                        break;
-                     Tags.Remove(leftName, leftLabel);
-                     if (tagObject.RightText != null)
-                     {
-                        Tags.Add(leftName, leftLabel, tagObject.RightText);
-                        break;
-                     }
-                     (var rightName, var rightLabel) = EvaluateLabelListGetLastNameAndLabel(tagObject.Expression.RightName, tagObject.Expression.RightLabels, variables);
-                     if (rightName == null)
-                     {
-                        Tags.Add(leftName, leftLabel, "");
-                        break;
-                     }
-                     var rightValue = Tags.FirstWithNameAndLabel(rightName, rightLabel);
-                     Tags.Add(leftName, leftLabel, rightValue);
-                  }
-                  break;
-            }
-            return true;
-         });
       }
    }
 }
