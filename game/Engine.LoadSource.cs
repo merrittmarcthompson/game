@@ -179,7 +179,7 @@ namespace Game
             }
          }
 
-         Tags GetStageTagsForNodes()
+         Tags BuildContainingTagsForNodes()
          {
             Tags newTags = new Tags();
             // Mark items for what stage they are on. Only things that are directly pointed to by the stage are on the stage. If a person is on the stage and there's change in his pocket, the change isn't on the stage. But if he takes the money out of his pocket and drops it, the money is now on the stage (that would be done by the 'drop' story).
@@ -188,17 +188,28 @@ namespace Game
                foreach (var arrowName in Tags.AllWithNameAndLabel(nodeName, "arrow"))
                {
                   var subordinateNode = Tags.FirstWithNameAndLabel(arrowName as string, "target");
-                  if (Tags.FirstWithNameAndLabel(subordinateNode as string, "isStage") == null)
-                  {
-                     newTags.Add(subordinateNode as string, "stage", nodeName);
-                  }
+                  var listText = Tags.FirstWithNameAndLabel(arrowName as string, "text");
+                  newTags.Add(subordinateNode as string, "stage", nodeName);
+                  newTags.Add(subordinateNode as string, "parent", nodeName);
+                  newTags.Add(subordinateNode as string, "listText", listText);
+               }
+            }
+            foreach ((var nodeName, var nodeValue) in Tags.AllWithLabel("isContainer"))
+            {
+               foreach (var arrowName in Tags.AllWithNameAndLabel(nodeName, "arrow"))
+               {
+                  var subordinateNode = Tags.FirstWithNameAndLabel(arrowName as string, "target");
+                  var listText = Tags.FirstWithNameAndLabel(arrowName as string, "text");
+                  newTags.Add(subordinateNode as string, "container", nodeName);
+                  newTags.Add(subordinateNode as string, "parent", nodeName);
+                  newTags.Add(subordinateNode as string, "listText", listText);
                }
             }
             return newTags;
          }
 
          // A chance to do some unit testing on the compiler.
-         var testSequenceObject = CompileSourceText("[Door.text]");
+         var testSequenceObject = CompileSourceText("[tag hero.stage=Stage]");
          //"[tag isOtherSide]");
          /*
        @"[when
@@ -264,7 +275,7 @@ namespace Game
             Tags.Merge(fileNewTags);
          }
 
-         Tags.Merge(GetStageTagsForNodes());
+         Tags.Merge(BuildContainingTagsForNodes());
       }
    }
 }

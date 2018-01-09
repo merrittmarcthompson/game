@@ -83,13 +83,30 @@ namespace Game
             var id = BuildId(node.Attribute("id").Value);
             result.Add(id, "sourceText", node.Descendants(y + "NodeLabel").First().Value);
             result.Add(id, "isNode", "");
+            var color = node.Descendants(y + "Fill").First().Attribute("color").Value;
+            var color2 = node.Descendants(y + "Fill").First().Attribute("color2")?.Value;
+            if (color == "#FFCC99")
+            {
+               result.Add(id, "isStage", "");
+            }
+            else if (color == "#99CCFF")
+            {
+               result.Add(id, "isDoor", "");
+            }
+            else if (color == "#FFFF99" || color2 == "#FFFF99")
+            {
+               result.Add(id, "isContainer", "");
+            }
+            else if (color == "#CCFFCC")
+            {
+               result.Add(id, "isMobile", "");
+            }
          }
-
          // 2. Add the arrows.
 
          IEnumerable<XElement> edges =
-           from edge in root.Descendants(g + "edge")
-           select edge;
+        from edge in root.Descendants(g + "edge")
+        select edge;
 
          foreach (XElement edge in edges)
          {

@@ -8,9 +8,10 @@
         Title="MainWindow" Height="726.5" Width="1108.8">
     <Grid>
         <Border BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left" Height="634" Margin="28,23,0,0" VerticalAlignment="Top" Width="360">
-            <ItemsControl Margin="10,10,10,10">
+            <ItemsControl Margin="10,15,10,0">
                 <TextBlock x:Name="StageListTitleText" TextWrapping="Wrap" Margin="20,20,20,0" FontSize="13" FontFamily="Georgia"/>
-                <ListBox x:Name="StageListBox" HorizontalAlignment="Left" Height="562" Margin="10,10,10,10" BorderBrush="White" VerticalAlignment="Top" Width="312" ScrollViewer.HorizontalScrollBarVisibility="Disabled" FontSize="13" SelectionChanged="StageListBox_SelectionChanged" FontFamily="Georgia"/>
+                <Separator Margin="20, 12, 20, 10"/>
+                <ListBox x:Name="StageListBox" HorizontalAlignment="Left" Height="562" Margin="10,0,10,10" BorderBrush="White" VerticalAlignment="Top" Width="312" ScrollViewer.HorizontalScrollBarVisibility="Disabled" FontSize="13" SelectionChanged="StageListBox_SelectionChanged" FontFamily="Georgia"/>
             </ItemsControl>
         </Border>
 
@@ -20,8 +21,7 @@
         </Border>
 
         <Border BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left" Height="634" Margin="784,23,0,0" VerticalAlignment="Top" Width="282">
-
-            <ListBox x:Name="ReactionListBox" HorizontalAlignment="Left" Height="587" Margin="10,20,0,0" VerticalAlignment="Top" Width="261" ScrollViewer.HorizontalScrollBarVisibility="Disabled"  BorderBrush="White" SelectionChanged="ReactionListBox_SelectionChanged" BorderThickness="1,1,1,1" FontFamily="Segoe UI" FontSize="13"/>
+            <ListBox x:Name="ReactionListBox" HorizontalAlignment="Left" Height="587" Margin="10,15,0,0" VerticalAlignment="Top" Width="261" ScrollViewer.HorizontalScrollBarVisibility="Disabled"  BorderBrush="White" SelectionChanged="ReactionListBox_SelectionChanged" BorderThickness="1,1,1,1" FontFamily="Segoe UI" FontSize="13"/>
         </Border>
     </Grid>
 </Window>

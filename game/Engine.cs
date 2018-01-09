@@ -548,13 +548,36 @@ namespace Game
             Log.Fail("Hero is not on any stage");
          }
 
-         foreach (var name in Tags.AllWithLabelAndValue("stage", heroStage))
+         foreach (var stageChildName in Tags.AllWithLabelAndValue("stage", heroStage))
          {
-            var description = EvaluateItemText(name, null);
+            var listTexts = Tags.AllWithNameAndLabel(stageChildName, "listText");
+            var description = "";
+            // Most things have one list text and that's what we display. But some immobile items have two list texts (ex. a door, which has two arrows pointing at it, one from each side, each of which contributes a list text. Disambiguate that that by going back to the original arrow text in those cases.
+            if (listTexts.Count() <= 1)
+               description = ValueString(listTexts.First(), null);
+            else
+            {
+               foreach (var arrow in Tags.AllWithNameAndLabel(heroStage as string, "arrow"))
+               {
+                  if (Tags.FirstWithNameAndLabel(arrow as string, "target") as string == stageChildName)
+                  {
+                     description = EvaluateText(Tags.FirstWithNameAndLabel(arrow as string, "text"), null);
+                     break;
+                  }
+               }
+            }
             if (String.IsNullOrWhiteSpace(description))
                continue;
-            yield return (description, name);
+            yield return (description, stageChildName);
          }
       }
    }
 }
+/*
+Indexes?
+
+pamphlet.listText:kitchen=A counter separates the kitchen...
+pamphlet.listText:livingRoom=A counter separates the living room...
+frontDoor.doorView:yard=The front door of the house...
+frontdoor.doorView:livingRoom=A front door of orange...
+*/
