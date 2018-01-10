@@ -22,7 +22,7 @@ namespace Game
          var accumulator = "";
          for (var i = 0; i < text.Length;)
          {
-            if (text[i] == '^')
+            if (text[i] == '*')
             {
                if (accumulator.Length > 0)
                {
@@ -32,7 +32,7 @@ namespace Game
                ++i;
                while (true)
                {
-                  if (i >= text.Length || text[i] == '^')
+                  if (i >= text.Length || text[i] == '*')
                   {
                      if (accumulator.Length > 0)
                      {

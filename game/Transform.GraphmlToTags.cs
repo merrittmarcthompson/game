@@ -83,7 +83,7 @@ namespace Game
             var id = BuildId(node.Attribute("id").Value);
             result.Add(id, "sourceText", node.Descendants(y + "NodeLabel").First().Value);
             result.Add(id, "isNode", "");
-            var color = node.Descendants(y + "Fill").First().Attribute("color").Value;
+            var color = node.Descendants(y + "Fill").First().Attribute("color")?.Value;
             var color2 = node.Descendants(y + "Fill").First().Attribute("color2")?.Value;
             if (color == "#FFCC99")
             {

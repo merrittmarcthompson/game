@@ -171,7 +171,17 @@ namespace Game
                         Tags.Add(leftName, leftLabel, "");
                         break;
                      }
-                     var rightValue = Tags.FirstWithNameAndLabel(rightName, rightLabel);
+                     var rightValue = "";
+                     if (rightLabel == null)
+                     {
+                        // This covers the [tag hero.stage=Stage] case.
+                        rightValue = rightName;
+                     }
+                     else
+                     {
+                        // This covers the [tag hero.stage=other.stage] case.
+                        rightValue = ValueString(Tags.FirstWithNameAndLabel(rightName, rightLabel), variables);
+                     }
                      Tags.Add(leftName, leftLabel, rightValue);
                   }
                   break;
@@ -215,6 +225,12 @@ namespace Game
          {
             return (null, null);
          }
+         // Oddly, the parser interprets this: [hero.stage=Stage] as this: [hero.stage=.Stage]. Maybe that should be fixed at some point. But for now, just have this function "fix" it by shifting the value out of the label and into the name.
+         if (name == "" && labels.Count() == 1)
+         {
+            name = labels[0];
+            labels = new List<string>();
+         }
          // For example, 'OtherSide.target.isOpen'. This function will return whatever OtherSide.target is as the name and 'isOpen' as the label.
          if (IsVariable(name))
          {
@@ -224,6 +240,9 @@ namespace Game
             }
             name = ValueString(variables[name], variables);
          }
+         // In the case with no labels, the value is the name itself.
+         if (!labels.Any())
+            return (name, null);
          object lastValue = null;
          string lastLabel = null;
          string lastName = null;
@@ -266,6 +285,9 @@ namespace Game
          (var lastName, var lastLabel) = EvaluateLabelListGetLastNameAndLabel(name, labels, variables);
          if (lastName == null)
             return null;
+         // This is the [tag hero.stage=DestinationStage] case -- no labels.
+         if (lastLabel == null)
+            return lastName;
          // Don't convert this to a string here. Do that as late as possible to make sure there are no old values in it.
          return Tags.FirstWithNameAndLabel(lastName, lastLabel);
       }
