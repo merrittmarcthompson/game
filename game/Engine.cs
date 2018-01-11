@@ -190,13 +190,6 @@ namespace Game
          });
       }
 
-      private static string SelectBestArrow(
-         Dictionary<string, string> reasons)
-      {
-         // Put cool algorithm here when we figure it out.
-         return reasons.First().Key;
-      }
-
       private static bool IsVariable(
         string name)
       {
@@ -301,8 +294,9 @@ namespace Game
          if (leftValue == null)
             return false != notExpression.Not;
 
-         // If there's no right side, success.
-         if (String.IsNullOrEmpty(notExpression.Expression.RightName))
+         // If there's no right side, success. (Oddly, the parser interprets this: [hero.stage=Stage] as this: [hero.stage=.Stage]. Maybe that should be fixed at some point. But for now, just have this function check the labels, not the name).
+
+         if (!notExpression.Expression.RightLabels.Any())
             return true != notExpression.Not;
 
          // Otherwise, compare to right side.
@@ -437,7 +431,11 @@ namespace Game
          Description description,
          Continuation continuation)
       {
-         description.Text += EvaluateItemText(continuation.NodeName, continuation.Variables) + "\r\n";
+         var text = EvaluateItemText(continuation.NodeName, continuation.Variables);
+         if (!String.IsNullOrEmpty(text))
+         {
+            description.Text += text + "\r\n";
+         }
          foreach (var arrowNameObject in Tags.AllWithNameAndLabel(continuation.NodeName, "arrow"))
          {
             var arrowName = ValueString(arrowNameObject, continuation.Variables);
@@ -492,11 +490,10 @@ namespace Game
          var description = new Description();
          var removedContinuations = new List<Continuation>();
          var addedContinuations = new List<Continuation>();
-         // Go over every possible description. We are going to ignore some or all of these.
          foreach (var continuation in Continuations)
          {
             var arrowReasons = new Dictionary<string, string>();
-            var continuationHasPlayerOptions = false;
+            var automaticArrowNames = new List<string>();
             var arrowCount = 0;
             foreach (var arrowNameObject in Tags.AllWithNameAndLabel(continuation.NodeName, "arrow"))
             {
@@ -507,9 +504,9 @@ namespace Game
                   continue; // to next arrow
                // We always have to add the arrow, even if there was no reason specified for the arrow due to '&& !arrowReasons.Any()' condition below.
                arrowReasons.Add(arrowName, "put the real reason here later when we've figured that out");
-               if (!String.IsNullOrWhiteSpace(optionText))
+               if (String.IsNullOrWhiteSpace(optionText))
                {
-                  continuationHasPlayerOptions = true;
+                  automaticArrowNames.Add(arrowName);
                }
             }
             if (arrowCount > 0 && !arrowReasons.Any())
@@ -518,11 +515,10 @@ namespace Game
                continue; // to next continuation
             }
             var describedContinuation = continuation;
-            if (arrowCount > 0 && !continuationHasPlayerOptions)
+            if (arrowCount > 0 && automaticArrowNames.Any())
             {
-               // There are no player options so we can move forward automatically.
-               var bestArrowName = SelectBestArrow(arrowReasons);
-               (var newContinuation, var removedContinuation) = ShiftContinuationToArrowTarget(bestArrowName, continuation);
+               // We only present options to the player if there are no automatic options, i.e. auto options override player options. This allows us to force escape from stories automatically, etc. It's a bad idea to make it possible to have more than one to be true at the same time. If so, just pick the first one.
+               (var newContinuation, var removedContinuation) = ShiftContinuationToArrowTarget(automaticArrowNames[0], continuation);
                if (removedContinuation != null)
                {
                   removedContinuations.Add(continuation);
