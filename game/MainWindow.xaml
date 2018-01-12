@@ -5,23 +5,29 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Game"
         mc:Ignorable="d"
-        Title="MainWindow" Height="726.5" Width="1108.8">
-    <Grid Background="White">
-        <Border Background="White" BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left" Height="634" Margin="28,23,0,0" VerticalAlignment="Top" Width="360">
-            <ItemsControl Margin="10,15,10,0">
-                <TextBlock x:Name="StageListTitleText" TextWrapping="Wrap" Margin="20,20,20,0" FontSize="13" FontFamily="Georgia"/>
-                <Separator Margin="20, 12, 20, 10"/>
-                <ListBox x:Name="StageListBox" HorizontalAlignment="Left" Height="562" Margin="10,0,10,10" BorderBrush="White" VerticalAlignment="Top" Width="312" ScrollViewer.HorizontalScrollBarVisibility="Disabled" FontSize="13" SelectionChanged="StageListBox_SelectionChanged" FontFamily="Georgia"/>
-            </ItemsControl>
-        </Border>
+        Title="MainWindow" Height="695" Width="1050.3">
+    <Grid Background="#FFE5E5E5">
+        <TabControl HorizontalAlignment="Left" Height="621" Margin="22,23,0,0" VerticalAlignment="Top" Width="356">
+            <TabItem Header="Location">
+                <ItemsControl Margin="10,10,10,0">
+                    <TextBlock x:Name="StageListTitleText" TextWrapping="Wrap" Margin="20,20,20,0" FontSize="13" FontFamily="Georgia"/>
+                    <Separator Margin="20, 12, 20, 10"/>
+                    <ListBox x:Name="StageListBox" HorizontalAlignment="Left" Height="510" Margin="10,0,0,0" BorderBrush="White" VerticalAlignment="Top" Width="312" ScrollViewer.HorizontalScrollBarVisibility="Disabled" FontSize="13" SelectionChanged="StageListBox_SelectionChanged" FontFamily="Georgia"/>
+                </ItemsControl>
+            </TabItem>
+            <TabItem Header="Contents">
+                <Grid Background="#FFE5E5E5" RenderTransformOrigin="0.33,4.788"/>
+            </TabItem>
+        </TabControl>
 
-        <Border Background="White" BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left" Height="634" Margin="405,23,0,0" VerticalAlignment="Top" Width="360">
+        <Border Background="White" BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" BorderThickness="1" HorizontalAlignment="Left" Height="599" Margin="379,45,0,0" VerticalAlignment="Top" Width="382">
             <ItemsControl x:Name="StoryArea" Margin="30,30,30,30" FontFamily="Georgia" FontSize="13">
             </ItemsControl>
         </Border>
 
-        <Border Background="White" BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left" Height="634" Margin="784,23,0,0" VerticalAlignment="Top" Width="282">
-            <ListBox x:Name="ReactionListBox" HorizontalAlignment="Left" Height="587" Margin="10,15,0,0" VerticalAlignment="Top" Width="261" ScrollViewer.HorizontalScrollBarVisibility="Disabled"  BorderBrush="White" SelectionChanged="ReactionListBox_SelectionChanged" BorderThickness="1,1,1,1" FontFamily="Segoe UI" FontSize="13"/>
+        <Border Background="White" BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" BorderThickness="1" HorizontalAlignment="Left" Height="599" Margin="762,45,0,0" VerticalAlignment="Top" Width="260">
+            <ListBox x:Name="ReactionListBox" HorizontalAlignment="Left" Height="573" Margin="10,15,0,0" VerticalAlignment="Top" Width="239" ScrollViewer.HorizontalScrollBarVisibility="Disabled"  BorderBrush="White" SelectionChanged="ReactionListBox_SelectionChanged" BorderThickness="1,1,1,1" FontFamily="Segoe UI" FontSize="13"/>
         </Border>
+
     </Grid>
 </Window>
