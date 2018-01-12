@@ -6,8 +6,8 @@
         xmlns:local="clr-namespace:Game"
         mc:Ignorable="d"
         Title="MainWindow" Height="726.5" Width="1108.8">
-    <Grid>
-        <Border BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left" Height="634" Margin="28,23,0,0" VerticalAlignment="Top" Width="360">
+    <Grid Background="White">
+        <Border Background="White" BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left" Height="634" Margin="28,23,0,0" VerticalAlignment="Top" Width="360">
             <ItemsControl Margin="10,15,10,0">
                 <TextBlock x:Name="StageListTitleText" TextWrapping="Wrap" Margin="20,20,20,0" FontSize="13" FontFamily="Georgia"/>
                 <Separator Margin="20, 12, 20, 10"/>
@@ -15,12 +15,12 @@
             </ItemsControl>
         </Border>
 
-        <Border BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left" Height="634" Margin="405,23,0,0" VerticalAlignment="Top" Width="360">
+        <Border Background="White" BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left" Height="634" Margin="405,23,0,0" VerticalAlignment="Top" Width="360">
             <ItemsControl x:Name="StoryArea" Margin="30,30,30,30" FontFamily="Georgia" FontSize="13">
             </ItemsControl>
         </Border>
 
-        <Border BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left" Height="634" Margin="784,23,0,0" VerticalAlignment="Top" Width="282">
+        <Border Background="White" BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left" Height="634" Margin="784,23,0,0" VerticalAlignment="Top" Width="282">
             <ListBox x:Name="ReactionListBox" HorizontalAlignment="Left" Height="587" Margin="10,15,0,0" VerticalAlignment="Top" Width="261" ScrollViewer.HorizontalScrollBarVisibility="Disabled"  BorderBrush="White" SelectionChanged="ReactionListBox_SelectionChanged" BorderThickness="1,1,1,1" FontFamily="Segoe UI" FontSize="13"/>
         </Border>
     </Grid>

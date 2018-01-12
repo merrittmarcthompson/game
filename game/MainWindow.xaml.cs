@@ -157,6 +157,7 @@ namespace Game
 
          var title = (TextBlock)FindName("StageListTitleText");
          SetupTextBlock(title, Engine.GetHeroStageDescription(), false);
+
          var stageListBox = (ListBox)FindName("StageListBox");
          stageListBox.Items.Clear();
          foreach ((var nodeText, var targetName) in Engine.HeroStageContents())
@@ -165,11 +166,16 @@ namespace Game
             SetupTextBlock(block, nodeText, true);
             AddToListBox(stageListBox, block, targetName);
          }
+
          var storyArea = (ItemsControl)FindName("StoryArea");
-         var storyBlock = new TextBlock();
-         SetupTextBlock(storyBlock, description.Text, false);
          storyArea.Items.Clear();
-         storyArea.Items.Add(storyBlock);
+         foreach (var paragraph in description.Text.Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
+         {
+            var storyBlock = new TextBlock();
+            SetupTextBlock(storyBlock, paragraph, true);
+            storyArea.Items.Add(storyBlock);
+         }
+
          var reactionListBox = (ListBox)FindName("ReactionListBox");
          reactionListBox.Items.Clear();
          foreach (var reaction in description.Options)
