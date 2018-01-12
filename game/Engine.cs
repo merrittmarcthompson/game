@@ -537,9 +537,34 @@ namespace Game
          return description;
       }
 
+      public static string GetHeroContainerDescription()
+      {
+         var heroContainer = Tags.FirstWithNameAndLabel("hero", "subject");
+         if (heroContainer == null)
+         {
+            return null;
+         }
+         return EvaluateItemText(heroContainer, null);
+      }
+
+      public static IEnumerable<(string nodeText, string targetName)> HeroSubjectContents()
+      {
+         var heroSubject = Tags.FirstWithNameAndLabel("hero", "subject");
+         if (heroSubject == null)
+            yield break;
+
+         foreach (var subjectChildName in Tags.AllWithLabelAndValue("container", heroSubject))
+         {
+            var listText = ValueString(Tags.FirstWithNameAndLabel(subjectChildName, "listText"), null);
+            if (String.IsNullOrWhiteSpace(listText))
+               continue;
+            yield return (listText, subjectChildName);
+         }
+      }
+
       public static void SelectItem(
-         string itemName,
-         bool set)
+            string itemName,
+            bool set)
       {
          Tags.Remove(itemName, "isSelected");
          if (set)

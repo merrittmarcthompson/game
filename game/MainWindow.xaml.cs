@@ -128,6 +128,25 @@ namespace Game
          SetupScreen();
       }
 
+      private void ContainerListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+      {
+         // Get rid of key bounce.
+         if (DateTime.Now < NextGoodClick)
+            return;
+         NextGoodClick = DateTime.Now.AddSeconds(0.5);
+
+         var listBox = sender as ListBox;
+         var panel = listBox.SelectedItem as DockPanel;
+         if (panel == null)
+            return;
+
+         var option = panel.Tag as Description.Option;
+         Engine.ShiftContinuationByChoice(option);
+
+         // Show the current stage and stories.
+         SetupScreen();
+      }
+
       private void StageListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
       {
          // Get rid of key bounce.
@@ -155,8 +174,8 @@ namespace Game
 
          var description = Engine.UpdateContinuations();
 
-         var title = (TextBlock)FindName("StageListTitleText");
-         SetupTextBlock(title, Engine.GetHeroStageDescription(), false);
+         var stageTitle = (TextBlock)FindName("StageListTitleText");
+         SetupTextBlock(stageTitle, Engine.GetHeroStageDescription(), false);
 
          var stageListBox = (ListBox)FindName("StageListBox");
          stageListBox.Items.Clear();
@@ -165,6 +184,30 @@ namespace Game
             var block = new TextBlock();
             SetupTextBlock(block, nodeText, true);
             AddToListBox(stageListBox, block, targetName);
+         }
+
+         var containerTab = (TabItem)FindName("ContainerTab");
+         var heroTab = (TabItem)FindName("HeroTab");
+         var containerTitle = (TextBlock)FindName("ContainerListTitleText");
+         var containerDescription = Engine.GetHeroContainerDescription();
+         if (containerDescription == null)
+         {
+            containerTab.Visibility = Visibility.Hidden;
+         }
+         else
+         {
+            containerTab.Visibility = Visibility.Visible;
+            containerTab.IsSelected = true;
+            SetupTextBlock(containerTitle, containerDescription, false);
+
+            var containerListBox = (ListBox)FindName("ContainerListBox");
+            stageListBox.Items.Clear();
+            foreach ((var nodeText, var targetName) in Engine.HeroSubjectContents())
+            {
+               var block = new TextBlock();
+               SetupTextBlock(block, nodeText, true);
+               AddToListBox(containerListBox, block, targetName);
+            }
          }
 
          var storyArea = (ItemsControl)FindName("StoryArea");
