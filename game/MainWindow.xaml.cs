@@ -115,6 +115,12 @@ namespace Game
          var panel = listBox.SelectedItem as DockPanel;
          if (panel == null)
             return;
+         listBox.SelectedIndex = -1;
+
+         // Get rid of key bounce.
+         if (DateTime.Now < NextGoodClick)
+            return;
+         NextGoodClick = DateTime.Now.AddSeconds(1);
 
          var option = panel.Tag as Description.Option;
          Engine.ShiftContinuationByChoice(option);
@@ -142,12 +148,14 @@ namespace Game
          NextGoodClick = DateTime.Now.AddSeconds(1);
 
          // When you click on an item in the stage box, set its isSelected property. That will have an effect on the next shift, possibly producing a new stage or a new story node.
-         Engine.SelectItem(panel.Tag as string, true);
+         // It stays selected until something else gets selected. That helps stories that are stopped if you lose interest in them and select something else
+         Engine.SetTag(panel.Tag as string, "isJustSelected");
+         Engine.SetTag(panel.Tag as string, "isStillSelected");
 
          // Show the current stage and stories.
          SetupScreen(panel.Tag as string);
 
-         Engine.SelectItem(panel.Tag as string, false);
+         Engine.ResetTag(panel.Tag as string, "isJustSelected");
       }
 
       /* There are two issues:

@@ -563,15 +563,19 @@ namespace Game
          }
       }
 
-      public static void SelectItem(
+      public static void SetTag(
             string itemName,
-            bool set)
+            string label)
       {
-         Tags.Remove(itemName, "isSelected");
-         if (set)
-         {
-            Tags.Add(itemName, "isSelected", "");
-         }
+         Tags.Remove(itemName, label);
+         Tags.Add(itemName, label, "");
+      }
+
+      public static void ResetTag(
+            string itemName,
+            string label)
+      {
+         Tags.Remove(itemName, label);
       }
 
       public static string GetHeroStageDescription()
