@@ -8,8 +8,8 @@ namespace Game
 {
    public partial class MainWindow : Window
    {
-      private DateTime NextGoodClick = DateTime.Now;
       private int Round = 0;
+      private DateTime NextGoodClick = DateTime.Now;
 
       private void SetupTextBlock(
         TextBlock block,
@@ -92,7 +92,7 @@ namespace Game
          block.TextWrapping = TextWrapping.Wrap;
          if (isListItem)
          {
-            block.Margin = new Thickness(5, 2.5, 5, 1);
+            block.Margin = new Thickness(5, 2.5, 5, 2);
          }
          block.LineHeight = 20;
       }
@@ -111,11 +111,6 @@ namespace Game
 
       private void ReactionListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
       {
-         // Get rid of key bounce.
-         if (DateTime.Now < NextGoodClick)
-            return;
-         NextGoodClick = DateTime.Now.AddSeconds(0.5);
-
          var listBox = sender as ListBox;
          var panel = listBox.SelectedItem as DockPanel;
          if (panel == null)
@@ -125,52 +120,43 @@ namespace Game
          Engine.ShiftContinuationByChoice(option);
 
          // Show the current stage and stories.
-         SetupScreen();
+         SetupScreen(null);
       }
 
       private void ContainerListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
       {
-         // Get rid of key bounce.
-         if (DateTime.Now < NextGoodClick)
-            return;
-         NextGoodClick = DateTime.Now.AddSeconds(0.5);
-
-         var listBox = sender as ListBox;
-         var panel = listBox.SelectedItem as DockPanel;
-         if (panel == null)
-            return;
-
-         var option = panel.Tag as Description.Option;
-         Engine.ShiftContinuationByChoice(option);
-
-         // Show the current stage and stories.
-         SetupScreen();
+         StageListBox_SelectionChanged(sender, e);
       }
 
       private void StageListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
       {
-         // Get rid of key bounce.
-         if (DateTime.Now < NextGoodClick)
-            return;
-         NextGoodClick = DateTime.Now.AddSeconds(0.5);
-
          var listBox = sender as ListBox;
          var panel = listBox.SelectedItem as DockPanel;
          if (panel == null)
             return;
+         listBox.SelectedIndex = -1;
+
+         // Get rid of key bounce.
+         if (DateTime.Now < NextGoodClick)
+            return;
+         NextGoodClick = DateTime.Now.AddSeconds(1);
 
          // When you click on an item in the stage box, set its isSelected property. That will have an effect on the next shift, possibly producing a new stage or a new story node.
          Engine.SelectItem(panel.Tag as string, true);
 
          // Show the current stage and stories.
-         SetupScreen();
+         SetupScreen(panel.Tag as string);
 
          Engine.SelectItem(panel.Tag as string, false);
       }
 
-      private void SetupScreen()
+      /* There are two issues:
+         1. It should only pop over to the container tab when it first appears.
+         2. When you select anything else on the location tab, the container tab goes away. */
+      private void SetupScreen(
+         string selectedName)
       {
-         Log.Add(String.Format("ROUND {0}", ++Round));
+         Log.Add(String.Format("Round {0}", ++Round));
 
          var description = Engine.UpdateContinuations();
 
@@ -189,19 +175,23 @@ namespace Game
          var containerTab = (TabItem)FindName("ContainerTab");
          var heroTab = (TabItem)FindName("HeroTab");
          var containerTitle = (TextBlock)FindName("ContainerListTitleText");
-         var containerDescription = Engine.GetHeroContainerDescription();
+         var (containerDescription, containerName) = Engine.GetHeroSubjectDescription();
          if (containerDescription == null)
          {
             containerTab.Visibility = Visibility.Hidden;
          }
          else
          {
+            if (containerName == selectedName)
+            {
+               // Switch over to the container tab.
+               containerTab.IsSelected = true;
+            }
             containerTab.Visibility = Visibility.Visible;
-            containerTab.IsSelected = true;
             SetupTextBlock(containerTitle, containerDescription, false);
 
             var containerListBox = (ListBox)FindName("ContainerListBox");
-            stageListBox.Items.Clear();
+            containerListBox.Items.Clear();
             foreach ((var nodeText, var targetName) in Engine.HeroSubjectContents())
             {
                var block = new TextBlock();
@@ -239,7 +229,7 @@ namespace Game
          Log.Add("Started");
          InitializeComponent();
          Engine.LoadSource();
-         SetupScreen();
+         SetupScreen(null);
          /*
            }
            catch (Exception e)

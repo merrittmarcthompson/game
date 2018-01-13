@@ -312,19 +312,19 @@ namespace Game
          // We've gotten to the end of the not-expressions--success.
          if (index >= notExpressions.Count)
          {
-            Log.Add(new string(' ', (index + 1) * 2) + "Win!");
+            //Log.Add(new string(' ', (index + 1) * 2) + "Win!");
             return true;
          }
 
          var notExpression = notExpressions[index];
-
+         /*
          string variableList = "";
          foreach (var variable in variables)
          {
             variableList += variable.Key + "=" + variable.Value + " ";
          }
          Log.Add(new string(' ', (index + 1) * 2) + notExpression + " | " + variableList);
-
+         */
          /* There are various cases here:
 
              Iteration over all values that satisfy:
@@ -460,6 +460,7 @@ namespace Game
          var newContinuation = new Continuation();
          newContinuation.IsStart = false;
          newContinuation.NodeName = ValueString(Tags.FirstWithNameAndLabel(arrowName, "target"), continuation.Variables);
+         Log.Add(String.Format("Shift from {0} to {1} via {2}", continuation.NodeName, newContinuation.NodeName, arrowName));
          newContinuation.Variables = continuation.Variables;
          EvaluateItemTags(newContinuation.NodeName, newContinuation.Variables);
          if (continuation.IsStart)
@@ -537,14 +538,14 @@ namespace Game
          return description;
       }
 
-      public static string GetHeroContainerDescription()
+      public static (string, string) GetHeroSubjectDescription()
       {
          var heroContainer = Tags.FirstWithNameAndLabel("hero", "subject");
          if (heroContainer == null)
          {
-            return null;
+            return (null, null);
          }
-         return EvaluateItemText(heroContainer, null);
+         return (EvaluateItemText(heroContainer, null), heroContainer as string);
       }
 
       public static IEnumerable<(string nodeText, string targetName)> HeroSubjectContents()

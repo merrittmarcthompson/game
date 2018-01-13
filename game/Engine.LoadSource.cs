@@ -91,23 +91,69 @@ namespace Game
             }
          }
 
+         void AddExplicitMapTagObjectNames(
+            Tags fileBaseTags)
+         {
+            // Make all the implicit tag names (ex. [if isLarge] or [parent.onText]) explicit (ex. [if map_test_n1.isLarge] or [map_test_e2.parent.onText]).
+            /* There are two situations:
+               onText => .onText => explicitName.onText
+               parent.onText => parent.onText => explicitName.parent.onText
+            */
+            foreach ((var itemName, var itemValue) in fileBaseTags.AllWithLabel("text"))
+            {
+               (itemValue as SequenceObject).Traverse((@object) =>
+               {
+                  switch (@object)
+                  {
+                     case SubstitutionObject substitutionObject:
+                        if (substitutionObject.Expression.LeftName != "")
+                        {
+                           substitutionObject.Expression.LeftLabels.Insert(0, substitutionObject.Expression.LeftName);
+                        }
+                        substitutionObject.Expression.LeftName = itemName;
+                        break;
+                     case TagObject tagObject:
+                        if (tagObject.Expression.LeftName != "")
+                        {
+                           tagObject.Expression.LeftLabels.Insert(0, tagObject.Expression.LeftName);
+                        }
+                        tagObject.Expression.LeftName = itemName;
+                        break;
+                     case IfObject ifObject:
+                        foreach (var notExpression in ifObject.NotExpressions)
+                        {
+                           if (notExpression.Expression.LeftName != "")
+                           {
+                              notExpression.Expression.LeftLabels.Insert(0, notExpression.Expression.LeftName);
+                           }
+                           notExpression.Expression.LeftName = itemName;
+                           if (notExpression.Expression.RightName != "")
+                           {
+                              notExpression.Expression.RightLabels.Insert(0, notExpression.Expression.RightName);
+                           }
+                           notExpression.Expression.RightName = itemName;
+                        }
+                        break;
+                  }
+                  return true;
+               });
+            }
+         }
+
          Tags TagItems(
             Tags fileBaseTags)
          {
-            // Execute the object text for maps.
+            // Execute the object text.
             var fileNewTags = new Tags();
             foreach ((var itemName, var itemValue) in fileBaseTags.AllWithLabel("text"))
             {
                // Execute all the tag directives. This is more limited than the full tagging done in story nodes.
-               (itemValue as SequenceObject).Traverse((@object) =>
+               (itemValue as SequenceObject).Traverse(@object =>
                {
                   if (!(@object is TagObject tagObject))
                      return true;
                   // [untag label] is just a comment in a map file. There's nothing in the tags to start with, so everything is untagged.
                   if (tagObject.Untag)
-                     return true;
-                  // Only do tags with no explicit name, i.e. ones that tag the object itself.
-                  if (tagObject.Expression.LeftName != "")
                      return true;
                   if (tagObject.Expression.LeftLabels.Count != 1)
                   {
@@ -124,40 +170,6 @@ namespace Game
                   else
                   {
                      fileNewTags.Add(itemName, tagObject.Expression.LeftLabels[0], "");
-                  }
-                  return true;
-               });
-
-               // Make all the implicit tag names (ex. [if isLarge]) explicit (ex. [if map_test_n1.isLarge]).
-               (itemValue as SequenceObject).Traverse((@object) =>
-               {
-                  switch (@object)
-                  {
-                     case SubstitutionObject substitutionObject:
-                        if (substitutionObject.Expression.LeftName == "")
-                        {
-                           substitutionObject.Expression.LeftName = itemName;
-                        }
-                        break;
-                     case TagObject tagObject:
-                        if (tagObject.Expression.LeftName == "")
-                        {
-                           tagObject.Expression.LeftName = itemName;
-                        }
-                        break;
-                     case IfObject ifObject:
-                        foreach (var notExpression in ifObject.NotExpressions)
-                        {
-                           if (notExpression.Expression.LeftName == "")
-                           {
-                              notExpression.Expression.LeftName = itemName;
-                           }
-                           if (notExpression.Expression.RightName == "")
-                           {
-                              notExpression.Expression.RightName = itemName;
-                           }
-                        }
-                        break;
                   }
                   return true;
                });
@@ -179,6 +191,46 @@ namespace Game
             }
          }
 
+         void ChangeNamesInText(
+            object listText,
+            string arrowName,
+            string subordinateNode)
+         {
+            // We've taken text from the arrow and we're going to move it to the arrow's target node. Change any object code that reference the arrow name to reference the target node.
+            (listText as SequenceObject).Traverse(@object =>
+            {
+               switch (@object)
+               {
+                  case SubstitutionObject substitutionObject:
+                     if (substitutionObject.Expression.LeftName == arrowName)
+                     {
+                        substitutionObject.Expression.LeftName = subordinateNode;
+                     }
+                     break;
+                  case TagObject tagObject:
+                     if (tagObject.Expression.LeftName == arrowName)
+                     {
+                        tagObject.Expression.LeftName = subordinateNode;
+                     }
+                     break;
+                  case IfObject ifObject:
+                     foreach (var notExpression in ifObject.NotExpressions)
+                     {
+                        if (notExpression.Expression.LeftName == arrowName)
+                        {
+                           notExpression.Expression.LeftName = subordinateNode;
+                        }
+                        if (notExpression.Expression.RightName == arrowName)
+                        {
+                           notExpression.Expression.RightName = subordinateNode;
+                        }
+                     }
+                     break;
+               }
+               return true;
+            });
+         }
+
          Tags BuildContainingTagsForNodes()
          {
             Tags newTags = new Tags();
@@ -191,6 +243,7 @@ namespace Game
                   var listText = Tags.FirstWithNameAndLabel(arrowName as string, "text");
                   newTags.Add(subordinateNode as string, "stage", nodeName);
                   newTags.Add(subordinateNode as string, "parent", nodeName);
+                  ChangeNamesInText(listText, arrowName as string, subordinateNode as string);
                   newTags.Add(subordinateNode as string, "listText", listText);
                }
             }
@@ -202,6 +255,7 @@ namespace Game
                   var listText = Tags.FirstWithNameAndLabel(arrowName as string, "text");
                   newTags.Add(subordinateNode as string, "container", nodeName);
                   newTags.Add(subordinateNode as string, "parent", nodeName);
+                  ChangeNamesInText(listText, arrowName as string, subordinateNode as string);
                   newTags.Add(subordinateNode as string, "listText", listText);
                }
             }
@@ -264,6 +318,7 @@ namespace Game
             if (isMap)
             {
                RenameBaseTags(fileBaseTags);
+               AddExplicitMapTagObjectNames(fileBaseTags);
                fileNewTags = TagItems(fileBaseTags);
             }
             else
@@ -274,7 +329,7 @@ namespace Game
             Tags.Merge(fileBaseTags);
             Tags.Merge(fileNewTags);
          }
-
+         Log.SetSourceName(null);
          Tags.Merge(BuildContainingTagsForNodes());
       }
    }

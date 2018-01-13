@@ -30,10 +30,6 @@ namespace Game
          {
             result += ":\r\n" + SourceText;
          }
-         else
-         {
-            result += "\r\n";
-         }
          return result;
       } 
 
