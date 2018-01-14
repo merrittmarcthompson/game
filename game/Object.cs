@@ -146,6 +146,10 @@ namespace Game
         Func<Object, bool> examine)
       {
          examine(this);
+         if (RightText != null)
+         {
+            RightText.Traverse(examine);
+         }
       }
       public override string ToString()
       {

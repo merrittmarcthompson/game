@@ -10,6 +10,7 @@ namespace Game
    {
       private int Round = 0;
       private DateTime NextGoodClick = DateTime.Now;
+      private string LastSelectedItem = null;
 
       private void SetupTextBlock(
         TextBlock block,
@@ -129,7 +130,7 @@ namespace Game
          SetupScreen(null);
       }
 
-      private void ContainerListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+      private void StorageListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
       {
          StageListBox_SelectionChanged(sender, e);
       }
@@ -149,18 +150,24 @@ namespace Game
 
          // When you click on an item in the stage box, set its isSelected property. That will have an effect on the next shift, possibly producing a new stage or a new story node.
          // It stays selected until something else gets selected. That helps stories that are stopped if you lose interest in them and select something else
-         Engine.SetTag(panel.Tag as string, "isJustSelected");
-         Engine.SetTag(panel.Tag as string, "isStillSelected");
+         var selectedItem = panel.Tag as string;
+         Engine.SetTag(selectedItem, "isJustSelected");
+         if (selectedItem != LastSelectedItem)
+         {
+            Engine.ResetTag(LastSelectedItem, "isStillSelected");
+            Engine.SetTag(selectedItem, "isStillSelected");
+            LastSelectedItem = selectedItem;
+         }
 
          // Show the current stage and stories.
-         SetupScreen(panel.Tag as string);
+         SetupScreen(selectedItem);
 
-         Engine.ResetTag(panel.Tag as string, "isJustSelected");
+         Engine.ResetTag(selectedItem, "isJustSelected");
       }
 
       /* There are two issues:
-         1. It should only pop over to the container tab when it first appears.
-         2. When you select anything else on the location tab, the container tab goes away. */
+         1. It should only pop over to the storage tab when it first appears.
+         2. When you select anything else on the location tab, the storage tab goes away. */
       private void SetupScreen(
          string selectedName)
       {
@@ -180,31 +187,31 @@ namespace Game
             AddToListBox(stageListBox, block, targetName);
          }
 
-         var containerTab = (TabItem)FindName("ContainerTab");
+         var storageTab = (TabItem)FindName("StorageTab");
          var heroTab = (TabItem)FindName("HeroTab");
-         var containerTitle = (TextBlock)FindName("ContainerListTitleText");
-         var (containerDescription, containerName) = Engine.GetHeroSubjectDescription();
-         if (containerDescription == null)
+         var storageTitle = (TextBlock)FindName("StorageListTitleText");
+         var (storageDescription, storageName) = Engine.GetHeroSubjectDescription();
+         if (storageDescription == null)
          {
-            containerTab.Visibility = Visibility.Hidden;
+            storageTab.Visibility = Visibility.Hidden;
          }
          else
          {
-            if (containerName == selectedName)
+            if (storageName == selectedName)
             {
-               // Switch over to the container tab.
-               containerTab.IsSelected = true;
+               // Switch over to the storage tab.
+               storageTab.IsSelected = true;
             }
-            containerTab.Visibility = Visibility.Visible;
-            SetupTextBlock(containerTitle, containerDescription, false);
+            storageTab.Visibility = Visibility.Visible;
+            SetupTextBlock(storageTitle, storageDescription, false);
 
-            var containerListBox = (ListBox)FindName("ContainerListBox");
-            containerListBox.Items.Clear();
+            var storageListBox = (ListBox)FindName("StorageListBox");
+            storageListBox.Items.Clear();
             foreach ((var nodeText, var targetName) in Engine.HeroSubjectContents())
             {
                var block = new TextBlock();
                SetupTextBlock(block, nodeText, true);
-               AddToListBox(containerListBox, block, targetName);
+               AddToListBox(storageListBox, block, targetName);
             }
          }
 

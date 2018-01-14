@@ -540,12 +540,12 @@ namespace Game
 
       public static (string, string) GetHeroSubjectDescription()
       {
-         var heroContainer = Tags.FirstWithNameAndLabel("hero", "subject");
-         if (heroContainer == null)
+         var heroStorage = Tags.FirstWithNameAndLabel("hero", "subject");
+         if (heroStorage == null)
          {
             return (null, null);
          }
-         return (EvaluateItemText(heroContainer, null), heroContainer as string);
+         return (EvaluateItemText(heroStorage, null), heroStorage as string);
       }
 
       public static IEnumerable<(string nodeText, string targetName)> HeroSubjectContents()
@@ -554,7 +554,7 @@ namespace Game
          if (heroSubject == null)
             yield break;
 
-         foreach (var subjectChildName in Tags.AllWithLabelAndValue("container", heroSubject))
+         foreach (var subjectChildName in Tags.AllWithLabelAndValue("storage", heroSubject))
          {
             var listText = ValueString(Tags.FirstWithNameAndLabel(subjectChildName, "listText"), null);
             if (String.IsNullOrWhiteSpace(listText))

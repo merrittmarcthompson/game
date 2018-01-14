@@ -17,11 +17,11 @@
             </TabItem>
             <TabItem x:Name="HeroTab" Header="Hero">
             </TabItem>
-            <TabItem x:Name="ContainerTab" Header="Container">
+            <TabItem x:Name="StorageTab" Header="Storage">
                 <ItemsControl Margin="10,10,10,0">
-                    <TextBlock x:Name="ContainerListTitleText" TextWrapping="Wrap" Margin="20,20,20,0" FontSize="13" FontFamily="Georgia"/>
+                    <TextBlock x:Name="StorageListTitleText" TextWrapping="Wrap" Margin="20,20,20,0" FontSize="13" FontFamily="Georgia"/>
                     <Separator Margin="20, 12, 20, 10"/>
-                    <ListBox x:Name="ContainerListBox" HorizontalAlignment="Left" Height="510" Margin="10,0,0,0" BorderBrush="White" VerticalAlignment="Top" Width="312" ScrollViewer.HorizontalScrollBarVisibility="Disabled" FontSize="13" SelectionChanged="ContainerListBox_SelectionChanged" FontFamily="Georgia"/>
+                    <ListBox x:Name="StorageListBox" HorizontalAlignment="Left" Height="510" Margin="10,0,0,0" BorderBrush="White" VerticalAlignment="Top" Width="312" ScrollViewer.HorizontalScrollBarVisibility="Disabled" FontSize="13" SelectionChanged="StorageListBox_SelectionChanged" FontFamily="Georgia"/>
                 </ItemsControl>
             </TabItem>
         </TabControl>

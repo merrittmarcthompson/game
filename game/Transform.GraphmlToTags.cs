@@ -85,21 +85,25 @@ namespace Game
             result.Add(id, "isNode", "");
             var color = node.Descendants(y + "Fill").First().Attribute("color")?.Value;
             var color2 = node.Descendants(y + "Fill").First().Attribute("color2")?.Value;
-            if (color == "#FFCC99")
+            if (color == "#FFCC99") // light orange
             {
                result.Add(id, "isStage", "");
             }
-            else if (color == "#99CCFF")
+            else if (color == "#99CCFF") // light blue
             {
                result.Add(id, "isDoor", "");
             }
-            else if (color == "#FFFF99" || color2 == "#FFFF99")
+            else if (color == "#FFFF99") // light yellow
             {
-               result.Add(id, "isContainer", "");
+               result.Add(id, "isStorage", "");
             }
-            else if (color == "#CCFFCC")
+            else if (color == "#CCFFCC") // light green
             {
-               result.Add(id, "isMobile", "");
+               result.Add(id, "isCast", "");
+            }
+            else if (color == "#C0C0C0") // light gray
+            {
+               result.Add(id, "isProp", "");
             }
          }
          // 2. Add the arrows.

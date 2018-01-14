@@ -77,7 +77,7 @@ namespace Game
         string label)
       {
          var selected = AllWithNameAndLabel(name, label);
-         // LookupFirst can return either a string or null. If it's a boolean tag, ex. [tag hero.isShort], and it is set, then LookupFirst will return "", which means "true". If it isn't set, it will return null, which means "false".
+         // This can return either a string or null. If it's a boolean tag, ex. [tag hero.isShort], and it is set, then LookupFirst will return "", which means "true". If it isn't set, it will return null, which means "false".
          if (selected.Any())
             return selected.First();
          return null;

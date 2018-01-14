@@ -235,26 +235,30 @@ namespace Game
          {
             Tags newTags = new Tags();
             // Mark items for what stage they are on. Only things that are directly pointed to by the stage are on the stage. If a person is on the stage and there's change in his pocket, the change isn't on the stage. But if he takes the money out of his pocket and drops it, the money is now on the stage (that would be done by the 'drop' story).
-            foreach ((var nodeName, var nodeValue) in Tags.AllWithLabel("isStage"))
+            foreach ((var stageName, var nodeValue) in Tags.AllWithLabel("isStage"))
             {
-               foreach (var arrowName in Tags.AllWithNameAndLabel(nodeName, "arrow"))
+               foreach (var arrowName in Tags.AllWithNameAndLabel(stageName, "arrow"))
                {
                   var subordinateNode = Tags.FirstWithNameAndLabel(arrowName as string, "target");
                   var listText = Tags.FirstWithNameAndLabel(arrowName as string, "text");
-                  newTags.Add(subordinateNode as string, "stage", nodeName);
-                  newTags.Add(subordinateNode as string, "parent", nodeName);
+                  newTags.Add(subordinateNode as string, "stage", stageName);
+                  newTags.Add(subordinateNode as string, "parent", stageName);
                   ChangeNamesInText(listText, arrowName as string, subordinateNode as string);
                   newTags.Add(subordinateNode as string, "listText", listText);
+                  if (Tags.FirstWithNameAndLabel(subordinateNode as string, "isCast") != null)
+                  {
+                     newTags.Add(stageName, "cast", subordinateNode);
+                  }
                }
             }
-            foreach ((var nodeName, var nodeValue) in Tags.AllWithLabel("isContainer"))
+            foreach ((var storageName, var nodeValue) in Tags.AllWithLabel("isStorage"))
             {
-               foreach (var arrowName in Tags.AllWithNameAndLabel(nodeName, "arrow"))
+               foreach (var arrowName in Tags.AllWithNameAndLabel(storageName, "arrow"))
                {
                   var subordinateNode = Tags.FirstWithNameAndLabel(arrowName as string, "target");
                   var listText = Tags.FirstWithNameAndLabel(arrowName as string, "text");
-                  newTags.Add(subordinateNode as string, "container", nodeName);
-                  newTags.Add(subordinateNode as string, "parent", nodeName);
+                  newTags.Add(subordinateNode as string, "storage", storageName);
+                  newTags.Add(subordinateNode as string, "parent", storageName);
                   ChangeNamesInText(listText, arrowName as string, subordinateNode as string);
                   newTags.Add(subordinateNode as string, "listText", listText);
                }
