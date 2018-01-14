@@ -9,6 +9,13 @@ namespace Game
       // It's all about these global variables.
       private static Tags Tags = new Tags();
       private static List<Continuation> Continuations = new List<Continuation>();
+      private static int ContinuationSerialNumber = 0;
+
+      private static string GenerateContinuationName(
+         string nodeName)
+      {
+         return ContinuationSerialNumber++.ToString() + "_" + nodeName;
+      }
 
       private static string GetSpecialText(
          string specialId,
@@ -462,16 +469,23 @@ namespace Game
          newContinuation.NodeName = ValueString(Tags.FirstWithNameAndLabel(arrowName, "target"), continuation.Variables);
          Log.Add(String.Format("Shift from {0} to {1} via {2}", continuation.NodeName, newContinuation.NodeName, arrowName));
          newContinuation.Variables = continuation.Variables;
-         EvaluateItemTags(newContinuation.NodeName, newContinuation.Variables);
+         newContinuation.Name = continuation.Name;
          if (continuation.IsStart)
          {
             // Keep it, but clear it for its next use.
             continuation.Variables = new Dictionary<string, object>();
+            // Make a new name for the starting continuation. The new continuation has taken on the old name.
+            continuation.Name = GenerateContinuationName(continuation.NodeName);
+            // Stories can refer to Story.label as a temporary storage area.
+            newContinuation.Variables.Add("Story", continuation.Name);
          }
          else
          {
             removedContinuation = continuation;
          }
+         // Stories can have tags on arrows which are executed when the arrow is selected and you move to its node.
+         EvaluateItemTags(arrowName, newContinuation.Variables);
+         EvaluateItemTags(newContinuation.NodeName, newContinuation.Variables);
          return (newContinuation, removedContinuation);
       }
 
@@ -530,6 +544,15 @@ namespace Game
             AddToDescription(description, describedContinuation);
             if (arrowCount == 0)
             {
+               // Remove temporary Story tags for the continuation.
+               var removedTags = new Tags();
+               var name = continuation.Variables["Story"] as string;
+               foreach ((var label, var value) in Tags.AllWithName(name))
+               {
+                  removedTags.Add(name, label, value);
+               }
+               Tags.Unmerge(removedTags);
+               // Remove the continuation itself.
                removedContinuations.Add(continuation);
             }
          }

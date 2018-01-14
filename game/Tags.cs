@@ -6,7 +6,7 @@ namespace Game
 {
    public class Tags
    {
-      private class Tag
+      private class Tag: IEquatable<Tag>
       {
          public string Name { get; set; }
          public string Label { get; set; }
@@ -27,6 +27,11 @@ namespace Game
             // Ex. "lucy.herosFirstName=Johnny"
             return Name + "." + Label + "=" + Value;
          }
+
+         public bool Equals(Tag other)
+         {
+            return Name == other.Name && Label == other.Label && Value == other.Value;
+         }
       }
 
       private HashSet<Tag> Collection = new HashSet<Tag>();
@@ -42,6 +47,12 @@ namespace Game
         Tags otherTags)
       {
          Collection.UnionWith(otherTags.Collection);
+      }
+
+      public void Unmerge(
+         Tags otherTags)
+      {
+         Collection.RemoveWhere(tag => otherTags.Collection.Contains(tag));
       }
 
       public void Add(

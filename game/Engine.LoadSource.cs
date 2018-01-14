@@ -187,6 +187,7 @@ namespace Game
                var continuation = new Continuation();
                continuation.NodeName = nodeName;
                continuation.IsStart = true;
+               continuation.Name = GenerateContinuationName(nodeName);
                Continuations.Add(continuation);
             }
          }

@@ -8,5 +8,6 @@ namespace Game
       public Dictionary<string, object> Variables = new Dictionary<string, object>();
       public string NodeName;
       public bool IsStart;
+      public string Name;
    }
 }

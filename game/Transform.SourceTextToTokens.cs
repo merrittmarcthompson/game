@@ -204,7 +204,7 @@ namespace Game
                            break;
 
                         default:
-                           if (!Char.IsLetterOrDigit(gottenLetter))
+                           if (!Char.IsLetterOrDigit(gottenLetter) || gottenLetter == '_')
                            {
                               Log.Fail(String.Format("line {0}: unexpected character '{1}'", lineNumber, gottenLetter));
                            }
