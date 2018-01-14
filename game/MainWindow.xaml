@@ -16,6 +16,10 @@
                 </ItemsControl>
             </TabItem>
             <TabItem x:Name="HeroTab" Header="Hero">
+                <ItemsControl Margin="10,10,10,0">
+                    <Label Content="Quests:" Margin="10,10,10,0" HorizontalAlignment="Left"/>
+                    <ItemsControl x:Name="QuestListArea" Margin="20,0,0,0"></ItemsControl>
+                </ItemsControl>
             </TabItem>
             <TabItem x:Name="StorageTab" Header="Storage">
                 <ItemsControl Margin="10,10,10,0">

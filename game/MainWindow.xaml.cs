@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -173,7 +173,7 @@ namespace Game
       private void SetupScreen(
          string selectedName)
       {
-         Log.Add(String.Format("Round {0}", ++Round));
+         Log.Add(String.Format("Round {0}", ++Round), null);
 
          var description = Engine.UpdateContinuations();
 
@@ -190,7 +190,6 @@ namespace Game
          }
 
          var storageTab = (TabItem)FindName("StorageTab");
-         var heroTab = (TabItem)FindName("HeroTab");
          var storageTitle = (TextBlock)FindName("StorageListTitleText");
          var (storageDescription, storageName) = Engine.GetHeroSubjectDescription();
          if (storageDescription == null)
@@ -214,6 +213,25 @@ namespace Game
                var block = new TextBlock();
                SetupTextBlock(block, nodeText, true);
                AddToListBox(storageListBox, block, targetName);
+            }
+         }
+
+         var questListArea = (ItemsControl)FindName("QuestListArea");
+         questListArea.Items.Clear();
+         var quests = Engine.HeroQuests();
+         if (!quests.Any())
+         {
+            var block = new TextBlock();
+            SetupTextBlock(block, "None", true);
+            questListArea.Items.Add(block);
+         }
+         else
+         {
+            foreach (var questText in quests)
+            {
+               var block = new TextBlock();
+               SetupTextBlock(block, questText, true);
+               questListArea.Items.Add(block);
             }
          }
 

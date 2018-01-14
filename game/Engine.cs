@@ -90,7 +90,7 @@ namespace Game
             }
             else
             {
-               Log.Fail(String.Format("Unknown special ID {0}.", specialId));
+               Log.Fail(String.Format("Unknown special ID {0}.", specialId), variables);
                return "";
             }
          }
@@ -212,7 +212,7 @@ namespace Game
       {
          if (value == null)
          {
-            Log.Fail("value is null");
+            Log.Fail("Value is null", variables);
          }
          if (value is string)
             return value as string;
@@ -239,7 +239,7 @@ namespace Game
          {
             if (!variables.ContainsKey(name))
             {
-               Log.Fail(String.Format("undefined variable {0}", name));
+               Log.Fail(String.Format("undefined variable {0}", name), variables);
             }
             name = ValueString(variables[name], variables);
          }
@@ -399,7 +399,7 @@ namespace Game
             }
             else
             {
-               Log.Fail("Expected labels or an assignment after a variable.");
+               Log.Fail("Expected labels or an assignment after a variable.", variables);
                return false;
             }
          }
@@ -644,6 +644,14 @@ namespace Game
             if (String.IsNullOrWhiteSpace(description))
                continue;
             yield return (description, stageChildName);
+         }
+      }
+
+      public static IEnumerable<string> HeroQuests()
+      {
+         foreach (var questName in Tags.AllWithNameAndLabel("hero", "quests"))
+         {
+            yield return ValueString(Tags.FirstWithNameAndLabel("quests", ValueString(questName, null)), null);
          }
       }
    }

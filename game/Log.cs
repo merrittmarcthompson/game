@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Windows;
 
@@ -18,7 +19,8 @@ namespace Game
       }
 
       private static string BuildFullMessage(
-         string message)
+         string message,
+         Dictionary<string, object> variables)
       {
          string result = "";
          if (FileName != null)
@@ -30,13 +32,28 @@ namespace Game
          {
             result += ":\r\n" + SourceText;
          }
+         if (variables != null)
+         {
+            foreach (var variable in variables)
+            {
+               result += "\r\n" + variable.Key + "=" + variable.Value.ToString();
+            }
+         }
          return result;
       } 
 
       public static void Add(
+        string message,
+        Dictionary<string, object> variables)
+      {
+         Writer.WriteLine(BuildFullMessage(message, variables));
+         Writer.Flush();
+      }
+
+      public static void Add(
         string message)
       {
-         Writer.WriteLine(BuildFullMessage(message));
+         Writer.WriteLine(BuildFullMessage(message, null));
          Writer.Flush();
       }
 
@@ -44,7 +61,16 @@ namespace Game
         string message)
       {
          Add(message);
-         MessageBox.Show(BuildFullMessage(message), "Game error");
+         MessageBox.Show(BuildFullMessage(message, null), "Game error");
+         Environment.Exit(1);
+      }
+
+      public static void Fail(
+        string message,
+        Dictionary<string, object> variables)
+      {
+         Add(message, variables);
+         MessageBox.Show(BuildFullMessage(message, variables), "Game error");
          Environment.Exit(1);
       }
 
@@ -54,10 +80,12 @@ namespace Game
          FileName = fileName;
       }
 
-      public static void SetSourceText(
+      public static string SetSourceText(
         string sourceText)
       {
+         var previousSourceText = SourceText;
          SourceText = sourceText;
+         return previousSourceText;
       }
    }
 }

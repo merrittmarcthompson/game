@@ -21,12 +21,19 @@ namespace Game
       public override void Traverse(
         Func<Object, bool> examine)
       {
-         Log.SetSourceText(SourceText);
          foreach (var @object in Objects)
          {
+            string previousSourceText = null;
+            if (SourceText != null)
+            {
+               previousSourceText = Log.SetSourceText(SourceText);
+            }
             @object.Traverse(examine);
+            if (previousSourceText != null)
+            {
+               Log.SetSourceText(previousSourceText);
+            }
          }
-         Log.SetSourceText(null);
       }
 
       public override string ToString()
