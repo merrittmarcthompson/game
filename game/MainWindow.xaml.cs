@@ -20,6 +20,8 @@ namespace Game
          block.Inlines.Clear();
          text = Transform.RemoveExtraBlanks(text);
          text = Transform.RemoveBlanksAfterNewLines(text);
+         // Em dashes
+         text = text.Replace("--", "—");
          var accumulator = "";
          for (var i = 0; i < text.Length;)
          {

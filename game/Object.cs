@@ -130,16 +130,19 @@ namespace Game
    {
       public Expression Expression;
       public SequenceObject RightText;
-      public bool Untag;
+      public bool IsUntag;
+      public bool IsBag;
 
       public TagObject(
         Expression expression,
         SequenceObject rightText,
-        bool untag)
+        bool isUntag,
+        bool isBag)
       {
          Expression = expression;
          RightText = rightText;
-         Untag = untag;
+         IsUntag = isUntag;
+         IsBag = isBag;
       }
 
       public override void Traverse(
@@ -153,7 +156,16 @@ namespace Game
       }
       public override string ToString()
       {
-         return (Untag ? "untag " : "tag ") + Expression.ToString();
+         var id = "tag";
+         if (IsUntag)
+         {
+            id = "untag";
+         }
+         else if (IsBag)
+         {
+            id = "bag";
+         }
+         return id + Expression.ToString();
       }
    }
 

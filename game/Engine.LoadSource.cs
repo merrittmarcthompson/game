@@ -153,7 +153,7 @@ namespace Game
                   if (!(@object is TagObject tagObject))
                      return true;
                   // [untag label] is just a comment in a map file. There's nothing in the tags to start with, so everything is untagged.
-                  if (tagObject.Untag)
+                  if (tagObject.IsUntag)
                      return true;
                   if (tagObject.Expression.LeftLabels.Count != 1)
                   {

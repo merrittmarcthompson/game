@@ -10,6 +10,7 @@
       public static TokenType Text = new TokenType("text");
 
       public static TokenType As = new TokenType("'as'");
+      public static TokenType Bag = new TokenType("'bag'");
       public static TokenType End = new TokenType("'end'");
       public static TokenType Else = new TokenType("'else'");
       public static TokenType If = new TokenType("'if'");

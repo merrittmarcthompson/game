@@ -251,6 +251,10 @@ namespace Game
                            {
                               result.Add(new Token(Token.Untag, id, lineNumber));
                            }
+                           else if (id == "bag")
+                           {
+                              result.Add(new Token(Token.Bag, id, lineNumber));
+                           }
                            else if (id == "name")
                            {
                               result.Add(new Token(Token.Name, id, lineNumber));

@@ -249,9 +249,10 @@ namespace Game
                   }
                   result.Objects.Add(new NameObject(GottenToken.Value));
                }
-               else if (GottenToken.Type == Token.Tag || GottenToken.Type == Token.Untag)
+               else if (GottenToken.Type == Token.Tag || GottenToken.Type == Token.Untag || GottenToken.Type == Token.Bag)
                {
                   bool isUntag = GottenToken.Type == Token.Untag;
+                  bool isBag = GottenToken.Type == Token.Bag;
                   var expression = GetExpression();
                   if (expression == null)
                      return null;
@@ -276,7 +277,7 @@ namespace Game
                         UngetToken();
                      }
                   }
-                  result.Objects.Add(new TagObject(expression, asSequenceObject, isUntag));
+                  result.Objects.Add(new TagObject(expression, asSequenceObject, isUntag, isBag));
                }
                else if (GottenToken.Type == Token.When)
                {

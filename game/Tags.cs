@@ -6,11 +6,11 @@ namespace Game
 {
    public class Tags
    {
-      private class Tag: IEquatable<Tag>
+      private class Tag : IEquatable<Tag>
       {
-         public string Name { get; set; }
-         public string Label { get; set; }
-         public object Value { get; set; }
+         public readonly string Name;
+         public readonly string Label;
+         public readonly object Value;
 
          public Tag(
            string name,
@@ -31,6 +31,19 @@ namespace Game
          public bool Equals(Tag other)
          {
             return Name == other.Name && Label == other.Label && Value == other.Value;
+         }
+
+         public override bool Equals(object other)
+         {
+            if (other is Tag otherTag)
+               return Equals(otherTag);
+            return false;
+         }
+
+         public override int GetHashCode()
+         {
+            var hashCode = (Name.GetHashCode() * 17 + Label.GetHashCode()) * 17 + Value.GetHashCode();
+            return hashCode;
          }
       }
 
@@ -60,7 +73,13 @@ namespace Game
         string label,
         object value)
       {
-         Collection.Add(new Tag(name, label, value ?? ""));
+         var candidateTag = new Tag(name, label, value ?? "");
+         // Don't put the same tag in twice. If they look at the same pamphlet two times, the collection should not be bagged with:
+         //    hero.hasRead=pamphlet
+         //    hero.hasRead=pamphlet
+         if (Collection.Contains(candidateTag))
+            return;
+         Collection.Add(candidateTag);
       }
 
       public IEnumerable<string> AllWithLabelAndValue(

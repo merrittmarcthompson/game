@@ -147,7 +147,7 @@ namespace Game
             switch (@object)
             {
                case TagObject tagObject:
-                  if (tagObject.Untag)
+                  if (tagObject.IsUntag)
                   {
                      (var leftName, var leftLabel) = EvaluateLabelListGetLastNameAndLabel(tagObject.Expression.LeftName, tagObject.Expression.LeftLabels, variables);
                      if (leftName == null)
@@ -166,7 +166,10 @@ namespace Game
                      (var leftName, var leftLabel) = EvaluateLabelListGetLastNameAndLabel(tagObject.Expression.LeftName, tagObject.Expression.LeftLabels, variables);
                      if (leftName == null)
                         break;
-                     Tags.Remove(leftName, leftLabel);
+                     if (!tagObject.IsBag)
+                     {
+                        Tags.Remove(leftName, leftLabel);
+                     }
                      if (tagObject.RightText != null)
                      {
                         Tags.Add(leftName, leftLabel, tagObject.RightText);
@@ -439,6 +442,7 @@ namespace Game
          Continuation continuation)
       {
          var text = EvaluateItemText(continuation.NodeName, continuation.Variables);
+         Log.Add(String.Format("{0} description: {1}", continuation.NodeName, text));
          if (!String.IsNullOrEmpty(text))
          {
             description.Text += text + "\r\n";
