@@ -90,7 +90,7 @@ namespace Game
             }
             else if (specialId == "Mrs")
             {
-               return heroIsMale ? "Mr." : "Mrs";
+               return heroIsMale ? "Mr." : "Mrs.";
             }
             else
             {

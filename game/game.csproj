@@ -67,6 +67,7 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Transform.VerticalToMatchingQuotes.cs" />
     <Compile Include="Engine.LoadSource.cs" />
     <Compile Include="Token.cs" />
     <Compile Include="TokenType.cs" />

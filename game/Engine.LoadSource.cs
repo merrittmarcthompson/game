@@ -118,6 +118,13 @@ namespace Game
                            tagObject.Expression.LeftLabels.Insert(0, tagObject.Expression.LeftName);
                         }
                         tagObject.Expression.LeftName = itemName;
+                        // We don't want to go into sub-texts of tag objects. They execute in the context of stories and always have explicit tags.
+                        /*
+                        if (RightText != null)
+                        {
+                           RightText.Traverse(examine);
+                        }
+                        */
                         break;
                      case IfObject ifObject:
                         foreach (var notExpression in ifObject.NotExpressions)
@@ -147,8 +154,13 @@ namespace Game
             var fileNewTags = new Tags();
             foreach ((var itemName, var itemValue) in fileBaseTags.AllWithLabel("text"))
             {
-               // Execute all the tag directives. This is more limited than the full tagging done in story nodes.
-               (itemValue as SequenceObject).Traverse(@object =>
+               // Execute the top-level tag directives. This is more limited than the full tagging done in story nodes. We don't do embedded tags, ex. we do tag noKnockDoorResponse but don't tag husband.isAnnoyed:
+               /*
+                  [tag noKnockDoorResponse as]
+                     [husband.first] says, "Ever think of knocking before you come in?"
+                     [tag husband.isAnnoyed]
+                  [end] */
+               (itemValue as SequenceObject).Scan(@object =>
                {
                   if (!(@object is TagObject tagObject))
                      return true;

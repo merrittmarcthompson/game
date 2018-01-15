@@ -36,6 +36,24 @@ namespace Game
          }
       }
 
+      public void Scan(
+        Func<Object, bool> examine)
+      {
+         foreach (var @object in Objects)
+         {
+            string previousSourceText = null;
+            if (SourceText != null)
+            {
+               previousSourceText = Log.SetSourceText(SourceText);
+            }
+            examine(@object);
+            if (previousSourceText != null)
+            {
+               Log.SetSourceText(previousSourceText);
+            }
+         }
+      }
+
       public override string ToString()
       {
          string result = "";
@@ -156,10 +174,6 @@ namespace Game
         Func<Object, bool> examine)
       {
          examine(this);
-         if (RightText != null)
-         {
-            RightText.Traverse(examine);
-         }
       }
       public override string ToString()
       {

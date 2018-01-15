@@ -11,7 +11,7 @@ namespace Game
          char pushedLetter = '\0';
          char gottenLetter;
          int letterIndex;
-         var specialIds = new List<string> { "p", "First", "Last", "he", "He", "him", "Him", "his", "His", "himself", "Himself", "man", "Man", "boy", "Boy", "Mr" };
+         var specialIds = new List<string> { "p", "First", "Last", "he", "He", "him", "Him", "his", "His", "himself", "Himself", "man", "Man", "boy", "Boy", "Mr", "Mrs" };
 
          // Some local helper functions
 

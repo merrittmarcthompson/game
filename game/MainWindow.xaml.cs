@@ -21,6 +21,7 @@ namespace Game
          block.Inlines.Clear();
          text = Transform.RemoveExtraBlanks(text);
          text = Transform.RemoveBlanksAfterNewLines(text);
+         text = Transform.VerticalToMatchingQuotes(text);
          // Em dashes
          text = text.Replace("--", "—");
          var accumulator = "";
@@ -124,7 +125,7 @@ namespace Game
          // Get rid of key bounce.
          if (DateTime.Now < NextGoodClick)
             return;
-         NextGoodClick = DateTime.Now.AddSeconds(1);
+         NextGoodClick = DateTime.Now.AddSeconds(0.5);
 
          var option = panel.Tag as Description.Option;
          Engine.ShiftContinuationByChoice(option);
@@ -149,7 +150,7 @@ namespace Game
          // Get rid of key bounce.
          if (DateTime.Now < NextGoodClick)
             return;
-         NextGoodClick = DateTime.Now.AddSeconds(1);
+         NextGoodClick = DateTime.Now.AddSeconds(0.5);
 
          // When you click on an item in the stage box, set its isSelected property. That will have an effect on the next shift, possibly producing a new stage or a new story node.
          // It stays selected until something else gets selected. That helps stories that are stopped if you lose interest in them and select something else
