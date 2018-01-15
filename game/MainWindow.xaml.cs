@@ -11,6 +11,7 @@ namespace Game
       private int Round = 0;
       private DateTime NextGoodClick = DateTime.Now;
       private string LastSelectedItem = null;
+      private int OldQuestCount = 0;
 
       private void SetupTextBlock(
         TextBlock block,
@@ -218,6 +219,7 @@ namespace Game
 
          var questListArea = (ItemsControl)FindName("QuestListArea");
          questListArea.Items.Clear();
+         var questCount = 0;
          var quests = Engine.HeroQuests();
          if (!quests.Any())
          {
@@ -229,10 +231,17 @@ namespace Game
          {
             foreach (var questText in quests)
             {
+               ++questCount;
                var block = new TextBlock();
                SetupTextBlock(block, questText, true);
                questListArea.Items.Add(block);
             }
+         }
+         if (questCount > OldQuestCount)
+         {
+            var heroTab = (TabItem)FindName("HeroTab");
+            heroTab.IsSelected = true;
+            OldQuestCount = questCount;
          }
 
          var storyArea = (ItemsControl)FindName("StoryArea");

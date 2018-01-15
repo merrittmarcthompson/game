@@ -87,5 +87,18 @@ namespace Game
          SourceText = sourceText;
          return previousSourceText;
       }
+
+      public static object FailWhenNull(
+         bool doCheck,
+         object @object,
+         string sourceName)
+      {
+         if (doCheck && @object == null)
+         {
+            Log.Fail(String.Format("{0} must not be null", sourceName));
+            return null;
+         }
+         return @object;
+      }
    }
 }

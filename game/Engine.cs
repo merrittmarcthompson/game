@@ -27,11 +27,11 @@ namespace Game
          }
          else if (specialId == "First")
          {
-            return ValueString(Tags.FirstWithNameAndLabel("hero", "first"), variables);
+            return ValueString(Tags.FirstWithNameAndLabel("hero", "first", true), variables);
          }
          else if (specialId == "Last")
          {
-            return ValueString(Tags.FirstWithNameAndLabel("hero", "last"), variables);
+            return ValueString(Tags.FirstWithNameAndLabel("hero", "last", true), variables);
          }
          else
          {
@@ -88,6 +88,10 @@ namespace Game
             {
                return heroIsMale ? "Mr." : "Ms";
             }
+            else if (specialId == "Mrs")
+            {
+               return heroIsMale ? "Mr." : "Mrs";
+            }
             else
             {
                Log.Fail(String.Format("Unknown special ID {0}.", specialId), variables);
@@ -120,7 +124,7 @@ namespace Game
                   accumulator += textObject.Text;
                   break;
                case SubstitutionObject substitutionObject:
-                  accumulator += ValueString(EvaluateLabelListFirst(substitutionObject.Expression.LeftName, substitutionObject.Expression.LeftLabels, variables), variables);
+                  accumulator += ValueString(EvaluateLabelListFirst(substitutionObject.Expression.LeftName, substitutionObject.Expression.LeftLabels, variables, true), variables);
                   break;
                case IfObject ifObject:
                   return TryRecursively(0, ifObject.NotExpressions, variables);
@@ -190,7 +194,7 @@ namespace Game
                      else
                      {
                         // This covers the [tag hero.stage=other.stage] case.
-                        rightValue = ValueString(Tags.FirstWithNameAndLabel(rightName, rightLabel), variables);
+                        rightValue = ValueString(Tags.FirstWithNameAndLabel(rightName, rightLabel, true), variables);
                      }
                      Tags.Add(leftName, leftLabel, rightValue);
                   }
@@ -222,10 +226,15 @@ namespace Game
       private static (string, string) EvaluateLabelListGetLastNameAndLabel(
          string name,
          List<string> labels,
-         Dictionary<string, object> variables)
+         Dictionary<string, object> variables,
+         bool mustNotBeNull = false)
       {
          if (name == null)
          {
+            if (mustNotBeNull)
+            {
+               Log.Fail("EvaluateLabelListGetLastNameAndLabel passed empty name");
+            }
             return (null, null);
          }
          // Oddly, the parser interprets this: [hero.stage=Stage] as this: [hero.stage=.Stage]. Maybe that should be fixed at some point. But for now, just have this function "fix" it by shifting the value out of the label and into the name.
@@ -241,7 +250,7 @@ namespace Game
             {
                Log.Fail(String.Format("undefined variable {0}", name), variables);
             }
-            name = ValueString(variables[name], variables);
+            name = ValueString(Log.FailWhenNull(true, variables[name], name), variables);
          }
          // In the case with no labels, the value is the name itself.
          if (!labels.Any())
@@ -256,7 +265,7 @@ namespace Game
             if (label == labels[labels.Count() - 1])
                break;
             // Otherwise, get the value make it the next name.
-            lastValue = Tags.FirstWithNameAndLabel(name, label);
+            lastValue = Tags.FirstWithNameAndLabel(name, label, mustNotBeNull);
             // If we can't find any part along the way, fail. 'null' means that it was never tagged, which is different from being tagged with no value (ex. [tag hero.isShort]), which has the value "".
             if (lastValue == null)
                return (null, null);
@@ -283,16 +292,17 @@ namespace Game
       private static object EvaluateLabelListFirst(
         string name,
         List<string> labels,
-        Dictionary<string, object> variables)
+        Dictionary<string, object> variables,
+        bool mustNotBeNull = false)
       {
-         (var lastName, var lastLabel) = EvaluateLabelListGetLastNameAndLabel(name, labels, variables);
+         (var lastName, var lastLabel) = EvaluateLabelListGetLastNameAndLabel(name, labels, variables, mustNotBeNull);
          if (lastName == null)
             return null;
          // This is the [tag hero.stage=DestinationStage] case -- no labels.
          if (lastLabel == null)
             return lastName;
          // Don't convert this to a string here. Do that as late as possible to make sure there are no old values in it.
-         return Tags.FirstWithNameAndLabel(lastName, lastLabel);
+         return Tags.FirstWithNameAndLabel(lastName, lastLabel, mustNotBeNull);
       }
 
       private static bool EvaluateExpression(
@@ -310,7 +320,7 @@ namespace Game
             return true != notExpression.Not;
 
          // Otherwise, compare to right side.
-         var rightValue = EvaluateLabelListFirst(notExpression.Expression.RightName, notExpression.Expression.RightLabels, variables);
+         var rightValue = EvaluateLabelListFirst(notExpression.Expression.RightName, notExpression.Expression.RightLabels, variables, true);
          return ValueString(leftValue, variables) == ValueString(rightValue, variables) != notExpression.Not;
       }
 
@@ -470,7 +480,7 @@ namespace Game
          Continuation removedContinuation = null;
          var newContinuation = new Continuation();
          newContinuation.IsStart = false;
-         newContinuation.NodeName = ValueString(Tags.FirstWithNameAndLabel(arrowName, "target"), continuation.Variables);
+         newContinuation.NodeName = ValueString(Tags.FirstWithNameAndLabel(arrowName, "target", true), continuation.Variables);
          Log.Add(String.Format("Shift from {0} to {1} via {2}", continuation.NodeName, newContinuation.NodeName, arrowName));
          newContinuation.Variables = continuation.Variables;
          newContinuation.Name = continuation.Name;
@@ -583,7 +593,7 @@ namespace Game
 
          foreach (var subjectChildName in Tags.AllWithLabelAndValue("storage", heroSubject))
          {
-            var listText = ValueString(Tags.FirstWithNameAndLabel(subjectChildName, "listText"), null);
+            var listText = ValueString(Tags.FirstWithNameAndLabel(subjectChildName, "listText", true), null);
             if (String.IsNullOrWhiteSpace(listText))
                continue;
             yield return (listText, subjectChildName);
@@ -625,7 +635,7 @@ namespace Game
 
          foreach (var stageChildName in Tags.AllWithLabelAndValue("stage", heroStage))
          {
-            var listTexts = Tags.AllWithNameAndLabel(stageChildName, "listText");
+            var listTexts = Tags.AllWithNameAndLabel(stageChildName, "listText", true);
             var description = "";
             // Most things have one list text and that's what we display. But some immobile items have two list texts (ex. a door, which has two arrows pointing at it, one from each side, each of which contributes a list text. Disambiguate that that by going back to the original arrow text in those cases.
             if (listTexts.Count() <= 1)
@@ -651,7 +661,7 @@ namespace Game
       {
          foreach (var questName in Tags.AllWithNameAndLabel("hero", "quests"))
          {
-            yield return ValueString(Tags.FirstWithNameAndLabel("quests", ValueString(questName, null)), null);
+            yield return ValueString(Tags.FirstWithNameAndLabel("quests", ValueString(questName, null), true), null);
          }
       }
    }

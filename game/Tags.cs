@@ -94,22 +94,27 @@ namespace Game
 
       public IEnumerable<object> AllWithNameAndLabel(
         string name,
-        string label)
+        string label,
+        bool mustNotBeEmpty = false)
       {
-         return
+         var result = 
            from tag in Collection
            where tag.Name == name && tag.Label == label
            select tag.Value;
+         Log.FailWhenNull(mustNotBeEmpty && !result.Any(), null, name + "." + label);
+         return result;
       }
 
       public object FirstWithNameAndLabel(
         string name,
-        string label)
+        string label,
+        bool mustNotBeNull = false)
       {
          var selected = AllWithNameAndLabel(name, label);
          // This can return either a string or null. If it's a boolean tag, ex. [tag hero.isShort], and it is set, then LookupFirst will return "", which means "true". If it isn't set, it will return null, which means "false".
          if (selected.Any())
             return selected.First();
+         Log.FailWhenNull(mustNotBeNull, null, name + "." + label);
          return null;
       }
 
