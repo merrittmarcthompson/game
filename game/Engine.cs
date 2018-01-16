@@ -146,10 +146,43 @@ namespace Game
             variables = new Dictionary<string, object>();
          }
          var text = Tags.FirstWithNameAndLabel(nodeName as string, "text");
+         EvaluateTags(text, variables);
+      }
+
+      private static void EvaluateTags(
+         object text,
+         Dictionary<string, object> variables)
+      {
          (text as SequenceObject).Traverse((@object) =>
          {
             switch (@object)
             {
+#if false
+               case SubstitutionObject substitutionObject:
+                  /* Execute tags that get inserted by substitutions. For example, in map:
+                        [tag documentText as]
+                           *How to Survive a Nuclear War*[p]
+                           ...
+                           [bag hero.quests=prepper]
+                        [end]
+                     Then in story, insert the text of the document and run its 'bag' directive:
+                        [Document.documentText]*/
+                  var value = EvaluateLabelListFirst(substitutionObject.Expression.LeftName, substitutionObject.Expression.LeftLabels, variables, true);
+                  if (!(value is SequenceObject))
+                  {
+                     Log.Fail("Substitution is an identifier, not text", variables);
+                  }
+                  EvaluateTags(value, variables);
+                  break;
+               case IfObject ifObject:
+                  // There may be different tags on different sides of the 'if'. Decide which way to go. For example:
+                  /* [if hero.isInBox]
+                        tag hero.wasInBox
+                     [else]
+                        tag hero.wasNotInBox
+                     [end] */
+                  return TryRecursively(0, ifObject.NotExpressions, variables);
+#endif
                case TagObject tagObject:
                   if (tagObject.IsUntag)
                   {
@@ -452,7 +485,7 @@ namespace Game
          Continuation continuation)
       {
          var text = EvaluateItemText(continuation.NodeName, continuation.Variables);
-         Log.Add(String.Format("{0} description: {1}", continuation.NodeName, text));
+         Log.Add(String.Format("describing {0}", continuation.NodeName));
          if (!String.IsNullOrEmpty(text))
          {
             description.Text += text + "\r\n";
@@ -497,7 +530,10 @@ namespace Game
          {
             removedContinuation = continuation;
          }
-         // Stories can have tags on arrows which are executed when the arrow is selected and you move to its node.
+         // Stories can have tags on arrows which are executed when the arrow is selected and you move to its node. For example:
+         /* Open the door.
+            [when not Door.isOpen
+            tag Story.noKnock]*/
          EvaluateItemTags(arrowName, newContinuation.Variables);
          EvaluateItemTags(newContinuation.NodeName, newContinuation.Variables);
          return (newContinuation, removedContinuation);
@@ -550,9 +586,11 @@ namespace Game
                (var newContinuation, var removedContinuation) = ShiftContinuationToArrowTarget(automaticArrowNames[0], continuation);
                if (removedContinuation != null)
                {
+                  Log.Add(String.Format("removed continuation {0} (a) node {1}", continuation.Name, continuation.NodeName));
                   removedContinuations.Add(continuation);
                }
                addedContinuations.Add(newContinuation);
+               Log.Add(String.Format("added continuation {0} node {1}", newContinuation.Name, newContinuation.NodeName));
                describedContinuation = newContinuation;
             }
             AddToDescription(description, describedContinuation);
@@ -567,6 +605,7 @@ namespace Game
                }
                Tags.Unmerge(removedTags);
                // Remove the continuation itself.
+               Log.Add(String.Format("removed continuation {0} (b) node {1}", continuation.Name, continuation.NodeName));
                removedContinuations.Add(continuation);
             }
          }

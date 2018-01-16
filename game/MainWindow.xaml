@@ -17,8 +17,8 @@
             </TabItem>
             <TabItem x:Name="HeroTab" Header="Hero">
                 <ItemsControl Margin="10,10,10,0">
-                    <Label Content="Quests:" Margin="10,10,10,0" HorizontalAlignment="Left"/>
-                    <ItemsControl x:Name="QuestListArea" Margin="20,0,0,0"></ItemsControl>
+                    <Label Content="Quests:" Margin="10,10,10,0" HorizontalAlignment="Left" FontFamily="Georgia" FontSize="13" FontWeight="Bold"/>
+                    <ItemsControl x:Name="QuestListArea" Margin="20,0,0,0" FontFamily="Georgia" FontSize="13"></ItemsControl>
                 </ItemsControl>
             </TabItem>
             <TabItem x:Name="StorageTab" Header="Storage">

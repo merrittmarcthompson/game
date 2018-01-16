@@ -239,6 +239,11 @@ namespace Game
                   (substitutionObject.Expression.LeftName, substitutionObject.Expression.LeftLabels) = GetLabels(GottenToken.Value);
                   result.Objects.Add(substitutionObject);
                }
+               else if (GottenToken.Type == Token.Start)
+               {
+                  // [start]
+                  result.Objects.Add(new StartObject());
+               }
                else if (GottenToken.Type == Token.Name)
                {
                   // [name bathroomDoor]

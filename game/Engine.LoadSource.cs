@@ -193,14 +193,22 @@ namespace Game
            Tags storyFileTags)
          {
             // Find all the story nodes where stories can start for this source file. Make a continuation for each one. That means that the player can "continue" from the beginning of that story. Later, as they play through a story, we will add more continuation nodes to represent their position in the story.
-            foreach ((var nodeName, _) in storyFileTags.AllWithLabel("start"))
+            foreach ((var nodeName, _) in storyFileTags.AllWithLabel("isNode"))
             {
-               // Add continuations for nodes tagged with start.
-               var continuation = new Continuation();
-               continuation.NodeName = nodeName;
-               continuation.IsStart = true;
-               continuation.Name = GenerateContinuationName(nodeName);
-               Continuations.Add(continuation);
+               var text = storyFileTags.FirstWithNameAndLabel(nodeName, "text");
+               (text as SequenceObject).Traverse((@object) =>
+               {
+                  // Add continuations for nodes with [start].
+                  if (!(@object is StartObject startObject))
+                     return true;
+                  // Add continuations for nodes tagged with start.
+                  var continuation = new Continuation();
+                  continuation.NodeName = nodeName;
+                  continuation.IsStart = true;
+                  continuation.Name = GenerateContinuationName(nodeName);
+                  Continuations.Add(continuation);
+                  return true;
+               });
             }
          }
 
@@ -331,20 +339,18 @@ namespace Game
             // Compile the directives embedded in the source text of each box and arrow to create a list of object 'text' tags and a SequenceObjects table that relates them to the actual object code.
             AddTextsForSourceTexts(fileBaseTags);
 
-            Tags fileNewTags;
             if (isMap)
             {
                RenameBaseTags(fileBaseTags);
                AddExplicitMapTagObjectNames(fileBaseTags);
-               fileNewTags = TagItems(fileBaseTags);
+               var fileNewTags = TagItems(fileBaseTags);
+               Tags.Merge(fileNewTags);
             }
             else
             {
-               fileNewTags = TagItems(fileBaseTags);
-               CreateStartingContinuations(fileNewTags);
+               CreateStartingContinuations(fileBaseTags);
             }
             Tags.Merge(fileBaseTags);
-            Tags.Merge(fileNewTags);
          }
          Log.SetSourceName(null);
          Tags.Merge(BuildContainingTagsForNodes());

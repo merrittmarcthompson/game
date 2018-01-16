@@ -46,14 +46,14 @@ namespace Game
         string message,
         Dictionary<string, object> variables)
       {
-         Writer.WriteLine(BuildFullMessage(message, variables));
+         Writer.WriteLine(message);
          Writer.Flush();
       }
 
       public static void Add(
         string message)
       {
-         Writer.WriteLine(BuildFullMessage(message, null));
+         Writer.WriteLine(message);
          Writer.Flush();
       }
 

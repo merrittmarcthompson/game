@@ -263,6 +263,10 @@ namespace Game
                            {
                               result.Add(new Token(Token.As, id, lineNumber));
                            }
+                           else if (id == "start")
+                           {
+                              result.Add(new Token(Token.Start, id, lineNumber));
+                           }
                            else if (specialIds.Contains(id))
                            {
                               result.Add(new Token(Token.Special, id, lineNumber));
