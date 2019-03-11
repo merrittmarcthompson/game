@@ -8,6 +8,7 @@ namespace Game
    {
       private class Tag : IEquatable<Tag>
       {
+      // The Value is usually a string, unless the Label is "text", in which case the Value is a SequenceObject.
          public readonly string Name;
          public readonly string Label;
          public readonly object Value;
@@ -69,9 +70,9 @@ namespace Game
       }
 
       public void Add(
-        string name,
-        string label,
-        object value)
+         string name,
+         string label,
+         object value)
       {
          var candidateTag = new Tag(name, label, value ?? "");
          // Don't put the same tag in twice. If they look at the same pamphlet two times, the collection should not be bagged with:

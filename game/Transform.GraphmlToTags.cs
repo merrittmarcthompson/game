@@ -40,7 +40,7 @@ namespace Game
             </node>
         </graph>
       */
-      // The output is tags like this:
+      // The output is tags like this (this example shows locations, which we no longer use):
       /*
            map_test_n0.sourceText=This is a room.
            map_test_n0.isNode=
@@ -69,48 +69,28 @@ namespace Game
          XNamespace y = "http://www.yworks.com/xml/graphml";
          XElement root = XElement.Parse(graphml);
 
+         // Our result will be a new tags database.
          var result = new Tags();
 
          // 1. Create a value for each non-group node in the source graphml, that contains the text.
-
-         IEnumerable<XElement> nodes =
-           from node in root.Descendants(g + "node")
-           where node.Attribute("yfiles.foldertype")?.Value != "group"
-           select node;
+         // < node id = "NODE_ID" yfiles.foldertype = "group" > // a group node
+         IEnumerable < XElement> nodes =
+            from node in root.Descendants(g + "node")
+            where node.Attribute("yfiles.foldertype")?.Value != "group"
+            select node;
 
          foreach (XElement node in nodes)
          {
             var id = BuildId(node.Attribute("id").Value);
             result.Add(id, "sourceText", node.Descendants(y + "NodeLabel").First().Value);
             result.Add(id, "isNode", "");
-            var color = node.Descendants(y + "Fill").First().Attribute("color")?.Value;
-            var color2 = node.Descendants(y + "Fill").First().Attribute("color2")?.Value;
-            if (color == "#FFCC99") // light orange
-            {
-               result.Add(id, "isStage", "");
-            }
-            else if (color == "#99CCFF") // light blue
-            {
-               result.Add(id, "isDoor", "");
-            }
-            else if (color == "#FFFF99") // light yellow
-            {
-               result.Add(id, "isStorage", "");
-            }
-            else if (color == "#CCFFCC") // light green
-            {
-               result.Add(id, "isCast", "");
-            }
-            else if (color == "#C0C0C0") // light gray
-            {
-               result.Add(id, "isProp", "");
-            }
          }
-         // 2. Add the arrows.
 
+         // 2. Add the arrows.
+         // <edge id="e0" source="NODE_ID" target="NODE_ID"> // an edge node
          IEnumerable<XElement> edges =
-        from edge in root.Descendants(g + "edge")
-        select edge;
+            from edge in root.Descendants(g + "edge")
+            select edge;
 
          foreach (XElement edge in edges)
          {
@@ -135,7 +115,6 @@ namespace Game
          //      <y:State closed="true"/>
          //    </y:GroupNode>
          //  </data>
-
          IEnumerable<XElement> groupFolderTypeNodes =
            from groupFolderTypeNode in root.Descendants(g + "node")
            where groupFolderTypeNode.Attribute("yfiles.foldertype")?.Value == "group"

@@ -4,87 +4,125 @@ using System.Linq;
 
 namespace Game
 {
+   // Partial: there's also the LoadSource function in its own file.
    public static partial class Engine
    {
-      // It's all about these global variables.
-      private static Tags Tags = new Tags();
-      private static List<Continuation> Continuations = new List<Continuation>();
-      private static int ContinuationSerialNumber = 0;
+      // The engine is all about the following global variables:
 
-      private static string GenerateContinuationName(
-         string nodeName)
+      // The Tags contain the state of the game: where you are, what people think of you, etc.
+      private static Tags Tags = new Tags();
+
+      // RootNodeNames is a list of all the root nodes where story trees start.
+      private static List<string> RootNodeNames = new List<string>();
+
+      // CurrentNodeName is the one node within a story tree that we are on right now. If it is null, we aren't in a story tree right now. In that case, we show a list of all the starting nodes that are appropriate for the current situation.
+      private static string CurrentNodeName = null;
+
+      // The same story tree can apply to different characters, locations, objects, etc. As we go through a story tree, we collect what the current values of those are.
+      private static Dictionary<string, object> CurrentVariables;
+
+      public static void SelectLink(
+         string link)
       {
-         return ContinuationSerialNumber++.ToString() + "_" + nodeName;
+      }
+
+      private static string ValueString(
+         object value,
+         Dictionary<string, object> variables)
+      {
+         if (value == null)
+         {
+            Log.Fail("Value is null", variables);
+         }
+         if (value is string)
+            return value as string;
+         return EvaluateText(value, variables);
+      }
+
+      private static bool EvaluateItemCondition(
+         string nodeName,
+         Dictionary<string, object> variables)
+      {
+         // When there are no when directives, it always succeeds.
+         var allSucceeded = true;
+         var text = Tags.FirstWithNameAndLabel(nodeName, "text");
+         (text as SequenceObject).Traverse((@object) =>
+         {
+            if (!(@object is WhenObject whenObject))
+               return true;
+            if (!TryRecursively(0, whenObject.NotExpressions, variables))
+            {
+               allSucceeded = false;
+            }
+            return true;
+         });
+         return allSucceeded;
       }
 
       private static string GetSpecialText(
-         string specialId,
-         Dictionary<string, object> variables)
+   string specialId,
+   Dictionary<string, object> variables)
       {
-         if (specialId == "p")
+         if (specialId == "John" || specialId == "Jane")
          {
-            return "\r\n";
+            return ValueString(Tags.FirstWithNameAndLabel("hero", "jane", true), variables);
          }
-         else if (specialId == "First")
+         else if (specialId == "Smith")
          {
-            return ValueString(Tags.FirstWithNameAndLabel("hero", "first", true), variables);
-         }
-         else if (specialId == "Last")
-         {
-            return ValueString(Tags.FirstWithNameAndLabel("hero", "last", true), variables);
+            return ValueString(Tags.FirstWithNameAndLabel("hero", "smith", true), variables);
          }
          else
          {
             bool heroIsMale = Tags.FirstWithNameAndLabel("hero", "isMale") != null;
-            if (specialId == "he")
+            if (specialId == "he" || specialId == "she")
             {
                return heroIsMale ? "he" : "she";
             }
-            else if (specialId == "He")
+            else if (specialId == "He" || specialId == "She")
             {
                return heroIsMale ? "He" : "She";
             }
-            else if (specialId == "him")
+            else if (specialId == "him" || specialId == "her")
             {
                return heroIsMale ? "him" : "her";
             }
-            else if (specialId == "Him")
+            else if (specialId == "Him" || specialId == "Her")
             {
                return heroIsMale ? "Him" : "Her";
             }
-            else if (specialId == "his")
+            else if (specialId == "his" || specialId == "hers")
             {
                return heroIsMale ? "his" : "her";
             }
-            else if (specialId == "His")
+            else if (specialId == "His" || specialId == "Hers")
             {
                return heroIsMale ? "His" : "Her";
             }
-            else if (specialId == "himself")
+            else if (specialId == "himself" || specialId == "herself")
             {
                return heroIsMale ? "himself" : "herself";
             }
-            else if (specialId == "Himself")
+            else if (specialId == "Himself" || specialId == "Herself")
             {
                return heroIsMale ? "Himself" : "Herself";
             }
-            else if (specialId == "man")
+            else if (specialId == "man" || specialId == "woman")
             {
                return heroIsMale ? "man" : "woman";
             }
-            else if (specialId == "Man")
+            else if (specialId == "Man" || specialId == "Woman")
             {
                return heroIsMale ? "Man" : "Woman";
             }
-            else if (specialId == "boy")
+            else if (specialId == "boy" || specialId == "girl")
             {
                return heroIsMale ? "boy" : "girl";
             }
-            else if (specialId == "Boy")
+            else if (specialId == "Boy" || specialId == "Girl")
             {
                return heroIsMale ? "Boy" : "Girl";
             }
-            else if (specialId == "Mr")
+            else if (specialId == "Mr" || specialId == "Ms")
             {
                return heroIsMale ? "Mr." : "Ms";
             }
@@ -100,160 +138,10 @@ namespace Game
          }
       }
 
-      private static string EvaluateItemText(
-         object nodeName,
-        Dictionary<string, object> variables)
-      {
-         return EvaluateText(Tags.FirstWithNameAndLabel(nodeName as string, "text"), variables);
-      }
-
-      private static string EvaluateText(
-        object value,
-        Dictionary<string, object> variables)
-      {
-         if (variables == null)
-         {
-            variables = new Dictionary<string, object>();
-         }
-         string accumulator = "";
-         (value as SequenceObject).Traverse((@object) =>
-         {
-            switch (@object)
-            {
-               case TextObject textObject:
-                  accumulator += textObject.Text;
-                  break;
-               case SubstitutionObject substitutionObject:
-                  accumulator += ValueString(EvaluateLabelListFirst(substitutionObject.Expression.LeftName, substitutionObject.Expression.LeftLabels, variables, true), variables);
-                  break;
-               case IfObject ifObject:
-                  return TryRecursively(0, ifObject.NotExpressions, variables);
-               case SpecialObject specialObject:
-                  accumulator += GetSpecialText(specialObject.Id, variables);
-                  break;
-            }
-            return true;
-         });
-         return accumulator;
-      }
-
-      private static void EvaluateItemTags(
-        object nodeName,
-        Dictionary<string, object> variables)
-      {
-         if (variables == null)
-         {
-            variables = new Dictionary<string, object>();
-         }
-         var text = Tags.FirstWithNameAndLabel(nodeName as string, "text");
-         EvaluateTags(text, variables);
-      }
-
-      private static void EvaluateTags(
-         object text,
-         Dictionary<string, object> variables)
-      {
-         (text as SequenceObject).Traverse((@object) =>
-         {
-            switch (@object)
-            {
-#if false
-               case SubstitutionObject substitutionObject:
-                  /* Execute tags that get inserted by substitutions. For example, in map:
-                        [tag documentText as]
-                           *How to Survive a Nuclear War*[p]
-                           ...
-                           [bag hero.quests=prepper]
-                        [end]
-                     Then in story, insert the text of the document and run its 'bag' directive:
-                        [Document.documentText]*/
-                  var value = EvaluateLabelListFirst(substitutionObject.Expression.LeftName, substitutionObject.Expression.LeftLabels, variables, true);
-                  if (!(value is SequenceObject))
-                  {
-                     Log.Fail("Substitution is an identifier, not text", variables);
-                  }
-                  EvaluateTags(value, variables);
-                  break;
-               case IfObject ifObject:
-                  // There may be different tags on different sides of the 'if'. Decide which way to go. For example:
-                  /* [if hero.isInBox]
-                        tag hero.wasInBox
-                     [else]
-                        tag hero.wasNotInBox
-                     [end] */
-                  return TryRecursively(0, ifObject.NotExpressions, variables);
-#endif
-               case TagObject tagObject:
-                  if (tagObject.IsUntag)
-                  {
-                     (var leftName, var leftLabel) = EvaluateLabelListGetLastNameAndLabel(tagObject.Expression.LeftName, tagObject.Expression.LeftLabels, variables);
-                     if (leftName == null)
-                        break;
-                     (var rightName, var rightLabel) = EvaluateLabelListGetLastNameAndLabel(tagObject.Expression.RightName, tagObject.Expression.RightLabels, variables);
-                     if (rightName == null)
-                     {
-                        Tags.Remove(leftName, leftLabel);
-                        break;
-                     }
-                     var rightValue = Tags.FirstWithNameAndLabel(rightName, rightLabel);
-                     Tags.Remove(leftName, leftLabel, rightValue);
-                  }
-                  else
-                  {
-                     (var leftName, var leftLabel) = EvaluateLabelListGetLastNameAndLabel(tagObject.Expression.LeftName, tagObject.Expression.LeftLabels, variables);
-                     if (leftName == null)
-                        break;
-                     if (!tagObject.IsBag)
-                     {
-                        Tags.Remove(leftName, leftLabel);
-                     }
-                     if (tagObject.RightText != null)
-                     {
-                        Tags.Add(leftName, leftLabel, tagObject.RightText);
-                        break;
-                     }
-                     (var rightName, var rightLabel) = EvaluateLabelListGetLastNameAndLabel(tagObject.Expression.RightName, tagObject.Expression.RightLabels, variables);
-                     if (rightName == null)
-                     {
-                        Tags.Add(leftName, leftLabel, "");
-                        break;
-                     }
-                     var rightValue = "";
-                     if (rightLabel == null)
-                     {
-                        // This covers the [tag hero.stage=Stage] case.
-                        rightValue = rightName;
-                     }
-                     else
-                     {
-                        // This covers the [tag hero.stage=other.stage] case.
-                        rightValue = ValueString(Tags.FirstWithNameAndLabel(rightName, rightLabel, true), variables);
-                     }
-                     Tags.Add(leftName, leftLabel, rightValue);
-                  }
-                  break;
-            }
-            return true;
-         });
-      }
-
       private static bool IsVariable(
-        string name)
+         string name)
       {
          return Char.IsUpper(name[0]);
-      }
-
-      private static string ValueString(
-         object value,
-         Dictionary<string, object> variables)
-      {
-         if (value == null)
-         {
-            Log.Fail("Value is null", variables);
-         }
-         if (value is string)
-            return value as string;
-         return EvaluateText(value, variables);
       }
 
       private static (string, string) EvaluateLabelListGetLastNameAndLabel(
@@ -458,258 +346,141 @@ namespace Game
          }
       }
 
-      private static (bool, string) EvaluateStoryArrow(
-         string arrowName,
+      private static string EvaluateText(
+         object value,
          Dictionary<string, object> variables)
       {
-         // When there are no when directives, it always succeeds.
-         var allSucceeded = true;
-         var optionText = "";
-         var arrowText = Tags.FirstWithNameAndLabel(arrowName, "text");
-         (arrowText as SequenceObject).Traverse((@object) =>
+         if (variables == null)
          {
-            if (!(@object is WhenObject whenObject))
-               return true;
-            if (!TryRecursively(0, whenObject.NotExpressions, variables))
+            variables = new Dictionary<string, object>();
+         }
+         string accumulator = "";
+         (value as SequenceObject).Traverse((@object) =>
+         {
+            switch (@object)
             {
-               allSucceeded = false;
+               case TextObject textObject:
+                  accumulator += textObject.Text;
+                  break;
+               case SubstitutionObject substitutionObject:
+                  accumulator += ValueString(EvaluateLabelListFirst(substitutionObject.Expression.LeftName, substitutionObject.Expression.LeftLabels, variables, true), variables);
+                  break;
+               case IfObject ifObject:
+                  return TryRecursively(0, ifObject.NotExpressions, variables);
+               case SpecialObject specialObject:
+                  accumulator += GetSpecialText(specialObject.Id, variables);
+                  break;
             }
             return true;
          });
-         optionText = EvaluateItemText(arrowName, variables);
-         return (allSucceeded, optionText);
+         return accumulator;
       }
 
-      private static Description AddToDescription(
-         Description description,
-         Continuation continuation)
+      private static string EvaluateItemText(
+         object nodeName,
+         Dictionary<string, object> variables)
       {
-         var text = EvaluateItemText(continuation.NodeName, continuation.Variables);
-         Log.Add(String.Format("describing {0}", continuation.NodeName));
-         if (!String.IsNullOrEmpty(text))
+         return EvaluateText(Tags.FirstWithNameAndLabel(nodeName as string, "text"), variables);
+      }
+
+      private static void EvaluateTags(
+         object text,
+         Dictionary<string, object> variables)
+      {
+         (text as SequenceObject).Traverse((@object) =>
          {
-            description.Text += text + "\r\n";
-         }
-         foreach (var arrowNameObject in Tags.AllWithNameAndLabel(continuation.NodeName, "arrow"))
-         {
-            var arrowName = ValueString(arrowNameObject, continuation.Variables);
-            (var allSucceeded, var optionText) = EvaluateStoryArrow(arrowName, continuation.Variables);
-            if (allSucceeded && !String.IsNullOrWhiteSpace(optionText))
+            switch (@object)
             {
-               var newOption = new Description.Option();
-               newOption.ArrowName = ValueString(arrowName, continuation.Variables);
-               newOption.Text = optionText;
-               newOption.Continuation = continuation;
-               description.Options.Add(newOption);
+               case TagObject tagObject:
+                  if (tagObject.IsUntag)
+                  {
+                     (var leftName, var leftLabel) = EvaluateLabelListGetLastNameAndLabel(tagObject.Expression.LeftName, tagObject.Expression.LeftLabels, variables);
+                     if (leftName == null)
+                        break;
+                     (var rightName, var rightLabel) = EvaluateLabelListGetLastNameAndLabel(tagObject.Expression.RightName, tagObject.Expression.RightLabels, variables);
+                     if (rightName == null)
+                     {
+                        Tags.Remove(leftName, leftLabel);
+                        break;
+                     }
+                     var rightValue = Tags.FirstWithNameAndLabel(rightName, rightLabel);
+                     Tags.Remove(leftName, leftLabel, rightValue);
+                  }
+                  else
+                  {
+                     (var leftName, var leftLabel) = EvaluateLabelListGetLastNameAndLabel(tagObject.Expression.LeftName, tagObject.Expression.LeftLabels, variables);
+                     if (leftName == null)
+                        break;
+                     if (!tagObject.IsBag)
+                     {
+                        Tags.Remove(leftName, leftLabel);
+                     }
+                     if (tagObject.RightText != null)
+                     {
+                        Tags.Add(leftName, leftLabel, tagObject.RightText);
+                        break;
+                     }
+                     (var rightName, var rightLabel) = EvaluateLabelListGetLastNameAndLabel(tagObject.Expression.RightName, tagObject.Expression.RightLabels, variables);
+                     if (rightName == null)
+                     {
+                        Tags.Add(leftName, leftLabel, "");
+                        break;
+                     }
+                     var rightValue = "";
+                     if (rightLabel == null)
+                     {
+                        // This covers the [tag hero.stage=Stage] case.
+                        rightValue = rightName;
+                     }
+                     else
+                     {
+                        // This covers the [tag hero.stage=other.stage] case.
+                        rightValue = ValueString(Tags.FirstWithNameAndLabel(rightName, rightLabel, true), variables);
+                     }
+                     Tags.Add(leftName, leftLabel, rightValue);
+                  }
+                  break;
             }
-         }
-         return description;
+            return true;
+         });
       }
 
-      private static (Continuation, Continuation) ShiftContinuationToArrowTarget(
-         string arrowName,
-         Continuation continuation)
+      public static string BuildNextText()
       {
-         Continuation removedContinuation = null;
-         var newContinuation = new Continuation();
-         newContinuation.IsStart = false;
-         newContinuation.NodeName = ValueString(Tags.FirstWithNameAndLabel(arrowName, "target", true), continuation.Variables);
-         Log.Add(String.Format("Shift from {0} to {1} via {2}", continuation.NodeName, newContinuation.NodeName, arrowName));
-         newContinuation.Variables = continuation.Variables;
-         newContinuation.Name = continuation.Name;
-         if (continuation.IsStart)
+         var resultText = "";
+
+         if (CurrentNodeName == null)
          {
-            // Keep it, but clear it for its next use.
-            continuation.Variables = new Dictionary<string, object>();
-            // Make a new name for the starting continuation. The new continuation has taken on the old name.
-            continuation.Name = GenerateContinuationName(continuation.NodeName);
-            // Stories can refer to Story.label as a temporary storage area.
-            newContinuation.Variables.Add("Story", continuation.Name);
+            // Present a menu of all the root story nodes which are appropriate to the current situation. For example, if the hero is located on a street, show the beginnings of all the stories that occur on that street.
+            foreach (var nodeName in RootNodeNames)
+            {
+               // Evaluate the node's when clause. If true, the story is appropriate for the menu.
+               var variables = new Dictionary<string, object>();
+               if (EvaluateItemCondition(nodeName, variables))
+               {
+                  // EvaluateItemCondition returned the variables that succeeded. Use them to build the result text.
+                  resultText = EvaluateItemText(nodeName, variables);
+
+                  // Now put in all the option arrow texts.
+                  foreach (var arrowNameObject in Tags.AllWithNameAndLabel(nodeName, "arrow"))
+                  {
+                     resultText += "@";
+                     var arrowName = ValueString(arrowNameObject, variables);
+                     if (EvaluateItemCondition(arrowName, variables))
+                     {
+                        resultText += "@";
+                        resultText += EvaluateItemText(arrowName, variables);
+                     }
+                  }
+
+               }
+            }
          }
          else
          {
-            removedContinuation = continuation;
+            // If we are in the middle of a story, show the current story node and its options (the arrows).
          }
-         // Stories can have tags on arrows which are executed when the arrow is selected and you move to its node. For example:
-         /* Open the door.
-            [when not Door.isOpen
-            tag Story.noKnock]*/
-         EvaluateItemTags(arrowName, newContinuation.Variables);
-         EvaluateItemTags(newContinuation.NodeName, newContinuation.Variables);
-         return (newContinuation, removedContinuation);
-      }
-
-      public static void ShiftContinuationByChoice(
-         Description.Option option)
-      {
-         (var newContinuation, var removedContinuation) = ShiftContinuationToArrowTarget(option.ArrowName, option.Continuation);
-         if (removedContinuation != null)
-         {
-            Continuations.Remove(option.Continuation);
-         }
-         Continuations.Add(newContinuation);
-      }
-
-      public static Description UpdateContinuations()
-      {
-         var description = new Description();
-         var removedContinuations = new List<Continuation>();
-         var addedContinuations = new List<Continuation>();
-         foreach (var continuation in Continuations)
-         {
-            var arrowReasons = new Dictionary<string, string>();
-            var automaticArrowNames = new List<string>();
-            var arrowCount = 0;
-            foreach (var arrowNameObject in Tags.AllWithNameAndLabel(continuation.NodeName, "arrow"))
-            {
-               var arrowName = ValueString(arrowNameObject, continuation.Variables);
-               ++arrowCount;
-               (var allSucceeded, var optionText) = EvaluateStoryArrow(arrowName, continuation.Variables);
-               if (!allSucceeded)
-                  continue; // to next arrow
-               // We always have to add the arrow, even if there was no reason specified for the arrow due to '&& !arrowReasons.Any()' condition below.
-               arrowReasons.Add(arrowName, "put the real reason here later when we've figured that out");
-               if (String.IsNullOrWhiteSpace(optionText))
-               {
-                  automaticArrowNames.Add(arrowName);
-               }
-            }
-            if (arrowCount > 0 && !arrowReasons.Any())
-            {
-               // No successful arrows means there's no way to move forward with this story right now.
-               continue; // to next continuation
-            }
-            var describedContinuation = continuation;
-            if (arrowCount > 0 && automaticArrowNames.Any())
-            {
-               // We only present options to the player if there are no automatic options, i.e. auto options override player options. This allows us to force escape from stories automatically, etc. It's a bad idea to make it possible to have more than one to be true at the same time. If so, just pick the first one.
-               (var newContinuation, var removedContinuation) = ShiftContinuationToArrowTarget(automaticArrowNames[0], continuation);
-               if (removedContinuation != null)
-               {
-                  Log.Add(String.Format("removed continuation {0} (a) node {1}", continuation.Name, continuation.NodeName));
-                  removedContinuations.Add(continuation);
-               }
-               addedContinuations.Add(newContinuation);
-               Log.Add(String.Format("added continuation {0} node {1}", newContinuation.Name, newContinuation.NodeName));
-               describedContinuation = newContinuation;
-            }
-            AddToDescription(description, describedContinuation);
-            if (arrowCount == 0)
-            {
-               // Remove temporary Story tags for the continuation.
-               var removedTags = new Tags();
-               var name = continuation.Variables["Story"] as string;
-               foreach ((var label, var value) in Tags.AllWithName(name))
-               {
-                  removedTags.Add(name, label, value);
-               }
-               Tags.Unmerge(removedTags);
-               // Remove the continuation itself.
-               Log.Add(String.Format("removed continuation {0} (b) node {1}", continuation.Name, continuation.NodeName));
-               removedContinuations.Add(continuation);
-            }
-         }
-         Continuations.RemoveAll(continuation => removedContinuations.Contains(continuation));
-         Continuations.AddRange(addedContinuations);
-         return description;
-      }
-
-      public static (string, string) GetHeroSubjectDescription()
-      {
-         var heroStorage = Tags.FirstWithNameAndLabel("hero", "subject");
-         if (heroStorage == null)
-         {
-            return (null, null);
-         }
-         return (EvaluateItemText(heroStorage, null), heroStorage as string);
-      }
-
-      public static IEnumerable<(string nodeText, string targetName)> HeroSubjectContents()
-      {
-         var heroSubject = Tags.FirstWithNameAndLabel("hero", "subject");
-         if (heroSubject == null)
-            yield break;
-
-         foreach (var subjectChildName in Tags.AllWithLabelAndValue("storage", heroSubject))
-         {
-            var listText = ValueString(Tags.FirstWithNameAndLabel(subjectChildName, "listText", true), null);
-            if (String.IsNullOrWhiteSpace(listText))
-               continue;
-            yield return (listText, subjectChildName);
-         }
-      }
-
-      public static void SetTag(
-            string itemName,
-            string label)
-      {
-         Tags.Remove(itemName, label);
-         Tags.Add(itemName, label, "");
-      }
-
-      public static void ResetTag(
-            string itemName,
-            string label)
-      {
-         Tags.Remove(itemName, label);
-      }
-
-      public static string GetHeroStageDescription()
-      {
-         var heroStage = Tags.FirstWithNameAndLabel("hero", "stage");
-         if (heroStage == null)
-         {
-            Log.Fail("Hero is not on any stage");
-         }
-         return EvaluateItemText(heroStage, null);
-      }
-
-      public static IEnumerable<(string nodeText, string targetName)> HeroStageContents()
-      {
-         var heroStage = Tags.FirstWithNameAndLabel("hero", "stage");
-         if (heroStage == null)
-         {
-            Log.Fail("Hero is not on any stage");
-         }
-
-         foreach (var stageChildName in Tags.AllWithLabelAndValue("stage", heroStage))
-         {
-            var listTexts = Tags.AllWithNameAndLabel(stageChildName, "listText", true);
-            var description = "";
-            // Most things have one list text and that's what we display. But some immobile items have two list texts (ex. a door, which has two arrows pointing at it, one from each side, each of which contributes a list text. Disambiguate that that by going back to the original arrow text in those cases.
-            if (listTexts.Count() <= 1)
-               description = ValueString(listTexts.First(), null);
-            else
-            {
-               foreach (var arrow in Tags.AllWithNameAndLabel(heroStage as string, "arrow"))
-               {
-                  if (Tags.FirstWithNameAndLabel(arrow as string, "target") as string == stageChildName)
-                  {
-                     description = EvaluateText(Tags.FirstWithNameAndLabel(arrow as string, "text"), null);
-                     break;
-                  }
-               }
-            }
-            if (String.IsNullOrWhiteSpace(description))
-               continue;
-            yield return (description, stageChildName);
-         }
-      }
-
-      public static IEnumerable<string> HeroQuests()
-      {
-         foreach (var questName in Tags.AllWithNameAndLabel("hero", "quests"))
-         {
-            yield return ValueString(Tags.FirstWithNameAndLabel("quests", ValueString(questName, null), true), null);
-         }
+         return resultText;
       }
    }
 }
-/*
-Indexes?
-
-pamphlet.listText:kitchen=A counter separates the kitchen...
-pamphlet.listText:livingRoom=A counter separates the living room...
-frontDoor.doorView:yard=The front door of the house...
-frontdoor.doorView:livingRoom=A front door of orange...
-*/

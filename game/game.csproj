@@ -74,10 +74,8 @@
     <Compile Include="Tags.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="Expression.cs" />
-    <Compile Include="Continuation.cs" />
     <Compile Include="NotExpression.cs" />
     <Compile Include="Engine.cs" />
-    <Compile Include="Description.cs" />
     <Compile Include="Transform.IntoId.cs" />
     <Compile Include="Transform.RemoveBlanksAfterNewLines.cs" />
     <Compile Include="Transform.RemoveExtraBlanks.cs" />

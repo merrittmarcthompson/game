@@ -229,7 +229,7 @@ namespace Game
                }
                else if (GottenToken.Type == Token.Special)
                {
-                  // Ex. [p]
+                  // Ex. [he]
                   result.Objects.Add(new SpecialObject(GottenToken.Value));
                }
                else if (GottenToken.Type == Token.Id || GottenToken.Type == Token.Variable)

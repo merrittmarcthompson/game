@@ -11,7 +11,7 @@ namespace Game
          char pushedLetter = '\0';
          char gottenLetter;
          int letterIndex;
-         var specialIds = new List<string> { "p", "First", "Last", "he", "He", "him", "Him", "his", "His", "himself", "Himself", "man", "Man", "boy", "Boy", "Mr", "Mrs" };
+         var specialIds = new List<string> { "John", "Jane", "Smith", "he", "He", "him", "Him", "his", "His", "himself", "Himself", "man", "Man", "boy", "Boy", "Mr", "Mrs", "she", "She", "her", "Her", "hers", "Hers", "herself", "Herself", "woman", "Woman", "girl", "Girl", "Ms" };
 
          // Some local helper functions
 
@@ -95,7 +95,7 @@ namespace Game
             switch (gottenLetter)
             {
                case '\n':
-                  // [p] lets you explicitly put in a paragraph break. We'll clean up any extra spaces later. This lets you break continguous text up into multiple lines within 'if' groups without having it affect formatting.
+                  // @ lets you explicitly put in a paragraph break. We'll clean up any extra spaces later. This lets you break contiguous text up into multiple lines within 'if' groups without having it affect formatting.
                   textAccumulator += " ";
                   ++lineNumber;
                   break;
