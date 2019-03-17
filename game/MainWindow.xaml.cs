@@ -58,7 +58,7 @@ namespace Game
                         hyperlink.TextDecorations = null;
                         hyperlink.Foreground = new SolidColorBrush(Color.FromRgb(0xa0, 0x00, 0x00));
                         hyperlink.Click += new RoutedEventHandler(HyperlinkClicked);
-                        block.Inlines.Add(/*new Bold(*/hyperlink/*)*/);
+                        block.Inlines.Add(hyperlink);
                         accumulator = "";
                         ++i;
                         break;

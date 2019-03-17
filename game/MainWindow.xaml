@@ -4,10 +4,10 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Game"
-        Title="Gamebook - Mobile Phone Game" Height="585" Width="325"
+        Title="Gamebook - Mobile Phone Game" Height="545" Width="305"
         ResizeMode="NoResize">
     <Grid Background="Beige" Margin="0,0,0,0">
-        <ItemsControl x:Name="StoryArea" Margin="8,10,0,0" FontFamily="Segoe UI" FontSize="12.9" Height="535" VerticalAlignment="Top" HorizontalAlignment="Left" Width="289">
+        <ItemsControl x:Name="StoryArea" Margin="8,10,0,0" FontFamily="Segoe UI" FontSize="12" Height="495" VerticalAlignment="Top" HorizontalAlignment="Left" Width="270">
         </ItemsControl>
     </Grid>
 </Window>
