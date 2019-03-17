@@ -244,15 +244,15 @@ namespace Game
                   // [start]
                   result.Objects.Add(new StartObject());
                }
-               else if (GottenToken.Type == Token.Name)
+               else if (GottenToken.Type == Token.Score)
                {
-                  // [name bathroomDoor]
+                  // [score brave]
                   GetToken();
                   if (GottenToken.Type != Token.Id)
                   {
-                     Log.Fail(Expected(Token.Name.Name, GottenToken));
+                     Log.Fail(Expected(Token.Score.Name, GottenToken));
                   }
-                  result.Objects.Add(new NameObject(GottenToken.Value));
+                  result.Objects.Add(new ScoreObject(GottenToken.Value));
                }
                else if (GottenToken.Type == Token.Tag || GottenToken.Type == Token.Untag || GottenToken.Type == Token.Bag)
                {

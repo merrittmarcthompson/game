@@ -70,7 +70,7 @@ namespace Game
          XElement root = XElement.Parse(graphml);
 
          // Our result will be a new tags database.
-         var result = new Tags();
+         var resultTags = new Tags();
 
          // 1. Create a value for each non-group node in the source graphml, that contains the text.
          // < node id = "NODE_ID" yfiles.foldertype = "group" > // a group node
@@ -82,8 +82,8 @@ namespace Game
          foreach (XElement node in nodes)
          {
             var id = BuildId(node.Attribute("id").Value);
-            result.Add(id, "sourceText", node.Descendants(y + "NodeLabel").First().Value);
-            result.Add(id, "isNode", "");
+            resultTags.Add(id, "sourceText", node.Descendants(y + "NodeLabel").First().Value);
+            resultTags.Add(id, "isNode", "");
          }
 
          // 2. Add the arrows.
@@ -98,9 +98,9 @@ namespace Game
             string targetNodeId = edge.Attribute("target").Value;
             string edgeId = edge.Attribute("id").Value;
             string edgeText = edge.Descendants(y + "EdgeLabel").DefaultIfEmpty(null)?.First()?.Value;
-            result.Add(BuildId(sourceNodeId), "arrow", BuildId(edgeId));
-            result.Add(BuildId(edgeId), "sourceText", edgeText);
-            result.Add(BuildId(edgeId), "target", BuildId(targetNodeId));
+            resultTags.Add(BuildId(sourceNodeId), "arrow", BuildId(edgeId));
+            resultTags.Add(BuildId(edgeId), "sourceText", edgeText);
+            resultTags.Add(BuildId(edgeId), "target", BuildId(targetNodeId));
          }
 
          // 3. Set the groups based on the groups in the source graphml.
@@ -134,9 +134,9 @@ namespace Game
               where subNode.Attribute("yfiles.foldertype")?.Value != "group"
               select subNode.Attribute("id").Value;
 
-            result.Add(BuildId(subNodes.First()), "group", groupId);
+            resultTags.Add(BuildId(subNodes.First()), "group", groupId);
          }
-         return result;
+         return resultTags;
       }
    }
 }

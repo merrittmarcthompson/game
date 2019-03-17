@@ -21,9 +21,15 @@ namespace Game
       // The same story tree can apply to different characters, locations, objects, etc. As we go through a story tree, we collect what the current values of those are.
       private static Dictionary<string, object> CurrentVariables;
 
-      public static void SelectLink(
-         string link)
+      private static Dictionary<string, string> CurrentOptionsNodeNames;
+
+      private static Dictionary<string, Dictionary<string, object>> CurrentOptionsVariables;
+
+      public static void SelectOption(
+         string option)
       {
+         CurrentNodeName = CurrentOptionsNodeNames[option];
+         CurrentVariables = CurrentOptionsVariables[option];
       }
 
       private static string ValueString(
@@ -43,7 +49,7 @@ namespace Game
          string nodeName,
          Dictionary<string, object> variables)
       {
-         // When there are no when directives, it always succeeds.
+         // When there are no 'when' directives, it always succeeds.
          var allSucceeded = true;
          var text = Tags.FirstWithNameAndLabel(nodeName, "text");
          (text as SequenceObject).Traverse((@object) =>
@@ -60,8 +66,8 @@ namespace Game
       }
 
       private static string GetSpecialText(
-   string specialId,
-   Dictionary<string, object> variables)
+         string specialId,
+         Dictionary<string, object> variables)
       {
          if (specialId == "John" || specialId == "Jane")
          {
@@ -377,10 +383,10 @@ namespace Game
       }
 
       private static string EvaluateItemText(
-         object nodeName,
+         object itemName,
          Dictionary<string, object> variables)
       {
-         return EvaluateText(Tags.FirstWithNameAndLabel(nodeName as string, "text"), variables);
+         return EvaluateText(Tags.FirstWithNameAndLabel(itemName as string, "text"), variables);
       }
 
       private static void EvaluateTags(
@@ -445,13 +451,37 @@ namespace Game
          });
       }
 
+      private static string BuildOneNodeText(
+         string nodeName,
+         Dictionary<string, object> variables)
+      {
+         var resultText = EvaluateItemText(nodeName, variables);
+         resultText += "@";
+
+         // Now put in all the option arrow texts.
+         foreach (var arrowNameObject in Tags.AllWithNameAndLabel(nodeName, "arrow"))
+         {
+            var arrowName = ValueString(arrowNameObject, variables);
+            if (EvaluateItemCondition(arrowName, variables))
+            {
+               resultText += "@~";
+               var option = EvaluateItemText(arrowName, variables);
+               resultText += "{" + option + "}";
+               CurrentOptionsNodeNames[option] = ValueString(Tags.FirstWithNameAndLabel(arrowName, "target"), variables);
+               CurrentOptionsVariables[option] = variables;
+            }
+         }
+         return resultText;
+      }
+
       public static string BuildNextText()
       {
          var resultText = "";
-
+         CurrentOptionsNodeNames = new Dictionary<string, string>();
+         CurrentOptionsVariables = new Dictionary<string, Dictionary<string, object>>();
          if (CurrentNodeName == null)
          {
-            // Present a menu of all the root story nodes which are appropriate to the current situation. For example, if the hero is located on a street, show the beginnings of all the stories that occur on that street.
+            // Present a menu of all the root story nodes which are appropriate to the current situation. For example, if the hero is located on a street, show the beginnings of all the stories that start on that street.
             foreach (var nodeName in RootNodeNames)
             {
                // Evaluate the node's when clause. If true, the story is appropriate for the menu.
@@ -459,26 +489,14 @@ namespace Game
                if (EvaluateItemCondition(nodeName, variables))
                {
                   // EvaluateItemCondition returned the variables that succeeded. Use them to build the result text.
-                  resultText = EvaluateItemText(nodeName, variables);
-
-                  // Now put in all the option arrow texts.
-                  foreach (var arrowNameObject in Tags.AllWithNameAndLabel(nodeName, "arrow"))
-                  {
-                     resultText += "@";
-                     var arrowName = ValueString(arrowNameObject, variables);
-                     if (EvaluateItemCondition(arrowName, variables))
-                     {
-                        resultText += "@";
-                        resultText += EvaluateItemText(arrowName, variables);
-                     }
-                  }
-
+                  resultText += BuildOneNodeText(nodeName, variables);
                }
             }
          }
          else
          {
             // If we are in the middle of a story, show the current story node and its options (the arrows).
+            resultText = BuildOneNodeText(CurrentNodeName, CurrentVariables);
          }
          return resultText;
       }

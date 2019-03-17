@@ -111,14 +111,14 @@ namespace Game
       }
    }
 
-   public class NameObject : Object
+   public class ScoreObject : Object
    {
-      public string Name;
+      public string Id;
 
-      public NameObject(
-        string name)
+      public ScoreObject(
+        string id)
       {
-         Name = name;
+         Id = id;
       }
 
       public override void Traverse(
@@ -128,7 +128,7 @@ namespace Game
       }
       public override string ToString()
       {
-         return "name " + Name;
+         return "id " + Id;
       }
    }
 

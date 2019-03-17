@@ -14,7 +14,7 @@
       public static TokenType End = new TokenType("'end'");
       public static TokenType Else = new TokenType("'else'");
       public static TokenType If = new TokenType("'if'");
-      public static TokenType Name = new TokenType("'name'");
+      public static TokenType Score = new TokenType("'score'");
       public static TokenType Not = new TokenType("'not'");
       public static TokenType Or = new TokenType("'or'");
       public static TokenType Start = new TokenType("'start'");
