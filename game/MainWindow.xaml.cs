@@ -2,6 +2,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
+using System.Windows.Input;
 using System.Windows.Media;
 
 namespace Game
@@ -9,6 +10,12 @@ namespace Game
    public partial class MainWindow : Window
    {
       private DateTime NextGoodClick = DateTime.Now;
+
+      void UndoClicked(object sender, RoutedEventArgs e)
+      {
+         Engine.Undo();
+         SetupScreen();
+      }
 
       private void HyperlinkClicked(object sender, RoutedEventArgs e)
       {
@@ -58,6 +65,7 @@ namespace Game
                         hyperlink.TextDecorations = null;
                         hyperlink.Foreground = new SolidColorBrush(Color.FromRgb(0xa0, 0x00, 0x00));
                         hyperlink.Click += new RoutedEventHandler(HyperlinkClicked);
+                        hyperlink.Cursor = Cursors.Hand;
                         block.Inlines.Add(hyperlink);
                         accumulator = "";
                         ++i;

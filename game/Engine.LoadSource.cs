@@ -84,7 +84,7 @@ namespace Game
                              where !fileBaseTags.AllWithLabelAndValue("target", nodeName).Any()
                              select nodeName).ToList<string>();
 
-            Tags.Merge(fileBaseTags);
+            Current.Tags.Merge(fileBaseTags);
          }
          Log.SetSourceName(null);
       }

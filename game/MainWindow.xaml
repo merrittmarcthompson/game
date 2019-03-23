@@ -7,7 +7,12 @@
         Title="Gamebook - Mobile Phone Game" Height="545" Width="305"
         ResizeMode="NoResize">
     <Grid Background="Beige" Margin="0,0,0,0">
-        <ItemsControl x:Name="StoryArea" Margin="8,10,0,0" FontFamily="Segoe UI" FontSize="12" Height="495" VerticalAlignment="Top" HorizontalAlignment="Left" Width="270">
-        </ItemsControl>
+        <ScrollViewer VerticalScrollBarVisibility="Hidden">
+            <ItemsControl x:Name="StoryArea" Margin="8,10,0,0" FontFamily="Segoe UI" FontSize="12" Height="auto" VerticalAlignment="Top" HorizontalAlignment="Left" Width="270">
+            </ItemsControl>
+        </ScrollViewer>
+        <Button HorizontalAlignment="Left" VerticalAlignment="Top" Width="26" Height="26" Margin="260,476,0,0" Click="UndoClicked" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
+            <Image Source="images\undo-button.png"></Image>
+        </Button>
     </Grid>
 </Window>

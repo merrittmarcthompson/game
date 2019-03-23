@@ -9,27 +9,56 @@ namespace Game
    {
       // The engine is all about the following global variables:
 
-      // The Tags contain the state of the game: where you are, what people think of you, etc.
-      private static Tags Tags = new Tags();
-
       // RootNodeNames is a list of all the root nodes where story trees start.
       private static List<string> RootNodeNames = new List<string>();
 
-      // CurrentNodeName is the one node within a story tree that we are on right now. If it is null, we aren't in a story tree right now. In that case, we show a list of all the starting nodes that are appropriate for the current situation.
-      private static string CurrentNodeName = null;
+      // State represents the state of the game. It implements undoing game choices and going back to previous game states.
+      private class State
+      {
+         // The Current.Tags contain the state of the game: where you are, what people think of you, etc.
+         public Tags Tags = new Tags();
 
-      // The same story tree can apply to different characters, locations, objects, etc. As we go through a story tree, we collect what the current values of those are.
-      private static Dictionary<string, object> CurrentVariables;
+         // Current.NodeName is the one node within a story tree that we are on right now. If it is null, we aren't in a story tree right now. In that case, we show a list of all the starting nodes that are appropriate for the current situation.
+         public string NodeName = null;
 
-      private static Dictionary<string, string> CurrentOptionsNodeNames;
+         // The same story tree can apply to different characters, locations, objects, etc. As we go through a story tree, we collect what the current values of those are.
+         public Dictionary<string, object> Variables;
 
-      private static Dictionary<string, Dictionary<string, object>> CurrentOptionsVariables;
+         public Dictionary<string, string> OptionsNodeNames;
+
+         public Dictionary<string, Dictionary<string, object>> OptionsVariables;
+
+         public State()
+         {
+         }
+
+         public State(State other)
+         {
+            Tags = other.Tags;
+            NodeName = other.NodeName;
+            Variables = other.Variables;
+            OptionsNodeNames = other.OptionsNodeNames;
+            OptionsVariables = other.OptionsVariables;
+         }
+      }
+
+      private static Stack<State> UndoStack = new Stack<State>();
+
+      private static State Current = new State();
+
+      public static void Undo()
+      {
+         if (UndoStack.Count == 0)
+            return;
+         Current = UndoStack.Pop();
+      }
 
       public static void SelectOption(
          string option)
       {
-         CurrentNodeName = CurrentOptionsNodeNames[option];
-         CurrentVariables = CurrentOptionsVariables[option];
+         UndoStack.Push(new State(Current));
+         Current.NodeName = Current.OptionsNodeNames[option];
+         Current.Variables = Current.OptionsVariables[option];
       }
 
       private static string ValueString(
@@ -51,7 +80,7 @@ namespace Game
       {
          // When there are no 'when' directives, it always succeeds.
          var allSucceeded = true;
-         var text = Tags.FirstWithNameAndLabel(nodeName, "text");
+         var text = Current.Tags.FirstWithNameAndLabel(nodeName, "text");
          (text as SequenceObject).Traverse((@object) =>
          {
             if (!(@object is WhenObject whenObject))
@@ -71,15 +100,15 @@ namespace Game
       {
          if (specialId == "John" || specialId == "Jane")
          {
-            return ValueString(Tags.FirstWithNameAndLabel("hero", "jane", true), variables);
+            return ValueString(Current.Tags.FirstWithNameAndLabel("hero", "jane", true), variables);
          }
          else if (specialId == "Smith")
          {
-            return ValueString(Tags.FirstWithNameAndLabel("hero", "smith", true), variables);
+            return ValueString(Current.Tags.FirstWithNameAndLabel("hero", "smith", true), variables);
          }
          else
          {
-            bool heroIsMale = Tags.FirstWithNameAndLabel("hero", "isMale") != null;
+            bool heroIsMale = Current.Tags.FirstWithNameAndLabel("hero", "isMale") != null;
             if (specialId == "he" || specialId == "she")
             {
                return heroIsMale ? "he" : "she";
@@ -192,7 +221,7 @@ namespace Game
             if (label == labels[labels.Count() - 1])
                break;
             // Otherwise, get the value make it the next name.
-            lastValue = Tags.FirstWithNameAndLabel(name, label, mustNotBeNull);
+            lastValue = Current.Tags.FirstWithNameAndLabel(name, label, mustNotBeNull);
             // If we can't find any part along the way, fail. 'null' means that it was never tagged, which is different from being tagged with no value (ex. [tag hero.isShort]), which has the value "".
             if (lastValue == null)
                return (null, null);
@@ -211,7 +240,7 @@ namespace Game
          if (lastName != null)
          {
             // Don't convert this to strings here. Do that as late as possible to make sure there are no old values in them.
-            return Tags.AllWithNameAndLabel(lastName, lastLabel);
+            return Current.Tags.AllWithNameAndLabel(lastName, lastLabel);
          }
          return Enumerable.Empty<object>();
       }
@@ -229,7 +258,7 @@ namespace Game
          if (lastLabel == null)
             return lastName;
          // Don't convert this to a string here. Do that as late as possible to make sure there are no old values in it.
-         return Tags.FirstWithNameAndLabel(lastName, lastLabel, mustNotBeNull);
+         return Current.Tags.FirstWithNameAndLabel(lastName, lastLabel, mustNotBeNull);
       }
 
       private static bool EvaluateExpression(
@@ -305,7 +334,7 @@ namespace Game
             // Iteration cases are followed by labels to test:
             if (notExpression.Expression.LeftLabels.Any())
             {
-               foreach ((var candidateName, var value) in Tags.AllWithLabel("isNode"))
+               foreach ((var candidateName, var value) in Current.Tags.AllWithLabel("isNode"))
                {
                   // Set the variable to each node name in the tags, then evaluate the whole expression.
                   variables[notExpression.Expression.LeftName] = candidateName;
@@ -386,7 +415,7 @@ namespace Game
          object itemName,
          Dictionary<string, object> variables)
       {
-         return EvaluateText(Tags.FirstWithNameAndLabel(itemName as string, "text"), variables);
+         return EvaluateText(Current.Tags.FirstWithNameAndLabel(itemName as string, "text"), variables);
       }
 
       private static void EvaluateTags(
@@ -406,11 +435,11 @@ namespace Game
                      (var rightName, var rightLabel) = EvaluateLabelListGetLastNameAndLabel(tagObject.Expression.RightName, tagObject.Expression.RightLabels, variables);
                      if (rightName == null)
                      {
-                        Tags.Remove(leftName, leftLabel);
+                        Current.Tags.Remove(leftName, leftLabel);
                         break;
                      }
-                     var rightValue = Tags.FirstWithNameAndLabel(rightName, rightLabel);
-                     Tags.Remove(leftName, leftLabel, rightValue);
+                     var rightValue = Current.Tags.FirstWithNameAndLabel(rightName, rightLabel);
+                     Current.Tags.Remove(leftName, leftLabel, rightValue);
                   }
                   else
                   {
@@ -419,17 +448,17 @@ namespace Game
                         break;
                      if (!tagObject.IsBag)
                      {
-                        Tags.Remove(leftName, leftLabel);
+                        Current.Tags.Remove(leftName, leftLabel);
                      }
                      if (tagObject.RightText != null)
                      {
-                        Tags.Add(leftName, leftLabel, tagObject.RightText);
+                        Current.Tags.Add(leftName, leftLabel, tagObject.RightText);
                         break;
                      }
                      (var rightName, var rightLabel) = EvaluateLabelListGetLastNameAndLabel(tagObject.Expression.RightName, tagObject.Expression.RightLabels, variables);
                      if (rightName == null)
                      {
-                        Tags.Add(leftName, leftLabel, "");
+                        Current.Tags.Add(leftName, leftLabel, "");
                         break;
                      }
                      var rightValue = "";
@@ -441,9 +470,9 @@ namespace Game
                      else
                      {
                         // This covers the [tag hero.stage=other.stage] case.
-                        rightValue = ValueString(Tags.FirstWithNameAndLabel(rightName, rightLabel, true), variables);
+                        rightValue = ValueString(Current.Tags.FirstWithNameAndLabel(rightName, rightLabel, true), variables);
                      }
-                     Tags.Add(leftName, leftLabel, rightValue);
+                     Current.Tags.Add(leftName, leftLabel, rightValue);
                   }
                   break;
             }
@@ -459,7 +488,7 @@ namespace Game
          resultText += "@";
 
          // Now put in all the option arrow texts.
-         foreach (var arrowNameObject in Tags.AllWithNameAndLabel(nodeName, "arrow"))
+         foreach (var arrowNameObject in Current.Tags.AllWithNameAndLabel(nodeName, "arrow"))
          {
             var arrowName = ValueString(arrowNameObject, variables);
             if (EvaluateItemCondition(arrowName, variables))
@@ -467,19 +496,21 @@ namespace Game
                resultText += "@~";
                var option = EvaluateItemText(arrowName, variables);
                resultText += "{" + option + "}";
-               CurrentOptionsNodeNames[option] = ValueString(Tags.FirstWithNameAndLabel(arrowName, "target"), variables);
-               CurrentOptionsVariables[option] = variables;
+               Current.OptionsNodeNames[option] = ValueString(Current.Tags.FirstWithNameAndLabel(arrowName, "target"), variables);
+               Current.OptionsVariables[option] = variables;
             }
          }
+         // Always leave a little white space at the bottom.
+         resultText += "@";
          return resultText;
       }
 
       public static string BuildNextText()
       {
          var resultText = "";
-         CurrentOptionsNodeNames = new Dictionary<string, string>();
-         CurrentOptionsVariables = new Dictionary<string, Dictionary<string, object>>();
-         if (CurrentNodeName == null)
+         Current.OptionsNodeNames = new Dictionary<string, string>();
+         Current.OptionsVariables = new Dictionary<string, Dictionary<string, object>>();
+         if (Current.NodeName == null)
          {
             // Present a menu of all the root story nodes which are appropriate to the current situation. For example, if the hero is located on a street, show the beginnings of all the stories that start on that street.
             foreach (var nodeName in RootNodeNames)
@@ -496,7 +527,7 @@ namespace Game
          else
          {
             // If we are in the middle of a story, show the current story node and its options (the arrows).
-            resultText = BuildOneNodeText(CurrentNodeName, CurrentVariables);
+            resultText = BuildOneNodeText(Current.NodeName, Current.Variables);
          }
          return resultText;
       }
