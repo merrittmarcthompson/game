@@ -53,6 +53,11 @@ namespace Game
          Current = UndoStack.Pop();
       }
 
+      public static bool canUndo()
+      {
+         return UndoStack.Count != 0;
+      }
+
       public static void SelectOption(
          string option)
       {

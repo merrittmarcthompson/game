@@ -38,6 +38,42 @@ namespace Game
             fileBaseTags.Merge(newTextTags);
          }
 
+         void MergeNodes(
+            Tags fileBaseTags)
+         {
+            Tags removedTags = new Tags();
+            Tags addedTags = new Tags();
+
+            // Search all nodes.
+            foreach ((var nodeName, var _) in fileBaseTags.AllWithLabel("isNode"))
+            {
+               // Seach all arrows coming from the node
+               foreach (var arrowName in fileBaseTags.AllWithNameAndLabel(nodeName, "arrow"))
+               {
+                  var sourceText = fileBaseTags.FirstWithNameAndLabel(arrowName as string, "sourceText");
+                  // If the arrow text is empty
+                  if (sourceText as string == "")
+                  {
+                     // Get the node the arrow points to.
+                     var target = fileBaseTags.FirstWithNameAndLabel(arrowName as string, "target");
+                     if (target != null)
+                     {
+                        // Concatenate the second node text to the first node text.
+                        var targetText = fileBaseTags.FirstWithNameAndLabel(target as string, "sourceText");
+                        var oldText = fileBaseTags.FirstWithNameAndLabel(nodeName, "sourceText");
+                        removedTags.Add(nodeName, "sourceText", oldText);
+                        addedTags.Add(nodeName, "sourceText", oldText as string + targetText as string);
+
+                        // Disconnect the first node from the arrow. We don't need it anymore. We have merged it's text into the node itself.
+                        removedTags.Add(nodeName, "arrow", arrowName);
+                     }
+                  }
+               }
+            }
+            fileBaseTags.Unmerge(removedTags);
+            fileBaseTags.Merge(addedTags);
+         }
+
          // START HERE
 
          // Get the source directory.
@@ -75,6 +111,9 @@ namespace Game
 
             // Translate the graphml boxes and arrows to tags. The file name is just used to create unique tags.
             var fileBaseTags = Transform.GraphmlToTags(graphml, Path.GetFileNameWithoutExtension(sourceName));
+
+            // If an arrow has no text, that means concatenate its target node to its source node and disconnect the source node from the arrow.
+            MergeNodes(fileBaseTags);
 
             // Compile the directives embedded in the source text of each box and arrow to create a list of object 'text' tags and a SequenceObjects table that relates them to the actual object code.
             AddTextsForSourceTexts(fileBaseTags);

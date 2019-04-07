@@ -147,6 +147,8 @@ namespace Game
             first = false;
             storyArea.Items.Add(TextToWPF(paragraph));
          }
+         var undoButton = (Button)FindName("UndoButton");
+         undoButton.Visibility = Engine.canUndo()? Visibility.Visible: Visibility.Hidden;
       }
 
       public MainWindow()
