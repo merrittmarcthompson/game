@@ -239,10 +239,10 @@ namespace Game
                   (substitutionObject.Expression.LeftName, substitutionObject.Expression.LeftLabels) = GetLabels(GottenToken.Value);
                   result.Objects.Add(substitutionObject);
                }
-               else if (GottenToken.Type == Token.Start)
+               else if (GottenToken.Type == Token.Merge)
                {
-                  // [start]
-                  result.Objects.Add(new StartObject());
+                  // [merge]
+                  result.Objects.Add(new MergeObject());
                }
                else if (GottenToken.Type == Token.Score)
                {

@@ -47,25 +47,31 @@ namespace Game
             // Search all nodes.
             foreach ((var nodeName, var _) in fileBaseTags.AllWithLabel("isNode"))
             {
-               // Seach all arrows coming from the node
+               // Search all arrows coming from the node
                foreach (var arrowName in fileBaseTags.AllWithNameAndLabel(nodeName, "arrow"))
                {
-                  var sourceText = fileBaseTags.FirstWithNameAndLabel(arrowName as string, "sourceText");
-                  // If the arrow text is empty
-                  if (sourceText as string == "")
+                  var objectText = fileBaseTags.FirstWithNameAndLabel(arrowName as string, "text");
+                  // If the arrow text contains [merge]
+                  if (EvaluateMerge(objectText))
                   {
                      // Get the node the arrow points to.
-                     var target = fileBaseTags.FirstWithNameAndLabel(arrowName as string, "target");
-                     if (target != null)
+                     var targetName = fileBaseTags.FirstWithNameAndLabel(arrowName as string, "target");
+                     if (targetName != null)
                      {
                         // Concatenate the second node text to the first node text.
-                        var targetText = fileBaseTags.FirstWithNameAndLabel(target as string, "sourceText");
-                        var oldText = fileBaseTags.FirstWithNameAndLabel(nodeName, "sourceText");
+                        var targetText = fileBaseTags.FirstWithNameAndLabel(targetName as string, "text");
+                        var oldText = fileBaseTags.FirstWithNameAndLabel(nodeName, "text");
                         removedTags.Add(nodeName, "sourceText", oldText);
-                        addedTags.Add(nodeName, "sourceText", oldText as string + targetText as string);
+                        addedTags.Add(nodeName, "sourceText", (oldText as SequenceObject).Append(targetText as SequenceObject));
 
                         // Disconnect the first node from the arrow. We don't need it anymore. We have merged it's text into the node itself.
                         removedTags.Add(nodeName, "arrow", arrowName);
+
+                        // Attach all the target node's arrows to the node.
+                        foreach (var targetArrowName in fileBaseTags.AllWithNameAndLabel(targetName as string, "arrow"))
+                        {
+                           addedTags.Add(nodeName, "arrow", targetArrowName);
+                        }
                      }
                   }
                }
@@ -112,11 +118,11 @@ namespace Game
             // Translate the graphml boxes and arrows to tags. The file name is just used to create unique tags.
             var fileBaseTags = Transform.GraphmlToTags(graphml, Path.GetFileNameWithoutExtension(sourceName));
 
-            // If an arrow has no text, that means concatenate its target node to its source node and disconnect the source node from the arrow.
-            MergeNodes(fileBaseTags);
-
             // Compile the directives embedded in the source text of each box and arrow to create a list of object 'text' tags and a SequenceObjects table that relates them to the actual object code.
             AddTextsForSourceTexts(fileBaseTags);
+
+            // If an arrow has [merge], that means concatenate its target node to its source node and disconnect the source node from the arrow.
+            MergeNodes(fileBaseTags);
 
             // Get the root story nodes. They have no arrows pointing at them.
             RootNodeNames = (from nodeName in fileBaseTags.AllWithLabelAndValue("isNode", "")

@@ -423,6 +423,23 @@ namespace Game
          return EvaluateText(Current.Tags.FirstWithNameAndLabel(itemName as string, "text"), variables);
       }
 
+      private static bool EvaluateMerge(
+         object text)
+      {
+         bool mergePresent = false;
+         (text as SequenceObject).Traverse((@object) =>
+         {
+            switch (@object)
+            {
+               case MergeObject mergeObject:
+                  mergePresent = true;
+                  return true;
+            }
+            return false;
+         });
+         return mergePresent;
+      }
+
       private static void EvaluateTags(
          object text,
          Dictionary<string, object> variables)
@@ -512,6 +529,7 @@ namespace Game
 
       public static string BuildNextText()
       {
+         // The UI calls this to obtain a text representation of the next screen to appear.
          var resultText = "";
          Current.OptionsNodeNames = new Dictionary<string, string>();
          Current.OptionsVariables = new Dictionary<string, Dictionary<string, object>>();

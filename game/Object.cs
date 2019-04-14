@@ -70,6 +70,14 @@ namespace Game
          }
          return result;
       }
+
+      public SequenceObject Append(
+         SequenceObject other)
+      {
+         // Implements the [merge] arrow feature that merges nodes.
+         Objects.AddRange(other.Objects);
+         return this;
+      }
    }
 
    public class IfObject : Object
@@ -212,9 +220,9 @@ namespace Game
       }
    }
 
-   public class StartObject : Object
+   public class MergeObject : Object
    {
-      public StartObject()
+      public MergeObject()
       {
       }
 
@@ -225,7 +233,7 @@ namespace Game
       }
       public override string ToString()
       {
-         return "start";
+         return "merge";
       }
    }
 
