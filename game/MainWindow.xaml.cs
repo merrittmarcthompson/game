@@ -53,31 +53,19 @@ namespace Game
                   block.Inlines.Add(new Run(accumulator));
                   accumulator = "";
                }
-               ++i;
-               while (true)
+               for (++i; i < paragraph.Length && paragraph[i] != '}'; ++i)
                {
-                  if (i >= paragraph.Length || paragraph[i] == '}')
-                  {
-                     if (accumulator.Length > 0)
-                     {
-                        var run = new Run(accumulator);
-                        var hyperlink = new Hyperlink(run);
-                        hyperlink.TextDecorations = null;
-                        hyperlink.Foreground = new SolidColorBrush(Color.FromRgb(0xa0, 0x00, 0x00));
-                        hyperlink.Click += new RoutedEventHandler(HyperlinkClicked);
-                        hyperlink.Cursor = Cursors.Hand;
-                        block.Inlines.Add(hyperlink);
-                        accumulator = "";
-                        ++i;
-                        break;
-                     }
-                  }
-                  else
-                  {
-                     accumulator += paragraph[i];
-                     ++i;
-                  }
+                  accumulator += paragraph[i];
                }
+               ++i;
+               var run = new Run(accumulator);
+               var hyperlink = new Hyperlink(run);
+               hyperlink.TextDecorations = null;
+               hyperlink.Foreground = new SolidColorBrush(Color.FromRgb(0xa0, 0x00, 0x00));
+               hyperlink.Click += new RoutedEventHandler(HyperlinkClicked);
+               hyperlink.Cursor = Cursors.Hand;
+               block.Inlines.Add(hyperlink);
+               accumulator = "";
             }
             // Italic
             else if (paragraph[i] == '<')

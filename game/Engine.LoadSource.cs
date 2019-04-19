@@ -44,6 +44,8 @@ namespace Game
             Tags removedTags = new Tags();
             Tags addedTags = new Tags();
 
+            // TO DO: repeat the following until there are no more merges to be done.
+
             // Search all nodes.
             foreach ((var nodeName, var _) in fileBaseTags.AllWithLabel("isNode"))
             {
