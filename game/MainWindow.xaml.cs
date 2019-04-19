@@ -43,7 +43,7 @@ namespace Game
             accumulator = "•  ";
             start = 1;
          }
-         for (var i = start; i < paragraph.Length;)
+         for (var i = start; i < paragraph.Length; ++i)
          {
             // Hyperlink
             if (paragraph[i] == '{')
@@ -57,7 +57,6 @@ namespace Game
                {
                   accumulator += paragraph[i];
                }
-               ++i;
                var run = new Run(accumulator);
                var hyperlink = new Hyperlink(run);
                hyperlink.TextDecorations = null;
@@ -75,31 +74,17 @@ namespace Game
                   block.Inlines.Add(new Run(accumulator));
                   accumulator = "";
                }
-               ++i;
-               while (true)
+               for (++i; i < paragraph.Length && paragraph[i] != '>'; ++i)
                {
-                  if (i >= paragraph.Length || paragraph[i] == '>')
-                  {
-                     if (accumulator.Length > 0)
-                     {
-                        var run = new Run(accumulator);
-                        block.Inlines.Add(new Italic(run));
-                        accumulator = "";
-                        ++i;
-                        break;
-                     }
-                  }
-                  else
-                  {
-                     accumulator += paragraph[i];
-                     ++i;
-                  }
+                  accumulator += paragraph[i];
                }
+               var run = new Run(accumulator);
+               block.Inlines.Add(new Italic(run));
+               accumulator = "";
             }
             else
             {
                accumulator += paragraph[i];
-               ++i;
             }
          }
          if (accumulator.Length > 0)
