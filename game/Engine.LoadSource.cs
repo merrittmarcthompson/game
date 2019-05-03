@@ -126,13 +126,13 @@ namespace Game
             // If an arrow has [merge], that means concatenate its target node to its source node and disconnect the source node from the arrow.
             MergeNodes(fileBaseTags);
 
-            // Get the root story nodes. They have no arrows pointing at them.
-            RootNodeNames = (from nodeName in fileBaseTags.AllWithLabelAndValue("isNode", "")
-                             where !fileBaseTags.AllWithLabelAndValue("target", nodeName).Any()
-                             select nodeName).ToList<string>();
-
             Current.Tags.Merge(fileBaseTags);
          }
+         // Get the root story nodes. They have no arrows pointing at them.
+         RootNodeNames = (from nodeName in Current.Tags.AllWithLabelAndValue("isNode", "")
+                          where !Current.Tags.AllWithLabelAndValue("target", nodeName).Any()
+                          select nodeName).ToList<string>();
+
          Log.SetSourceName(null);
       }
    }

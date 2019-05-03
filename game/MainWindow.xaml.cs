@@ -108,6 +108,9 @@ namespace Game
          var storyArea = (ItemsControl)FindName("StoryArea");
          storyArea.Items.Clear();
          var text = Engine.BuildNextText();
+
+         text = "@Jane was in her living room, holding the Vault Tec {pamphlet}. @She could hear little Bobby starting to get fussy in the nursery room.@~{Go check on Bobby.}@There was the clicking sound of Tom tapping his razor on the edge of the bathroom sink.@~{Go see Tom.}";
+
          var first = true;
          foreach (var piece in text.Split('@'))
          {

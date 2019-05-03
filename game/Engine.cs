@@ -533,24 +533,31 @@ namespace Game
          var resultText = "";
          Current.OptionsNodeNames = new Dictionary<string, string>();
          Current.OptionsVariables = new Dictionary<string, Dictionary<string, object>>();
-         if (Current.NodeName == null)
+
+         if (Current.NodeName != null)
          {
-            // Present a menu of all the root story nodes which are appropriate to the current situation. For example, if the hero is located on a street, show the beginnings of all the stories that start on that street.
-            foreach (var nodeName in RootNodeNames)
+            // This means we are in the middle of a scene. We have just moved to this node.
+            // First execute any tagging code that's in the node.
+            EvaluateTags(Current.Tags.FirstWithNameAndLabel(Current.NodeName, "text"), Current.Variables);
+            // If it has options, we're not on a terminal node that ends the scene.
+            if (Current.Tags.FirstWithNameAndLabel(Current.NodeName, "arrow") != null)
             {
-               // Evaluate the node's when clause. If true, the story is appropriate for the menu.
-               var variables = new Dictionary<string, object>();
-               if (EvaluateItemCondition(nodeName, variables))
-               {
-                  // EvaluateItemCondition returned the variables that succeeded. Use them to build the result text.
-                  resultText += BuildOneNodeText(nodeName, variables);
-               }
+               // Show the current story node and its options (the arrows).
+               resultText = BuildOneNodeText(Current.NodeName, Current.Variables);
+               // Done!
+               return resultText;
             }
          }
-         else
+         // If we get here, we have never entered or we are just exiting a scene. Present a menu of all the root story nodes which are appropriate to the current situation. For example, if the hero is located on a street, show the beginnings of all the stories that start on that street.
+         foreach (var nodeName in RootNodeNames)
          {
-            // If we are in the middle of a story, show the current story node and its options (the arrows).
-            resultText = BuildOneNodeText(Current.NodeName, Current.Variables);
+            // Evaluate the node's when clause. If true, the story is appropriate for the menu.
+            var variables = new Dictionary<string, object>();
+            if (EvaluateItemCondition(nodeName, variables))
+            {
+               // EvaluateItemCondition returned the variables that succeeded. Use them to build the result text.
+               resultText += BuildOneNodeText(nodeName, variables);
+            }
          }
          return resultText;
       }
