@@ -507,7 +507,6 @@ namespace Game
          Dictionary<string, object> variables)
       {
          var resultText = EvaluateItemText(nodeName, variables);
-         resultText += "@";
 
          // Now put in all the option arrow texts.
          foreach (var arrowNameObject in Current.Tags.AllWithNameAndLabel(nodeName, "arrow"))
@@ -515,15 +514,26 @@ namespace Game
             var arrowName = ValueString(arrowNameObject, variables);
             if (EvaluateItemCondition(arrowName, variables))
             {
-               resultText += "@~";
                var option = EvaluateItemText(arrowName, variables);
-               resultText += "{" + option + "}";
+               if (option[0] == '{')
+               {
+                  // If it's in braces, it refers to a hyperlink already in the text. Don't make a new hyperlink for it. Just take off the braces. When the user clicks on the link, it won't have braces.
+                  option = option.Substring(1);
+                  var end = option.IndexOf("}");
+                  if (end != -1)
+                  {
+                     option = option.Substring(0, end);
+                  }
+               }
+               else
+               {
+                  resultText += "@~";
+                  resultText += "{" + option + "}";
+               }
                Current.OptionsNodeNames[option] = ValueString(Current.Tags.FirstWithNameAndLabel(arrowName, "target"), variables);
                Current.OptionsVariables[option] = variables;
             }
          }
-         // Always leave a little white space at the bottom.
-         resultText += "@";
          return resultText;
       }
 

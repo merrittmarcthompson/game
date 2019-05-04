@@ -27,22 +27,26 @@ namespace Game
 
       private TextBlock TextToWPF(
         string paragraph)
-      // Transform the text into a WPF TextBlock. The TextBlock represents a paragraph. This allows us to have spaces between paragraphs (though I don't use that feature at the moment).
+      // Transform the text into a WPF TextBlock. Representing paragraphs with TextBlocks lets us make space after the paragraph, which isn't possible with continuous text. 
       {
          var block = new TextBlock();
          paragraph = Transform.RemoveBlanksAfterNewLines(paragraph);
          paragraph = Transform.VerticalToMatchingQuotes(paragraph);
          // Em dashes
          paragraph = paragraph.Replace("--", "—");
-         // Indent the top of the paragraph.
-         var accumulator = "   ";
+         var accumulator = "";
          var start = 0;
+         var isBullet = false;
          if (paragraph.Length > 0 && paragraph[0] == '~')
          {
-            // Or maybe it's a bullet...
+            // Bullet
             accumulator = "•  ";
             start = 1;
+            isBullet = true;
          }
+
+         // TO DO: no way to put italic in a hyperlink or vice versa.
+
          for (var i = start; i < paragraph.Length; ++i)
          {
             // Hyperlink
@@ -93,11 +97,19 @@ namespace Game
          }
 
          block.TextWrapping = TextWrapping.Wrap;
-         block.Margin = new Thickness(5, 0, 5, 0);
-         block.LineHeight = 20;
-
+         if (isBullet)
+         {
+            // Indent more and make them closer together.
+            block.Margin = new Thickness(14, 0, 5, 3);
+         }
+         else
+         {
+            block.Margin = new Thickness(5, 4, 5, 4);
+         }
+         block.LineHeight = 18;
+         
          return block;
-      }
+         }
 
       private void SetupScreen()
       {
@@ -109,7 +121,7 @@ namespace Game
          storyArea.Items.Clear();
          var text = Engine.BuildNextText();
 
-         text = "@Jane was in her living room, holding the Vault Tec {pamphlet}. @She could hear little Bobby starting to get fussy in the nursery room.@~{Go check on Bobby.}@There was the clicking sound of Tom tapping his razor on the edge of the bathroom sink.@~{Go see Tom.}";
+         //text = "@Jane was in her living room, holding the Vault Tec {pamphlet}. @She could hear little Bobby starting to get fussy in the nursery room.@~{Go check on Bobby.}@There was the clicking sound of Tom tapping his razor on the edge of the bathroom sink.@~{Go see Tom.}";
 
          var first = true;
          foreach (var piece in text.Split('@'))
