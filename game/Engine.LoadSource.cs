@@ -86,7 +86,7 @@ namespace Game
          {
             if (!Current.Tags.AllWithLabelAndValue("target", nodeName).Any())
             {
-               // Nothing points to it. This can either be a root node where a scene starts, or it can be a sub-scene that gets merged into other scenes.
+               // Nothing points to it. This can either be a root node where a scene starts, or it can be a referenced scene that gets merged into other scenes.
                var objectText = Current.Tags.FirstWithNameAndLabel(nodeName, "text");
                string sceneId = EvaluateName(objectText);
                if (sceneId == null)

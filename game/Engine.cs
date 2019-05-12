@@ -31,6 +31,9 @@ namespace Game
 
          public Dictionary<string, Dictionary<string, object>> OptionsVariables;
 
+         // Stack of return merge locations for referential merges.
+         public Stack<string> NextTargetActionNameOnReturn = new Stack<string>();
+
          public State()
          {
          }
@@ -42,6 +45,7 @@ namespace Game
             Variables = other.Variables;
             OptionsNodeNames = other.OptionsNodeNames;
             OptionsVariables = other.OptionsVariables;
+            NextTargetActionNameOnReturn = other.NextTargetActionNameOnReturn;
          }
       }
 
@@ -535,34 +539,52 @@ namespace Game
          var accumulatedActionTexts = "";
 
          // This recursive routine will accumulate all the action and reaction text values in the above variables.
-         BuildNext(firstActionName);
+         Accumulate(firstActionName);
 
          if (accumulatedReactionTexts.Length == 0 && !allowNoReactions)
             return null;
          return accumulatedActionTexts + accumulatedReactionTexts;
 
-         void BuildNext(
+         void Accumulate(
             string actionName)
          {
             // First append this action box's own text.
             accumulatedActionTexts += EvaluateItemText(actionName, variables);
 
             // Next examine all the arrows for the action.
+            var arrowCount = 0;
             foreach (var arrowNameObject in Current.Tags.AllWithNameAndLabel(actionName, "arrow"))
             {
                var arrowName = ValueString(arrowNameObject, variables);
                // If conditions in the arrow are false, then just ignore the arrow completely. This includes both reaction and merge arrows.
                if (!EvaluateItemCondition(arrowName, variables))
                   continue;
-               // Check the arrow type.
+               ++arrowCount;
+               // Check the arrow type. There are only two kinds of arrows.
                MergeObject mergeObject = EvaluateMerge(Current.Tags.FirstWithNameAndLabel(arrowName, "text"));
                if (mergeObject != null)
                {
-                  // It's a merge arrow. It should be impossible for it to have no target. Let it crash if that's the case.
-                  var targetActionName = Current.Tags.FirstWithNameAndLabel(arrowName as string, "target");
-                  // Append the text.
-                  // Call this routine again. It will append the target's text and examine the target's arrows.
-                  BuildNext(targetActionName as string);
+                  // It's a merge arrow. There are two kinds of merge arrows.
+                  string targetActionName;
+                  if (mergeObject.SceneId != null)
+                  {
+                     // It's a referential merge arrow. Merge the action it references by name.
+                     if (!MergeNodeNames.ContainsKey(mergeObject.SceneId))
+                     {
+                        Log.Fail("Unknown scene name " + mergeObject.SceneId);
+                     }
+                     targetActionName = MergeNodeNames[mergeObject.SceneId];
+                     // When we finish the jump to the other scene, we will continue merging with the action this arrow points to.
+                     Current.NextTargetActionNameOnReturn.Push(Current.Tags.FirstWithNameAndLabel(arrowName, "target") as string);
+                  }
+                  else
+                  {
+                     // It's a local merge arrow. Merge the action it points to.
+                     // It should be impossible for it to have no target. Let it crash if that's the case.
+                     targetActionName = Current.Tags.FirstWithNameAndLabel(arrowName, "target") as string;
+                  }
+                  // Call this routine again recursively. It will append the target's text and examine the target's arrows.
+                  Accumulate(targetActionName);
                }
                else
                {
@@ -586,6 +608,14 @@ namespace Game
                   }
                   Current.OptionsNodeNames[reactionText] = ValueString(Current.Tags.FirstWithNameAndLabel(arrowName, "target"), variables);
                   Current.OptionsVariables[reactionText] = variables;
+               }
+            }
+            if (arrowCount == 0)
+            {
+               // This is a terminal action of a scene. If this scene was referenced by another scene, we need to continue merging back in the referencing scene.
+               if (Current.NextTargetActionNameOnReturn.Any())
+               {
+                  Accumulate(Current.NextTargetActionNameOnReturn.Pop());
                }
             }
          }

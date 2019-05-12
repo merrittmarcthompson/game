@@ -154,8 +154,6 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="books\fo4.gb\start.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <Resource Include="books\unit-test.gb\start.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
