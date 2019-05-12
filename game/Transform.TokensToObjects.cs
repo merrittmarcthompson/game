@@ -242,7 +242,29 @@ namespace Game
                else if (GottenToken.Type == Token.Merge)
                {
                   // [merge]
-                  result.Objects.Add(new MergeObject());
+                  // [merge sceneId]
+                  string sceneId = null;
+
+                  GetToken();
+                  if (GottenToken.Type == Token.Id)
+                  {
+                     sceneId = GottenToken.Value;
+                  }
+                  else
+                  {
+                     UngetToken();
+                  }
+                  result.Objects.Add(new MergeObject(sceneId));
+               }
+               else if (GottenToken.Type == Token.Name)
+               {
+                  // [name soundsLikeAScam]
+                  GetToken();
+                  if (GottenToken.Type != Token.Id)
+                  {
+                     Log.Fail(Expected(Token.Name.Name, GottenToken));
+                  }
+                  result.Objects.Add(new NameObject(GottenToken.Value));
                }
                else if (GottenToken.Type == Token.Score)
                {

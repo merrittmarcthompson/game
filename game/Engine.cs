@@ -9,8 +9,11 @@ namespace Game
    {
       // The engine is all about the following global variables:
 
-      // RootNodeNames is a list of all the root nodes where story trees start.
+      // RootNodeNames is a list of all the root nodes where scene trees start.
       private static List<string> RootNodeNames = new List<string>();
+
+      // MergeNodeNames is a list of all the root nodes that can be merged into other scenes.
+      private static Dictionary<string, string> MergeNodeNames = new Dictionary<string, string>();
 
       // State represents the state of the game. It implements undoing game choices and going back to previous game states.
       private class State
@@ -423,21 +426,38 @@ namespace Game
          return EvaluateText(Current.Tags.FirstWithNameAndLabel(itemName as string, "text"), variables);
       }
 
-      private static bool EvaluateMerge(
+      private static MergeObject EvaluateMerge(
          object text)
       {
-         bool mergePresent = false;
+         MergeObject result = null;
          (text as SequenceObject).Traverse((@object) =>
          {
             switch (@object)
             {
                case MergeObject mergeObject:
-                  mergePresent = true;
+                  result = mergeObject;
                   return true;
             }
             return false;
          });
-         return mergePresent;
+         return result;
+      }
+
+      private static string EvaluateName(
+         object text)
+      {
+         string result = null;
+         (text as SequenceObject).Traverse((@object) =>
+         {
+            switch (@object)
+            {
+               case NameObject nameObject:
+                  result = nameObject.NameId;
+                  return true;
+            }
+            return false;
+         });
+         return result;
       }
 
       private static void EvaluateTags(
@@ -503,44 +523,77 @@ namespace Game
       }
 
       private static string BuildOneNodeText(
-         string nodeName,
-         Dictionary<string, object> variables)
+         string firstActionName,
+         Dictionary<string, object> variables,
+         bool allowNoReactions)
       {
-         var resultText = EvaluateItemText(nodeName, variables);
+         // Starting with the given action box, a) merge the texts of all actions connected below it into one text, and b) collect all the reaction arrows and append them at the end.
+         // Reaction arrows and merge arrows can be intermingled, but we want all the reaction arrows at the bottom. So we're going to accumulate the reaction texts in a separate variable and append it later.
+         var accumulatedReactionTexts = "";
 
-         // Now put in all the option arrow texts.
-         foreach (var arrowNameObject in Current.Tags.AllWithNameAndLabel(nodeName, "arrow"))
+         // The action text will contain all the merged action texts.
+         var accumulatedActionTexts = "";
+
+         // This recursive routine will accumulate all the action and reaction text values in the above variables.
+         BuildNext(firstActionName);
+
+         if (accumulatedReactionTexts.Length == 0 && !allowNoReactions)
+            return null;
+         return accumulatedActionTexts + accumulatedReactionTexts;
+
+         void BuildNext(
+            string actionName)
          {
-            var arrowName = ValueString(arrowNameObject, variables);
-            if (EvaluateItemCondition(arrowName, variables))
+            // First append this action box's own text.
+            accumulatedActionTexts += EvaluateItemText(actionName, variables);
+
+            // Next examine all the arrows for the action.
+            foreach (var arrowNameObject in Current.Tags.AllWithNameAndLabel(actionName, "arrow"))
             {
-               var option = EvaluateItemText(arrowName, variables);
-               if (option[0] == '{')
+               var arrowName = ValueString(arrowNameObject, variables);
+               // If conditions in the arrow are false, then just ignore the arrow completely. This includes both reaction and merge arrows.
+               if (!EvaluateItemCondition(arrowName, variables))
+                  continue;
+               // Check the arrow type.
+               MergeObject mergeObject = EvaluateMerge(Current.Tags.FirstWithNameAndLabel(arrowName, "text"));
+               if (mergeObject != null)
                {
-                  // If it's in braces, it refers to a hyperlink already in the text. Don't make a new hyperlink for it. Just take off the braces. When the user clicks on the link, it won't have braces.
-                  option = option.Substring(1);
-                  var end = option.IndexOf("}");
-                  if (end != -1)
-                  {
-                     option = option.Substring(0, end);
-                  }
+                  // It's a merge arrow. It should be impossible for it to have no target. Let it crash if that's the case.
+                  var targetActionName = Current.Tags.FirstWithNameAndLabel(arrowName as string, "target");
+                  // Append the text.
+                  // Call this routine again. It will append the target's text and examine the target's arrows.
+                  BuildNext(targetActionName as string);
                }
                else
                {
-                  resultText += "@~";
-                  resultText += "{" + option + "}";
+                  // It's a reaction arrow.
+                  var reactionText = EvaluateItemText(arrowName, variables);
+                  // There's a little trickiness with links here...
+                  if (reactionText.Length > 0 && reactionText[0] == '{')
+                  {
+                     // If it's in braces, it refers to a hyperlink already in the text. Don't make a new hyperlink for it. Just take off the braces. When the user clicks on the link, it won't have braces.
+                     reactionText = reactionText.Substring(1);
+                     var end = reactionText.IndexOf("}");
+                     if (end != -1)
+                     {
+                        reactionText = reactionText.Substring(0, end);
+                     }
+                  }
+                  else
+                  {
+                     accumulatedReactionTexts += "@~";
+                     accumulatedReactionTexts += "{" + reactionText + "}";
+                  }
+                  Current.OptionsNodeNames[reactionText] = ValueString(Current.Tags.FirstWithNameAndLabel(arrowName, "target"), variables);
+                  Current.OptionsVariables[reactionText] = variables;
                }
-               Current.OptionsNodeNames[option] = ValueString(Current.Tags.FirstWithNameAndLabel(arrowName, "target"), variables);
-               Current.OptionsVariables[option] = variables;
             }
          }
-         return resultText;
       }
 
       public static string BuildNextText()
       {
          // The UI calls this to obtain a text representation of the next screen to appear.
-         var resultText = "";
          Current.OptionsNodeNames = new Dictionary<string, string>();
          Current.OptionsVariables = new Dictionary<string, Dictionary<string, object>>();
 
@@ -549,16 +602,14 @@ namespace Game
             // This means we are in the middle of a scene. We have just moved to this node.
             // First execute any tagging code that's in the node.
             EvaluateTags(Current.Tags.FirstWithNameAndLabel(Current.NodeName, "text"), Current.Variables);
-            // If it has options, we're not on a terminal node that ends the scene.
-            if (Current.Tags.FirstWithNameAndLabel(Current.NodeName, "arrow") != null)
-            {
-               // Show the current story node and its options (the arrows).
-               resultText = BuildOneNodeText(Current.NodeName, Current.Variables);
-               // Done!
+            // Show the current action box and its reaction arrows. False means, if there are no reactions, fail. You always have to have a way to move forward.
+            var resultText = BuildOneNodeText(Current.NodeName, Current.Variables, false);
+            // Null result means it got to a terminal action (with no reactions), so it's time to go back to a menu.
+            if (resultText != null)
                return resultText;
-            }
          }
-         // If we get here, we have never entered or we are just exiting a scene. Present a menu of all the root story nodes which are appropriate to the current situation. For example, if the hero is located on a street, show the beginnings of all the stories that start on that street.
+         // If we get here, we have never entered or we are just exiting a scene. Present a menu of all the root scene nodes which are appropriate to the current situation. For example, if the hero is located on a street, show the beginnings of all the scenes that start on that street.
+         var accumulator = "";
          foreach (var nodeName in RootNodeNames)
          {
             // Evaluate the node's when clause. If true, the story is appropriate for the menu.
@@ -566,10 +617,11 @@ namespace Game
             if (EvaluateItemCondition(nodeName, variables))
             {
                // EvaluateItemCondition returned the variables that succeeded. Use them to build the result text.
-               resultText += BuildOneNodeText(nodeName, variables);
+               // True means allow no reactions. This lets us put "description-only" scenes on a menu.
+               accumulator += BuildOneNodeText(nodeName, variables, true);
             }
          }
-         return resultText;
+         return accumulator;
       }
    }
 }

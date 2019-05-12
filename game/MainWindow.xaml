@@ -7,7 +7,7 @@
         Title="Gamebook - Mobile Phone Game" Height="545" Width="305"
         ResizeMode="NoResize">
     <Grid Background="Beige" Margin="0,0,0,0">
-        <ScrollViewer VerticalScrollBarVisibility="Hidden" Margin="0,0,0,10">
+        <ScrollViewer VerticalScrollBarVisibility="Hidden">
             <ItemsControl x:Name="StoryArea" Margin="8,10,0,0" FontFamily="Segoe UI" FontSize="12" Height="auto" VerticalAlignment="Top" HorizontalAlignment="Left" Width="270">
             </ItemsControl>
         </ScrollViewer>

@@ -1,0 +1,4 @@
+[tag book.situation=start]
+[tag book.jane as]Jane[end]
+[tag book.smith as]Smith[end]
+[untag book.isMale]

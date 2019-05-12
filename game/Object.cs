@@ -222,8 +222,12 @@ namespace Game
 
    public class MergeObject : Object
    {
-      public MergeObject()
+      public string SceneId;
+
+      public MergeObject(
+         string sceneId)
       {
+         SceneId = sceneId;
       }
 
       public override void Traverse(
@@ -237,6 +241,26 @@ namespace Game
       }
    }
 
+   public class NameObject : Object
+   {
+      public string NameId;
+
+      public NameObject(
+         string nameId)
+      {
+         NameId = nameId;
+      }
+
+      public override void Traverse(
+        Func<Object, bool> examine)
+      {
+         examine(this);
+      }
+      public override string ToString()
+      {
+         return "merge";
+      }
+   }
    public class SpecialObject : Object
    {
       public string Id;

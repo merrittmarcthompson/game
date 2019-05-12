@@ -121,6 +121,13 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <None Include="books\fo4.gb\bobby.graphml" />
+    <None Include="books\fo4.gb\butWhatAboutBobby.graphml" />
+    <None Include="books\fo4.gb\pamphlet.graphml" />
+    <None Include="books\fo4.gb\soundsLikeAScam.graphml" />
+    <None Include="books\fo4.gb\tom.graphml" />
+    <None Include="books\fo4.gb\vaultTecMan.graphml" />
+    <None Include="books\unit-test.gb\test-scene1.graphml" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -144,6 +151,12 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="books\fo4.gb\start.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="books\unit-test.gb\start.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
