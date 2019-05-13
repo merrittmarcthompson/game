@@ -235,9 +235,28 @@ namespace Game
       {
          examine(this);
       }
+
       public override string ToString()
       {
          return "merge";
+      }
+   }
+
+   public class StartObject : Object
+   {
+      public StartObject()
+      {
+      }
+
+      public override void Traverse(
+        Func<Object, bool> examine)
+      {
+         examine(this);
+      }
+
+      public override string ToString()
+      {
+         return "start";
       }
    }
 
@@ -258,7 +277,7 @@ namespace Game
       }
       public override string ToString()
       {
-         return "merge";
+         return "name";
       }
    }
    public class SpecialObject : Object

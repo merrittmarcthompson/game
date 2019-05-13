@@ -112,15 +112,15 @@ namespace Game
       {
          if (specialId == "John" || specialId == "Jane")
          {
-            return ValueString(Current.Tags.FirstWithNameAndLabel("hero", "jane", true), variables);
+            return ValueString(Current.Tags.FirstWithNameAndLabel("book", "jane", true), variables);
          }
          else if (specialId == "Smith")
          {
-            return ValueString(Current.Tags.FirstWithNameAndLabel("hero", "smith", true), variables);
+            return ValueString(Current.Tags.FirstWithNameAndLabel("book", "smith", true), variables);
          }
          else
          {
-            bool heroIsMale = Current.Tags.FirstWithNameAndLabel("hero", "isMale") != null;
+            bool heroIsMale = Current.Tags.FirstWithNameAndLabel("book", "isMale") != null;
             if (specialId == "he" || specialId == "she")
             {
                return heroIsMale ? "he" : "she";
@@ -440,23 +440,6 @@ namespace Game
             {
                case MergeObject mergeObject:
                   result = mergeObject;
-                  return true;
-            }
-            return false;
-         });
-         return result;
-      }
-
-      private static string EvaluateName(
-         object text)
-      {
-         string result = null;
-         (text as SequenceObject).Traverse((@object) =>
-         {
-            switch (@object)
-            {
-               case NameObject nameObject:
-                  result = nameObject.NameId;
                   return true;
             }
             return false;

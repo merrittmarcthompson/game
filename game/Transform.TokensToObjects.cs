@@ -256,6 +256,11 @@ namespace Game
                   }
                   result.Objects.Add(new MergeObject(sceneId));
                }
+               else if (GottenToken.Type == Token.Start)
+               {
+                  // [start]
+                  result.Objects.Add(new StartObject());
+               }
                else if (GottenToken.Type == Token.Name)
                {
                   // [name soundsLikeAScam]
