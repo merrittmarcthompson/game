@@ -81,24 +81,23 @@ namespace Game
 
             Current.Tags.Merge(fileBaseTags);
          }
-         // Get the root scene nodes and the merge nodes.
+         // Get the root story nodes and the merge nodes.
          foreach (var nodeName in Current.Tags.AllWithLabelAndValue("isNode", ""))
          {
-            // There are two kinds of root nodes: start nodes where a scene starts, and name nodes where a referenced scene starts.
-            var objectText = Current.Tags.FirstWithNameAndLabel(nodeName, "text");
-            (objectText as SequenceObject).Traverse((@object) =>
+            if (!Current.Tags.AllWithLabelAndValue("target", nodeName).Any())
             {
-               switch (@object)
+               // Nothing points to it. This can either be a root node where a scene starts, or it can be a referenced scene that gets merged into other scenes.
+               var objectText = Current.Tags.FirstWithNameAndLabel(nodeName, "text");
+               string sceneId = EvaluateName(objectText);
+               if (sceneId == null)
                {
-                  case NameObject nameObject:
-                     MergeNodeNames.Add(nameObject.NameId, nodeName);
-                     return true;
-                  case StartObject startObject:
-                     RootNodeNames.Add(nodeName);
-                     return true;
+                  RootNodeNames.Add(nodeName);
                }
-               return false;
-            });
+               else
+               {
+                  MergeNodeNames.Add(sceneId, nodeName);
+               }
+            }
          }
          Log.SetSourceName(null);
       }

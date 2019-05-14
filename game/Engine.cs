@@ -420,7 +420,7 @@ namespace Game
             }
             return true;
          });
-         return accumulator;
+         return Transform.RemoveExtraBlanks(accumulator);
       }
 
       private static string EvaluateItemText(
@@ -440,6 +440,23 @@ namespace Game
             {
                case MergeObject mergeObject:
                   result = mergeObject;
+                  return true;
+            }
+            return false;
+         });
+         return result;
+      }
+
+      private static string EvaluateName(
+         object text)
+      {
+         string result = null;
+         (text as SequenceObject).Traverse((@object) =>
+         {
+            switch (@object)
+            {
+               case NameObject nameObject:
+                  result = nameObject.NameId;
                   return true;
             }
             return false;
@@ -631,6 +648,7 @@ namespace Game
             {
                // EvaluateItemCondition returned the variables that succeeded. Use them to build the result text.
                // True means allow no reactions. This lets us put "description-only" scenes on a menu.
+               EvaluateTags(Current.Tags.FirstWithNameAndLabel(nodeName, "text"), variables);
                accumulator += BuildOneNodeText(nodeName, variables, true);
             }
          }

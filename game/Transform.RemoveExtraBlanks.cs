@@ -24,7 +24,8 @@
                fixedText += letter;
             }
          }
-         return fixedText;
+         // Get rid of trailing spaces too.
+         return fixedText.Trim();
       }
    }
 }

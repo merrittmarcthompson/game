@@ -11,7 +11,7 @@
             <ItemsControl x:Name="StoryArea" Margin="8,10,0,0" FontFamily="Segoe UI" FontSize="12" Height="auto" VerticalAlignment="Top" HorizontalAlignment="Left" Width="270">
             </ItemsControl>
         </ScrollViewer>
-        <Button x:Name="UndoButton" HorizontalAlignment="Left" VerticalAlignment="Top" Width="26" Height="26" Margin="260,476,0,0" Click="UndoClicked" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
+        <Button x:Name="UndoButton" Opacity="0.50" HorizontalAlignment="Left" VerticalAlignment="Top" Width="26" Height="26" Margin="260,476,0,0" Click="UndoClicked" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
             <Image Source="images\undo-button.png"></Image>
         </Button>
     </Grid>

@@ -64,7 +64,7 @@ namespace Game
                var run = new Run(accumulator);
                var hyperlink = new Hyperlink(run);
                hyperlink.TextDecorations = null;
-               hyperlink.Foreground = new SolidColorBrush(Color.FromRgb(0xa0, 0x00, 0x00));
+               hyperlink.Foreground = new SolidColorBrush(Color.FromRgb(0xc0, 0x00, 0x00));
                hyperlink.Click += new RoutedEventHandler(HyperlinkClicked);
                hyperlink.Cursor = Cursors.Hand;
                block.Inlines.Add(hyperlink);
@@ -119,9 +119,8 @@ namespace Game
          // Add an extra paragraph on the end just to have some white space.
          var text = Engine.BuildNextText() + "@";
          var first = true;
-         foreach (var piece in text.Split('@'))
+         foreach (var paragraph in text.Split('@'))
          {
-            var paragraph = Transform.RemoveExtraBlanks(piece);
             if (first && paragraph.Length < 1)
                continue;
             first = false;

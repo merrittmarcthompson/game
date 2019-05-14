@@ -242,24 +242,6 @@ namespace Game
       }
    }
 
-   public class StartObject : Object
-   {
-      public StartObject()
-      {
-      }
-
-      public override void Traverse(
-        Func<Object, bool> examine)
-      {
-         examine(this);
-      }
-
-      public override string ToString()
-      {
-         return "start";
-      }
-   }
-
    public class NameObject : Object
    {
       public string NameId;
