@@ -548,8 +548,9 @@ namespace Game
          void Accumulate(
             string actionName)
          {
-            // First append this action box's own text.
+            // First append this action box's own text and execute any settings.
             accumulatedActionTexts += EvaluateItemText(actionName, variables);
+            EvaluateTags(Current.Tags.FirstWithNameAndLabel(actionName, "text"), variables);
 
             // Next examine all the arrows for the action.
             var arrowCount = 0;
@@ -630,8 +631,6 @@ namespace Game
          if (Current.NodeName != null)
          {
             // This means we are in the middle of a scene. We have just moved to this node.
-            // First execute any tagging code that's in the node.
-            EvaluateTags(Current.Tags.FirstWithNameAndLabel(Current.NodeName, "text"), Current.Variables);
             // Show the current action box and its reaction arrows. False means, if there are no reactions, fail. You always have to have a way to move forward.
             var resultText = BuildOneNodeText(Current.NodeName, Current.Variables, false);
             // Null result means it got to a terminal action (with no reactions), so it's time to go back to a menu.
