@@ -85,7 +85,7 @@ namespace Game
             {
                if (textAccumulator != "")
                {
-                  result.Add(new Token(Token.Text, textAccumulator, lineNumber));
+                  result.Add(new Token(Token.Characters, textAccumulator, lineNumber));
                   textAccumulator = "";
                }
                result.Add(new Token(Token.EndOfSourceText, "", lineNumber));
@@ -142,7 +142,7 @@ namespace Game
                   // If we have accumulated a text string, record it as the next token before going into code mode.
                   if (textAccumulator != "")
                   {
-                     result.Add(new Token(Token.Text, textAccumulator, lineNumber));
+                     result.Add(new Token(Token.Characters, textAccumulator, lineNumber));
                      textAccumulator = "";
                   }
 
@@ -243,25 +243,17 @@ namespace Game
                            {
                               result.Add(new Token(Token.When, id, lineNumber));
                            }
-                           else if (id == "tag")
+                           else if (id == "set")
                            {
-                              result.Add(new Token(Token.Tag, id, lineNumber));
-                           }
-                           else if (id == "untag")
-                           {
-                              result.Add(new Token(Token.Untag, id, lineNumber));
-                           }
-                           else if (id == "bag")
-                           {
-                              result.Add(new Token(Token.Bag, id, lineNumber));
+                              result.Add(new Token(Token.Set, id, lineNumber));
                            }
                            else if (id == "score")
                            {
                               result.Add(new Token(Token.Score, id, lineNumber));
                            }
-                           else if (id == "as")
+                           else if (id == "text")
                            {
-                              result.Add(new Token(Token.As, id, lineNumber));
+                              result.Add(new Token(Token.Text, id, lineNumber));
                            }
                            else if (id == "merge")
                            {
@@ -277,15 +269,7 @@ namespace Game
                            }
                            else
                            {
-                              // Variables start with an uppercase letter.
-                              if (Char.IsUpper(id[0]))
-                              {
-                                 result.Add(new Token(Token.Variable, id, lineNumber));
-                              }
-                              else
-                              {
-                                 result.Add(new Token(Token.Id, id, lineNumber));
-                              }
+                              result.Add(new Token(Token.Id, id, lineNumber));
                            }
                            break;
                      }

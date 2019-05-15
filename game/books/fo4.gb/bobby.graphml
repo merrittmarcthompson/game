@@ -20,7 +20,7 @@
           <y:Geometry height="40.58203125" width="374.84521484374994" x="242.06707511780755" y="0.0"/>
           <y:Fill color="#FFFFFF" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
-          <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="40.58203125" horizontalTextPosition="center" iconTextGap="4" modelName="internal" modelPosition="c" textColor="#000000" verticalTextPosition="bottom" visible="true" width="374.84521484374994" x="0.0" xml:space="preserve" y="0.0">[when book.situation=livingRoom]
+          <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="40.58203125" horizontalTextPosition="center" iconTextGap="4" modelName="internal" modelPosition="c" textColor="#000000" verticalTextPosition="bottom" visible="true" width="374.84521484374994" x="0.0" xml:space="preserve" y="0.0">[when situation=livingRoom]
 Jane could hear little Bobby starting to get fussy in the nursery.</y:NodeLabel>
         </y:GenericNode>
       </data>

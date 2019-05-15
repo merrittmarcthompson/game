@@ -4,24 +4,25 @@ namespace Game
 {
    public class Expression
    {
-      public string LeftName { get; set; }
-      public List<string> LeftLabels { get; set; } = new List<string>();
-      public string RightName { get; set; }
-      public List<string> RightLabels { get; set; } = new List<string>();
+      // This represents:
+      //    tvOn
+      //    not tvOn
+      //    tvOn=mr_rogers
+      public string LeftId = null;
+      public string RightId = null;
+      public bool Not = false;
 
       public override string ToString()
       {
-         // Ex. Door.isOpen=OtherDoor.isOpen
-         string result;
-         result = LeftName;
-         foreach (var label in LeftLabels)
+         string result ="";
+         if (Not)
          {
-            result += "." + label;
+            result += "not ";
          }
-         result += "=" + RightName;
-         foreach (var label in RightLabels)
+         result += LeftId;
+         if (RightId != null)
          {
-            result += "." + label;
+            result += "=" + RightId;
          }
          return result;
       }

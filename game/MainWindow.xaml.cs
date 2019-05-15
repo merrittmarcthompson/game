@@ -21,7 +21,7 @@ namespace Game
       {
          var hyperlink = (Hyperlink)sender;
          var link = hyperlink.Inlines.FirstInline.ContentStart.GetTextInRun(LogicalDirection.Forward);
-         Engine.SelectOption(link);
+         Engine.SelectReaction(link);
          SetupScreen();
       }
 

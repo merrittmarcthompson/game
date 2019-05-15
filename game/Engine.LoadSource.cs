@@ -47,7 +47,7 @@ namespace Game
             Log.Fail("usage: gamebook.exe source-directory");
          }
 
-         // Load the start file that has all the intial tag settings.
+         // Load the start file that has all the intial settings.
          var startFile = Path.Combine(arguments[1], "start.txt");
          Log.SetSourceName(startFile);
          if (!File.Exists(startFile))
@@ -56,7 +56,7 @@ namespace Game
          }
          string startText = File.ReadAllText(startFile);
          var text = CompileSourceText(startText);
-         EvaluateTags(text, new Dictionary<string, object>());
+         EvaluateSettings(text);
 
          // Load all the graphml files in the source directory.
          var sourcePaths = Directory.GetFiles(arguments[1], "*.graphml");
@@ -79,23 +79,23 @@ namespace Game
             // Compile the directives embedded in the source text of each box and arrow to create a list of object 'text' tags and a SequenceObjects table that relates them to the actual object code.
             AddTextsForSourceTexts(fileBaseTags);
 
-            Current.Tags.Merge(fileBaseTags);
+            Tags.Merge(fileBaseTags);
          }
          // Get the root story nodes and the merge nodes.
-         foreach (var nodeName in Current.Tags.AllWithLabelAndValue("isNode", ""))
+         foreach (var nodeName in Tags.AllWithLabelAndValue("isNode", ""))
          {
-            if (!Current.Tags.AllWithLabelAndValue("target", nodeName).Any())
+            if (!Tags.AllWithLabelAndValue("target", nodeName).Any())
             {
                // Nothing points to it. This can either be a root node where a scene starts, or it can be a referenced scene that gets merged into other scenes.
-               var objectText = Current.Tags.FirstWithNameAndLabel(nodeName, "text");
+               var objectText = Tags.FirstWithNameAndLabel(nodeName, "text");
                string sceneId = EvaluateName(objectText);
                if (sceneId == null)
                {
-                  RootNodeNames.Add(nodeName);
+                  RootActionIds.Add(nodeName);
                }
                else
                {
-                  MergeNodeNames.Add(sceneId, nodeName);
+                  MergeActionIds.Add(sceneId, nodeName);
                }
             }
          }

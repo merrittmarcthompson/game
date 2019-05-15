@@ -82,7 +82,7 @@ namespace Game
 
    public class IfObject : Object
    {
-      public List<NotExpression> NotExpressions;
+      public List<Expression> Expressions;
       public Object TrueSource;
       public Object FalseSource;
 
@@ -100,13 +100,13 @@ namespace Game
       }
       public override string ToString()
       {
-         return "if " + NotExpressions.ToString();
+         return "if " + Expressions.ToString();
       }
    }
 
    public class WhenObject : Object
    {
-      public List<NotExpression> NotExpressions;
+      public List<Expression> Expressions;
 
       public override void Traverse(
         Func<Object, bool> examine)
@@ -115,20 +115,34 @@ namespace Game
       }
       public override string ToString()
       {
-         return "when " + NotExpressions.ToString();
+         return "when " + Expressions.ToString();
+      }
+   }
+
+   public class SetObject : Object
+   {
+      public List<Expression> Expressions;
+
+      public override void Traverse(
+         Func<Object, bool> examine)
+      {
+         examine(this);
+      }
+      public override string ToString()
+      {
+         return "set" + Expressions.ToString();
       }
    }
 
    public class ScoreObject : Object
    {
-      public string Id;
+      public List<string> Ids = null;
 
       public ScoreObject(
-        string id)
+         List<string> ids)
       {
-         Id = id;
+         Ids = ids;
       }
-
       public override void Traverse(
         Func<Object, bool> examine)
       {
@@ -136,7 +150,7 @@ namespace Game
       }
       public override string ToString()
       {
-         return "id " + Id;
+         return "score " + Ids.ToString();
       }
    }
 
@@ -146,7 +160,7 @@ namespace Game
       //  His name was [hero.first].
       //  [Lucy.herosFirstName] was Lucy's pet name for him.
 
-      public Expression Expression = new Expression();
+      public string Id = null;
 
       public override void Traverse(
         Func<Object, bool> examine)
@@ -155,58 +169,38 @@ namespace Game
       }
       public override string ToString()
       {
-         return "[" + Expression.ToString() + "]";
-      }
-   }
-
-   public class TagObject : Object
-   {
-      public Expression Expression;
-      public SequenceObject RightText;
-      public bool IsUntag;
-      public bool IsBag;
-
-      public TagObject(
-        Expression expression,
-        SequenceObject rightText,
-        bool isUntag,
-        bool isBag)
-      {
-         Expression = expression;
-         RightText = rightText;
-         IsUntag = isUntag;
-         IsBag = isBag;
-      }
-
-      public override void Traverse(
-        Func<Object, bool> examine)
-      {
-         examine(this);
-      }
-      public override string ToString()
-      {
-         var id = "tag";
-         if (IsUntag)
-         {
-            id = "untag";
-         }
-         else if (IsBag)
-         {
-            id = "bag";
-         }
-         return id + Expression.ToString();
+         return "[" + Id + "]";
       }
    }
 
    public class TextObject : Object
    {
-      // This is the text.
-      public string Text;
+      public SequenceObject Text;
 
       public TextObject(
-        string text)
+         SequenceObject text)
       {
          Text = text;
+      }
+      public override void Traverse(
+        Func<Object, bool> examine)
+      {
+         examine(this);
+      }
+      public override string ToString()
+      {
+         return Text.ToString();
+      }
+   }
+
+   public class CharacterObject : Object
+   {
+      public string Characters;
+
+      public CharacterObject(
+        string characters)
+      {
+         Characters = characters;
       }
 
       public override void Traverse(
@@ -216,7 +210,7 @@ namespace Game
       }
       public override string ToString()
       {
-         return Text;
+         return Characters;
       }
    }
 
@@ -251,7 +245,6 @@ namespace Game
       {
          NameId = nameId;
       }
-
       public override void Traverse(
         Func<Object, bool> examine)
       {

@@ -1,4 +1,3 @@
-[tag book.situation=vaultTecMan]
-[tag book.jane as]Sarah[end]
-[tag book.smith as]Spaulding[end]
-[tag book.tvOn]
+[set situation=vaultTecMan]
+[text jane]Sarah[end]
+[text smith]Spaulding[end]

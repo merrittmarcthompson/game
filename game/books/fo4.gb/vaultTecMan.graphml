@@ -17,7 +17,7 @@
     <node id="n0">
       <data key="d6">
         <y:GenericNode configuration="com.yworks.flowchart.process">
-          <y:Geometry height="161.619140625" width="460.1640625" x="3537.9195560515873" y="2454.8505859375"/>
+          <y:Geometry height="161.619140625" width="460.1640625" x="3537.9195560515873" y="2444.2685546875"/>
           <y:Fill color="#FFFFFF" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="161.619140625" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="460.1640625" x="4.547473508864641E-13" xml:space="preserve" y="0.0">@"That's perfectly all right, ma'am," the man replied.
@@ -36,17 +36,17 @@ on this sooner rather than later."
     <node id="n1">
       <data key="d6">
         <y:GenericNode configuration="com.yworks.flowchart.process">
-          <y:Geometry height="30.0" width="199.5927734375" x="3361.9333751860117" y="2687.1708984375"/>
+          <y:Geometry height="30.0" width="165.48046875" x="3378.9895275297617" y="2676.5888671875"/>
           <y:Fill color="#FFFFFF" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
-          <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="30.0" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="199.5927734375" x="0.0" xml:space="preserve" y="0.0">[tag book.situation=livingRoom]<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="6.661338147750939E-16" nodeRatioY="-2.220446049250313E-16" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
+          <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="30.0" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="165.48046875" x="0.0" xml:space="preserve" y="0.0">[set situation=livingRoom]<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="6.661338147750939E-16" nodeRatioY="-2.220446049250313E-16" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
         </y:GenericNode>
       </data>
     </node>
     <node id="n2">
       <data key="d6">
         <y:GenericNode configuration="com.yworks.flowchart.process">
-          <y:Geometry height="30.0" width="14.0" x="3151.9579365079367" y="2354.1494140625"/>
+          <y:Geometry height="30.0" width="14.0" x="3151.9579365079367" y="2343.5673828125"/>
           <y:Fill color="#FFFFFF" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" hasText="false" height="30.0" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="14.0" x="0.0" y="0.0">
@@ -63,12 +63,12 @@ on this sooner rather than later."
     <node id="n3">
       <data key="d6">
         <y:GenericNode configuration="com.yworks.flowchart.process">
-          <y:Geometry height="57.873046875" width="278.697265625" x="3016.1093036954367" y="2454.8505859375"/>
+          <y:Geometry height="57.873046875" width="278.697265625" x="3016.1093036954367" y="2444.2685546875"/>
           <y:Fill color="#FFFFFF" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="57.873046875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="278.697265625" x="0.0" xml:space="preserve" y="0.0">@"Alright."
 @"You won't regret this, ma'am. I assure you."
-[tag book.signedForVault]<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="6.661338147750939E-16" nodeRatioY="-2.220446049250313E-16" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
+[set signedForVault]<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="6.661338147750939E-16" nodeRatioY="-2.220446049250313E-16" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
         </y:GenericNode>
       </data>
     </node>
@@ -106,12 +106,12 @@ on this sooner rather than later."
         <node id="n4::n0">
           <data key="d6">
             <y:GenericNode configuration="com.yworks.flowchart.process">
-              <y:Geometry height="57.873046875" width="230.0107421875" x="573.8962162078373" y="0.0"/>
+              <y:Geometry height="57.873046875" width="195.8984375" x="590.9523685515873" y="0.0"/>
               <y:Fill color="#FFFFFF" transparent="false"/>
               <y:BorderStyle color="#000000" type="line" width="1.0"/>
-              <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="57.873046875" horizontalTextPosition="center" iconTextGap="4" modelName="internal" modelPosition="c" textColor="#000000" verticalTextPosition="bottom" visible="true" width="230.0107421875" x="0.0" xml:space="preserve" y="0.0">[when book.situation=vaultTecMan
-tag scene.tvOn
-tag book.tomVaultTecMan=didntSee]</y:NodeLabel>
+              <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="57.873046875" horizontalTextPosition="center" iconTextGap="4" modelName="internal" modelPosition="c" textColor="#000000" verticalTextPosition="bottom" visible="true" width="195.8984375" x="0.0" xml:space="preserve" y="0.0">[when situation=vaultTecMan
+set tvOn
+set tomVaultTecMan=didntSee]</y:NodeLabel>
             </y:GenericNode>
           </data>
         </node>
@@ -156,7 +156,7 @@ Tom had set up the {TV} on a pile of moving boxes, but [Jane] had turned it off.
               <y:Geometry height="40.58203125" width="360.55029296875" x="341.1054090711806" y="572.66552734375"/>
               <y:Fill color="#FFFFFF" transparent="false"/>
               <y:BorderStyle color="#000000" type="line" width="1.0"/>
-              <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="40.58203125" horizontalTextPosition="center" iconTextGap="4" modelName="internal" modelPosition="c" textColor="#000000" verticalTextPosition="bottom" visible="true" width="360.55029296875" x="0.0" xml:space="preserve" y="0.0">The TV was a new 2077 Astrolux model 6000.
+              <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="40.58203125" horizontalTextPosition="center" iconTextGap="4" modelName="internal" modelPosition="c" textColor="#000000" verticalTextPosition="bottom" visible="true" width="360.55029296875" x="0.0" xml:space="preserve" y="0.0">The TV was a new 2077 Chromalux model 6000.
 [Jane] had gotten it as a wedding present from Tom's family.</y:NodeLabel>
             </y:GenericNode>
           </data>
@@ -164,20 +164,20 @@ Tom had set up the {TV} on a pile of moving boxes, but [Jane] had turned it off.
         <node id="n4::n5">
           <data key="d6">
             <y:GenericNode configuration="com.yworks.flowchart.process">
-              <y:Geometry height="30.0" width="121.87841796875" x="456.22983863467266" y="966.42529296875"/>
+              <y:Geometry height="30.0" width="92.85693359375" x="474.9520887586806" y="966.42529296875"/>
               <y:Fill color="#FFFFFF" transparent="false"/>
               <y:BorderStyle color="#000000" type="line" width="1.0"/>
-              <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="30.0" horizontalTextPosition="center" iconTextGap="4" modelName="internal" modelPosition="c" textColor="#000000" verticalTextPosition="bottom" visible="true" width="121.87841796875" x="0.0" xml:space="preserve" y="0.0">[untag scene.tvOn]</y:NodeLabel>
+              <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="30.0" horizontalTextPosition="center" iconTextGap="4" modelName="internal" modelPosition="c" textColor="#000000" verticalTextPosition="bottom" visible="true" width="92.85693359375" x="0.0" xml:space="preserve" y="0.0">[set not tvOn]</y:NodeLabel>
             </y:GenericNode>
           </data>
         </node>
         <node id="n4::n6">
           <data key="d6">
             <y:GenericNode configuration="com.yworks.flowchart.process">
-              <y:Geometry height="30.0" width="107.16455078125" x="587.9816134982639" y="966.42529296875"/>
+              <y:Geometry height="30.0" width="69.91650390625" x="606.6056369357639" y="966.42529296875"/>
               <y:Fill color="#FFFFFF" transparent="false"/>
               <y:BorderStyle color="#000000" type="line" width="1.0"/>
-              <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="30.0" horizontalTextPosition="center" iconTextGap="4" modelName="internal" modelPosition="c" textColor="#000000" verticalTextPosition="bottom" visible="true" width="107.16455078125" x="0.0" xml:space="preserve" y="0.0">[tag scene.tvOn]</y:NodeLabel>
+              <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="30.0" horizontalTextPosition="center" iconTextGap="4" modelName="internal" modelPosition="c" textColor="#000000" verticalTextPosition="bottom" visible="true" width="69.91650390625" x="0.0" xml:space="preserve" y="0.0">[set tvOn]</y:NodeLabel>
             </y:GenericNode>
           </data>
         </node>
@@ -263,10 +263,10 @@ He put his hand on the doorknob.<y:LabelModel><y:SmartNodeLabelModel distance="4
         <node id="n5::n2">
           <data key="d6">
             <y:GenericNode configuration="com.yworks.flowchart.process">
-              <y:Geometry height="230.783203125" width="312.93652343749955" x="3975.160706535218" y="966.42529296875"/>
+              <y:Geometry height="230.783203125" width="312.9365234375" x="3975.160706535218" y="966.42529296875"/>
               <y:Fill color="#FFFFFF" transparent="false"/>
               <y:BorderStyle color="#000000" type="line" width="1.0"/>
-              <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="230.783203125" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="312.93652343749955" x="0.0" xml:space="preserve" y="0.0">@"Fine," [Jane] muttered as Tom opened the door.
+              <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="230.783203125" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="312.9365234375" x="0.0" xml:space="preserve" y="0.0">@"Fine," [Jane] muttered as Tom opened the door.
 "You can deal with it."
 @"Good morning, sir!" said the man in the blue suit.
 "Lovely day, isn't it?
@@ -275,7 +275,7 @@ America's number one family security solution."
 @"That's nice," said Tom.
 "My wife [Jane] would love to talk to you about it."
 He walked back to the bathroom.
-[tag book.tomVaultTecMan=saw]
+[set tomVaultTecMan=saw]
 @[Jane] glared at him, then walked to the door.
 "I'm sorry," [she] said.
 "We don't want any nuclear war today."<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="6.661338147750939E-16" nodeRatioY="-2.220446049250313E-16" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
@@ -296,7 +296,7 @@ and they want you to sign up for a place
 in their underground survival shelter."
 @"Huh. Sounds like a scam."
 @"It is a scam."
-[tag book.tomVaultTecMan=scam]<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="6.661338147750939E-16" nodeRatioY="-2.220446049250313E-16" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
+[set tomVaultTecMan=scam]<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="6.661338147750939E-16" nodeRatioY="-2.220446049250313E-16" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
             </y:GenericNode>
           </data>
         </node>
@@ -341,7 +341,7 @@ She put one finger on his chest and pushed him back.
 A pamphlet appeared under the door.
 [Jane] picked it up.
 @"I'm going to go finish shaving," Tom said.
-[tag book.tomVaultTecMan=doesntCare]<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="6.661338147750939E-16" nodeRatioY="-2.220446049250313E-16" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
+[set tomVaultTecMan=doesntCare]<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="6.661338147750939E-16" nodeRatioY="-2.220446049250313E-16" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
             </y:GenericNode>
           </data>
         </node>
@@ -557,7 +557,7 @@ We will ultimately outsurvive them."<y:LabelModel><y:SmartNodeLabelModel distanc
         <y:ProxyAutoBoundsNode>
           <y:Realizers active="0">
             <y:GroupNode>
-              <y:Geometry height="851.27001953125" width="1363.319047619048" x="1037.073412698413" y="1434.52880859375"/>
+              <y:Geometry height="840.68798828125" width="1363.319047619048" x="1037.073412698413" y="1434.52880859375"/>
               <y:Fill color="#F2F0D8" transparent="false"/>
               <y:BorderStyle color="#000000" type="line" width="1.0"/>
               <y:NodeLabel alignment="right" autoSizePolicy="node_width" backgroundColor="#B7B69E" borderDistance="0.0" fontFamily="Dialog" fontSize="15" fontStyle="plain" hasLineColor="false" height="22.37646484375" horizontalTextPosition="center" iconTextGap="4" modelName="internal" modelPosition="t" textColor="#000000" verticalTextPosition="bottom" visible="true" width="1363.319047619048" x="0.0" xml:space="preserve" y="0.0">That's a very good question!</y:NodeLabel>
@@ -599,11 +599,10 @@ If I may ask?"<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelMode
         <node id="n7::n1">
           <data key="d6">
             <y:GenericNode configuration="com.yworks.flowchart.process">
-              <y:Geometry height="40.58203125" width="318.84619140625" x="1135.8737296937004" y="1960.486328125"/>
+              <y:Geometry height="30.0" width="507.57470703125" x="1053.073757595486" y="1960.486328125"/>
               <y:Fill color="#FFFFFF" transparent="false"/>
               <y:BorderStyle color="#000000" type="line" width="1.0"/>
-              <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="40.58203125" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="318.84619140625" x="2.2737367544323206E-13" xml:space="preserve" y="0.0">@"You've got a degree like that,
-and you're just taking care of a baby in the suburbs?"<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="6.661338147750939E-16" nodeRatioY="-2.220446049250313E-16" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
+              <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="30.0" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="507.57470703125" x="2.2737367544323206E-13" xml:space="preserve" y="0.0">@"You've got a degree like that, and you're just taking care of a baby in the suburbs?"<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="6.661338147750939E-16" nodeRatioY="-2.220446049250313E-16" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
             </y:GenericNode>
           </data>
         </node>
@@ -621,7 +620,7 @@ Well, [Mrs] [Smith],<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:Lab
         <node id="n7::n3">
           <data key="d6">
             <y:GenericNode configuration="com.yworks.flowchart.process">
-              <y:Geometry height="57.873046875" width="231.46435546875" x="1099.8531397259424" y="2060.76953125"/>
+              <y:Geometry height="57.873046875" width="231.46435546875" x="1064.2352825830853" y="2050.1875"/>
               <y:Fill color="#FFFFFF" transparent="false"/>
               <y:BorderStyle color="#000000" type="line" width="1.0"/>
               <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="57.873046875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="231.46435546875" x="2.2737367544323206E-13" xml:space="preserve" y="0.0">@[Jane]'s shoulders sagged.
@@ -633,7 +632,7 @@ Well, [Mrs] [Smith],<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:Lab
         <node id="n7::n4">
           <data key="d6">
             <y:GenericNode configuration="com.yworks.flowchart.process">
-              <y:Geometry height="109.74609375" width="426.04541015625" x="1338.3177711123512" y="2060.76953125"/>
+              <y:Geometry height="109.74609375" width="426.04541015625" x="1302.699913969494" y="2050.1875"/>
               <y:Fill color="#FFFFFF" transparent="false"/>
               <y:BorderStyle color="#000000" type="line" width="1.0"/>
               <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="109.74609375" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="426.04541015625" x="2.2737367544323206E-13" xml:space="preserve" y="0.0">@[Jane]'s eyes narrowed.
@@ -668,7 +667,7 @@ In fact,<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:M
         <node id="n7::n7">
           <data key="d6">
             <y:GenericNode configuration="com.yworks.flowchart.process">
-              <y:Geometry height="40.58203125" width="292.41455078125" x="1405.1332007998512" y="2230.216796875"/>
+              <y:Geometry height="40.58203125" width="292.41455078125" x="1369.515343656994" y="2219.634765625"/>
               <y:Fill color="#FFFFFF" transparent="false"/>
               <y:BorderStyle color="#000000" type="line" width="1.0"/>
               <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="40.58203125" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="292.41455078125" x="2.2737367544323206E-13" xml:space="preserve" y="0.0">I think our future needs smart people like you.
@@ -746,7 +745,7 @@ I'd like to sign you up with a high-IQ fee waiver."<y:LabelModel><y:SmartNodeLab
               <y:Fill color="#FFFFFF" transparent="false"/>
               <y:BorderStyle color="#000000" type="line" width="1.0"/>
               <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="196.201171875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="468.84765625" x="2.2737367544323206E-13" xml:space="preserve" y="0.0">@[Jane] stepped to the front door and opened it.
-"Hey!" [she] called.
+"Hey!" [she] said.
 The man was facing away, making a note on his clipboard.
 "Hey, Vault Tec man!" she repeated.
 The man turned around, noticed her, then tipped his hat and walked over.
@@ -786,10 +785,10 @@ That's how simple it is."
         <node id="n8::n2">
           <data key="d6">
             <y:GenericNode configuration="com.yworks.flowchart.process">
-              <y:Geometry height="213.4921875" width="285.0830078125" x="1144.5934167286707" y="966.42529296875"/>
+              <y:Geometry height="230.783203125" width="285.0830078125" x="1144.5934167286707" y="966.42529296875"/>
               <y:Fill color="#FFFFFF" transparent="false"/>
               <y:BorderStyle color="#000000" type="line" width="1.0"/>
-              <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="213.4921875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="285.0830078125" x="2.2737367544323206E-13" xml:space="preserve" y="0.0">@"Sign me up!" said [Jane].
+              <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="230.783203125" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="285.0830078125" x="2.2737367544323206E-13" xml:space="preserve" y="0.0">@"Sign me up!" said [Jane].
 "My husband didn't like this neighborhood,
 but I was sold as soon as I heard
 we'd be nuclear-safe.
@@ -800,7 +799,8 @@ He made some notations on his clipboard.
 "Just sign here and you're good to go.
 Here's a brochure with some more information.
 Have a good day, now."
-[tag book.soldOnVaultByRealtor]<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="6.661338147750939E-16" nodeRatioY="-2.220446049250313E-16" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
+[set soldOnVaultByRealtor
+set signedForVault]<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="6.661338147750939E-16" nodeRatioY="-2.220446049250313E-16" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
             </y:GenericNode>
           </data>
         </node>
@@ -849,7 +849,7 @@ a shorter quarantine period?"<y:LabelModel><y:SmartNodeLabelModel distance="4.0"
     <edge id="n8::e0" source="n8::n0" target="n8::n2">
       <data key="d10">
         <y:PolyLineEdge>
-          <y:Path sx="-187.5390625" sy="98.1005859375" tx="0.0" ty="-106.74609375">
+          <y:Path sx="-187.5390625" sy="98.1005859375" tx="0.0" ty="-115.3916015625">
             <y:Point x="1576.683556547619" y="779.36669921875"/>
             <y:Point x="1287.1349206349207" y="779.36669921875"/>
           </y:Path>
@@ -925,7 +925,7 @@ Or only some people?
           <y:Path sx="-127.9822998046875" sy="37.58203125" tx="0.0" ty="-28.9365234375"/>
           <y:LineStyle color="#000000" type="line" width="1.0"/>
           <y:Arrows source="none" target="standard"/>
-          <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" horizontalTextPosition="center" iconTextGap="4" modelName="free" modelPosition="anywhere" preferredPlacement="anywhere" ratio="0.5" textColor="#000000" verticalTextPosition="bottom" visible="true" width="140.734375" x="-70.36701757037451" xml:space="preserve" y="31.0">[merge when scene.tvOn]<y:PreferredPlacementDescriptor angle="0.0" angleOffsetOnRightSide="0" angleReference="absolute" angleRotationOnRightSide="co" distance="-1.0" frozen="true" placement="anywhere" side="anywhere" sideReference="relative_to_edge_flow"/></y:EdgeLabel>
+          <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" horizontalTextPosition="center" iconTextGap="4" modelName="free" modelPosition="anywhere" preferredPlacement="anywhere" ratio="0.5" textColor="#000000" verticalTextPosition="bottom" visible="true" width="105.37890625" x="-52.689283195374514" xml:space="preserve" y="31.0">[merge when tvOn]<y:PreferredPlacementDescriptor angle="0.0" angleOffsetOnRightSide="0" angleReference="absolute" angleRotationOnRightSide="co" distance="-1.0" frozen="true" placement="anywhere" side="anywhere" sideReference="relative_to_edge_flow"/></y:EdgeLabel>
           <y:BendStyle smoothed="false"/>
         </y:PolyLineEdge>
       </data>
@@ -939,7 +939,7 @@ Or only some people?
           </y:Path>
           <y:LineStyle color="#000000" type="line" width="1.0"/>
           <y:Arrows source="none" target="standard"/>
-          <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" horizontalTextPosition="center" iconTextGap="4" modelName="free" modelPosition="anywhere" preferredPlacement="anywhere" ratio="0.5" textColor="#000000" verticalTextPosition="bottom" visible="true" width="160.75" x="162.8677131773934" xml:space="preserve" y="31.0">[merge when not scene.tvOn]<y:PreferredPlacementDescriptor angle="0.0" angleOffsetOnRightSide="0" angleReference="absolute" angleRotationOnRightSide="co" distance="-1.0" frozen="true" placement="anywhere" side="anywhere" sideReference="relative_to_edge_flow"/></y:EdgeLabel>
+          <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" horizontalTextPosition="center" iconTextGap="4" modelName="free" modelPosition="anywhere" preferredPlacement="anywhere" ratio="0.5" textColor="#000000" verticalTextPosition="bottom" visible="true" width="125.39453125" x="180.5454475523934" xml:space="preserve" y="31.0">[merge when not tvOn]<y:PreferredPlacementDescriptor angle="0.0" angleOffsetOnRightSide="0" angleReference="absolute" angleRotationOnRightSide="co" distance="-1.0" frozen="true" placement="anywhere" side="anywhere" sideReference="relative_to_edge_flow"/></y:EdgeLabel>
           <y:BendStyle smoothed="false"/>
         </y:PolyLineEdge>
       </data>
@@ -1131,12 +1131,12 @@ stand a chance against the Red Chinese!
           <y:Path sx="0.0" sy="115.3916015625" tx="153.38802083333348" ty="-80.8095703125">
             <y:Point x="4131.628968253968" y="1207.70849609375"/>
             <y:Point x="3975.1603174603174" y="1207.70849609375"/>
-            <y:Point x="3975.1603174603174" y="2430.0"/>
-            <y:Point x="3921.3896081349208" y="2430.0"/>
+            <y:Point x="3975.1603174603174" y="2419.41796875"/>
+            <y:Point x="3921.3896081349208" y="2419.41796875"/>
           </y:Path>
           <y:LineStyle color="#000000" type="line" width="1.0"/>
           <y:Arrows source="none" target="standard"/>
-          <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" hasText="false" height="4.0" horizontalTextPosition="center" iconTextGap="4" modelName="free" modelPosition="anywhere" preferredPlacement="anywhere" ratio="0.5" textColor="#000000" verticalTextPosition="bottom" visible="true" width="4.0" x="-158.4685887896826" y="842.21044921875">
+          <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" hasText="false" height="4.0" horizontalTextPosition="center" iconTextGap="4" modelName="free" modelPosition="anywhere" preferredPlacement="anywhere" ratio="0.5" textColor="#000000" verticalTextPosition="bottom" visible="true" width="4.0" x="-158.4685887896826" y="831.62841796875">
             <y:PreferredPlacementDescriptor angle="0.0" angleOffsetOnRightSide="0" angleReference="absolute" angleRotationOnRightSide="co" distance="-1.0" frozen="true" placement="anywhere" side="anywhere" sideReference="relative_to_edge_flow"/>
           </y:EdgeLabel>
           <y:BendStyle smoothed="false"/>
@@ -1187,13 +1187,13 @@ stand a chance against the Red Chinese!
     <edge id="e2" source="n5::n6" target="n1">
       <data key="d10">
         <y:PolyLineEdge>
-          <y:Path sx="0.0" sy="46.2275390625" tx="74.8472900390625" ty="-15.0">
-            <y:Point x="4620.0317460317465" y="2676.6708984375"/>
-            <y:Point x="3536.5770519438242" y="2676.6708984375"/>
+          <y:Path sx="0.0" sy="46.2275390625" tx="62.05517578124999" ty="-15.0">
+            <y:Point x="4620.0317460317465" y="2666.0888671875"/>
+            <y:Point x="3531.4330700102305" y="2666.0888671875"/>
           </y:Path>
           <y:LineStyle color="#000000" type="line" width="1.0"/>
           <y:Arrows source="none" target="standard"/>
-          <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" horizontalTextPosition="center" iconTextGap="4" modelName="free" modelPosition="anywhere" preferredPlacement="anywhere" ratio="0.5" textColor="#000000" verticalTextPosition="bottom" visible="true" width="55.369140625" x="-27.68456256200352" xml:space="preserve" y="347.021484375">Continue.<y:PreferredPlacementDescriptor angle="0.0" angleOffsetOnRightSide="0" angleReference="absolute" angleRotationOnRightSide="co" distance="-1.0" frozen="true" placement="anywhere" side="anywhere" sideReference="relative_to_edge_flow"/></y:EdgeLabel>
+          <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" horizontalTextPosition="center" iconTextGap="4" modelName="free" modelPosition="anywhere" preferredPlacement="anywhere" ratio="0.5" textColor="#000000" verticalTextPosition="bottom" visible="true" width="55.369140625" x="-27.68456256200352" xml:space="preserve" y="336.439453125">Continue.<y:PreferredPlacementDescriptor angle="0.0" angleOffsetOnRightSide="0" angleReference="absolute" angleRotationOnRightSide="co" distance="-1.0" frozen="true" placement="anywhere" side="anywhere" sideReference="relative_to_edge_flow"/></y:EdgeLabel>
           <y:BendStyle smoothed="false"/>
         </y:PolyLineEdge>
       </data>
@@ -1202,12 +1202,12 @@ stand a chance against the Red Chinese!
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="124.037109375" tx="0.0" ty="-15.0">
-            <y:Point x="2847.8186507936507" y="2321.6494140625"/>
-            <y:Point x="3158.9579365079367" y="2321.6494140625"/>
+            <y:Point x="2847.8186507936507" y="2311.0673828125"/>
+            <y:Point x="3158.9579365079367" y="2311.0673828125"/>
           </y:Path>
           <y:LineStyle color="#000000" type="line" width="1.0"/>
           <y:Arrows source="none" target="standard"/>
-          <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" horizontalTextPosition="center" iconTextGap="4" modelName="free" modelPosition="anywhere" preferredPlacement="anywhere" ratio="0.5" textColor="#000000" verticalTextPosition="bottom" visible="true" width="44.681640625" x="-22.340773034474296" xml:space="preserve" y="312.0888671875">[merge]<y:PreferredPlacementDescriptor angle="0.0" angleOffsetOnRightSide="0" angleReference="absolute" angleRotationOnRightSide="co" distance="-1.0" frozen="true" placement="anywhere" side="anywhere" sideReference="relative_to_edge_flow"/></y:EdgeLabel>
+          <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" horizontalTextPosition="center" iconTextGap="4" modelName="free" modelPosition="anywhere" preferredPlacement="anywhere" ratio="0.5" textColor="#000000" verticalTextPosition="bottom" visible="true" width="44.681640625" x="-22.340773034474296" xml:space="preserve" y="301.5068359375">[merge]<y:PreferredPlacementDescriptor angle="0.0" angleOffsetOnRightSide="0" angleReference="absolute" angleRotationOnRightSide="co" distance="-1.0" frozen="true" placement="anywhere" side="anywhere" sideReference="relative_to_edge_flow"/></y:EdgeLabel>
           <y:BendStyle smoothed="false"/>
         </y:PolyLineEdge>
       </data>
@@ -1287,8 +1287,8 @@ stand a chance against the Red Chinese!
           <y:Path sx="0.0" sy="132.6826171875" tx="-2.800000000000182" ty="-15.0">
             <y:Point x="2248.648015873016" y="1363.32763671875"/>
             <y:Point x="2434.233333333333" y="1363.32763671875"/>
-            <y:Point x="2434.233333333333" y="2332.6494140625"/>
-            <y:Point x="3156.1579365079365" y="2332.6494140625"/>
+            <y:Point x="2434.233333333333" y="2322.0673828125"/>
+            <y:Point x="3156.1579365079365" y="2322.0673828125"/>
           </y:Path>
           <y:LineStyle color="#000000" type="line" width="1.0"/>
           <y:Arrows source="none" target="standard"/>
@@ -1322,9 +1322,9 @@ stand a chance against the Red Chinese!
     <edge id="e6" source="n0" target="n1">
       <data key="d10">
         <y:PolyLineEdge>
-          <y:Path sx="0.0" sy="80.8095703125" tx="24.9490966796875" ty="-15.0">
-            <y:Point x="3768.0015873015873" y="2665.6708984375"/>
-            <y:Point x="3486.6788585844492" y="2665.6708984375"/>
+          <y:Path sx="0.0" sy="80.8095703125" tx="20.68505859375" ty="-15.0">
+            <y:Point x="3768.0015873015873" y="2655.0888671875"/>
+            <y:Point x="3484.964197939918" y="2655.0888671875"/>
           </y:Path>
           <y:LineStyle color="#000000" type="line" width="1.0"/>
           <y:Arrows source="none" target="standard"/>
@@ -1375,10 +1375,10 @@ stand a chance against the Red Chinese!
     <edge id="n7::e5" source="n7::n1" target="n7::n3">
       <data key="d10">
         <y:PolyLineEdge>
-          <y:Path sx="-79.7115478515625" sy="20.291015625" tx="0.0" ty="-28.9365234375"/>
+          <y:Path sx="-126.8936767578125" sy="15.0" tx="0.0" ty="-28.9365234375"/>
           <y:LineStyle color="#000000" type="line" width="1.0"/>
           <y:Arrows source="none" target="standard"/>
-          <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" horizontalTextPosition="center" iconTextGap="4" modelName="free" modelPosition="anywhere" preferredPlacement="anywhere" ratio="0.5" textColor="#000000" verticalTextPosition="bottom" visible="true" width="89.37109375" x="-44.685556563120144" xml:space="preserve" y="31.0">Tell me about it.<y:PreferredPlacementDescriptor angle="0.0" angleOffsetOnRightSide="0" angleReference="absolute" angleRotationOnRightSide="co" distance="-1.0" frozen="true" placement="anywhere" side="anywhere" sideReference="relative_to_edge_flow"/></y:EdgeLabel>
+          <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" horizontalTextPosition="center" iconTextGap="4" modelName="free" modelPosition="anywhere" preferredPlacement="anywhere" ratio="0.5" textColor="#000000" verticalTextPosition="bottom" visible="true" width="89.37109375" x="-44.685493784102164" xml:space="preserve" y="31.0">Tell me about it.<y:PreferredPlacementDescriptor angle="0.0" angleOffsetOnRightSide="0" angleReference="absolute" angleRotationOnRightSide="co" distance="-1.0" frozen="true" placement="anywhere" side="anywhere" sideReference="relative_to_edge_flow"/></y:EdgeLabel>
           <y:BendStyle smoothed="false"/>
         </y:PolyLineEdge>
       </data>
@@ -1386,13 +1386,13 @@ stand a chance against the Red Chinese!
     <edge id="n7::e6" source="n7::n1" target="n7::n4">
       <data key="d10">
         <y:PolyLineEdge>
-          <y:Path sx="79.7115478515625" sy="20.291015625" tx="0.0" ty="-54.873046875">
-            <y:Point x="1375.008373248388" y="2011.568359375"/>
-            <y:Point x="1551.3404761904762" y="2011.568359375"/>
+          <y:Path sx="126.8936767578125" sy="15.0" tx="0.0" ty="-54.873046875">
+            <y:Point x="1433.7547878689236" y="2000.986328125"/>
+            <y:Point x="1515.722619047619" y="2000.986328125"/>
           </y:Path>
           <y:LineStyle color="#000000" type="line" width="1.0"/>
           <y:Arrows source="none" target="standard"/>
-          <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" horizontalTextPosition="center" iconTextGap="4" modelName="free" modelPosition="anywhere" preferredPlacement="anywhere" ratio="0.5" textColor="#000000" verticalTextPosition="bottom" visible="true" width="256.111328125" x="48.27638927641374" xml:space="preserve" y="31.0">Raising healthy children is critical for our future.<y:PreferredPlacementDescriptor angle="0.0" angleOffsetOnRightSide="0" angleReference="absolute" angleRotationOnRightSide="co" distance="-1.0" frozen="true" placement="anywhere" side="anywhere" sideReference="relative_to_edge_flow"/></y:EdgeLabel>
+          <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" horizontalTextPosition="center" iconTextGap="4" modelName="free" modelPosition="anywhere" preferredPlacement="anywhere" ratio="0.5" textColor="#000000" verticalTextPosition="bottom" visible="true" width="256.111328125" x="-46.08780575706851" xml:space="preserve" y="31.0">Raising healthy children is critical for our future.<y:PreferredPlacementDescriptor angle="0.0" angleOffsetOnRightSide="0" angleReference="absolute" angleRotationOnRightSide="co" distance="-1.0" frozen="true" placement="anywhere" side="anywhere" sideReference="relative_to_edge_flow"/></y:EdgeLabel>
           <y:BendStyle smoothed="false"/>
         </y:PolyLineEdge>
       </data>
@@ -1401,12 +1401,12 @@ stand a chance against the Red Chinese!
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="20.291015625" tx="97.47151692708326" ty="-20.291015625">
-            <y:Point x="1956.2960317460318" y="2205.3662109375"/>
-            <y:Point x="1648.8119931175595" y="2205.3662109375"/>
+            <y:Point x="1956.2960317460318" y="2194.7841796875"/>
+            <y:Point x="1613.1941359747022" y="2194.7841796875"/>
           </y:Path>
           <y:LineStyle color="#000000" type="line" width="1.0"/>
           <y:Arrows source="none" target="standard"/>
-          <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" horizontalTextPosition="center" iconTextGap="4" modelName="free" modelPosition="anywhere" preferredPlacement="anywhere" ratio="0.5" textColor="#000000" verticalTextPosition="bottom" visible="true" width="44.681640625" x="-22.34080907428074" xml:space="preserve" y="110.2236328125">[merge]<y:PreferredPlacementDescriptor angle="0.0" angleOffsetOnRightSide="0" angleReference="absolute" angleRotationOnRightSide="co" distance="-1.0" frozen="true" placement="anywhere" side="anywhere" sideReference="relative_to_edge_flow"/></y:EdgeLabel>
+          <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" horizontalTextPosition="center" iconTextGap="4" modelName="free" modelPosition="anywhere" preferredPlacement="anywhere" ratio="0.5" textColor="#000000" verticalTextPosition="bottom" visible="true" width="44.681640625" x="-22.34080907428074" xml:space="preserve" y="99.6416015625">[merge]<y:PreferredPlacementDescriptor angle="0.0" angleOffsetOnRightSide="0" angleReference="absolute" angleRotationOnRightSide="co" distance="-1.0" frozen="true" placement="anywhere" side="anywhere" sideReference="relative_to_edge_flow"/></y:EdgeLabel>
           <y:BendStyle smoothed="false"/>
         </y:PolyLineEdge>
       </data>
@@ -1415,12 +1415,12 @@ stand a chance against the Red Chinese!
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="28.9365234375" tx="-97.47151692708326" ty="-20.291015625">
-            <y:Point x="1215.5853174603174" y="2219.716796875"/>
-            <y:Point x="1453.868959263393" y="2219.716796875"/>
+            <y:Point x="1179.9674603174603" y="2209.134765625"/>
+            <y:Point x="1418.2511021205357" y="2209.134765625"/>
           </y:Path>
           <y:LineStyle color="#000000" type="line" width="1.0"/>
           <y:Arrows source="none" target="standard"/>
-          <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" horizontalTextPosition="center" iconTextGap="4" modelName="free" modelPosition="anywhere" preferredPlacement="anywhere" ratio="0.5" textColor="#000000" verticalTextPosition="bottom" visible="true" width="44.681640625" x="-22.340830000620144" xml:space="preserve" y="71.873046875">[merge]<y:PreferredPlacementDescriptor angle="0.0" angleOffsetOnRightSide="0" angleReference="absolute" angleRotationOnRightSide="co" distance="-1.0" frozen="true" placement="anywhere" side="anywhere" sideReference="relative_to_edge_flow"/></y:EdgeLabel>
+          <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" horizontalTextPosition="center" iconTextGap="4" modelName="free" modelPosition="anywhere" preferredPlacement="anywhere" ratio="0.5" textColor="#000000" verticalTextPosition="bottom" visible="true" width="44.681640625" x="-22.340767221602164" xml:space="preserve" y="71.873046875">[merge]<y:PreferredPlacementDescriptor angle="0.0" angleOffsetOnRightSide="0" angleReference="absolute" angleRotationOnRightSide="co" distance="-1.0" frozen="true" placement="anywhere" side="anywhere" sideReference="relative_to_edge_flow"/></y:EdgeLabel>
           <y:BendStyle smoothed="false"/>
         </y:PolyLineEdge>
       </data>
@@ -1431,7 +1431,7 @@ stand a chance against the Red Chinese!
           <y:Path sx="0.0" sy="54.873046875" tx="0.0" ty="-20.291015625"/>
           <y:LineStyle color="#000000" type="line" width="1.0"/>
           <y:Arrows source="none" target="standard"/>
-          <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" horizontalTextPosition="center" iconTextGap="4" modelName="free" modelPosition="anywhere" preferredPlacement="anywhere" ratio="0.5" textColor="#000000" verticalTextPosition="bottom" visible="true" width="44.681640625" x="-22.340798223586262" xml:space="preserve" y="20.0">[merge]<y:PreferredPlacementDescriptor angle="0.0" angleOffsetOnRightSide="0" angleReference="absolute" angleRotationOnRightSide="co" distance="-1.0" frozen="true" placement="anywhere" side="anywhere" sideReference="relative_to_edge_flow"/></y:EdgeLabel>
+          <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" horizontalTextPosition="center" iconTextGap="4" modelName="free" modelPosition="anywhere" preferredPlacement="anywhere" ratio="0.5" textColor="#000000" verticalTextPosition="bottom" visible="true" width="44.681640625" x="-22.34085751488101" xml:space="preserve" y="20.0">[merge]<y:PreferredPlacementDescriptor angle="0.0" angleOffsetOnRightSide="0" angleReference="absolute" angleRotationOnRightSide="co" distance="-1.0" frozen="true" placement="anywhere" side="anywhere" sideReference="relative_to_edge_flow"/></y:EdgeLabel>
           <y:BendStyle smoothed="false"/>
         </y:PolyLineEdge>
       </data>
@@ -1439,9 +1439,9 @@ stand a chance against the Red Chinese!
     <edge id="n7::e10" source="n7::n5" target="n7::n1">
       <data key="d10">
         <y:PolyLineEdge>
-          <y:Path sx="0.0" sy="15.0" tx="-79.7115478515625" ty="-20.291015625">
+          <y:Path sx="0.0" sy="15.0" tx="-126.8936767578125" ty="-15.0">
             <y:Point x="1139.143253968254" y="1949.986328125"/>
-            <y:Point x="1215.585277545263" y="1949.986328125"/>
+            <y:Point x="1179.9674343532986" y="1949.986328125"/>
           </y:Path>
           <y:LineStyle color="#000000" type="line" width="1.0"/>
           <y:Arrows source="none" target="standard"/>
@@ -1453,7 +1453,10 @@ stand a chance against the Red Chinese!
     <edge id="n7::e11" source="n7::n6" target="n7::n1">
       <data key="d10">
         <y:PolyLineEdge>
-          <y:Path sx="0.0" sy="15.0" tx="79.7115478515625" ty="-20.291015625"/>
+          <y:Path sx="0.0" sy="15.0" tx="126.8936767578125" ty="-15.0">
+            <y:Point x="1375.0083333333334" y="1949.986328125"/>
+            <y:Point x="1433.7547878689236" y="1949.986328125"/>
+          </y:Path>
           <y:LineStyle color="#000000" type="line" width="1.0"/>
           <y:Arrows source="none" target="standard"/>
           <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" horizontalTextPosition="center" iconTextGap="4" modelName="free" modelPosition="anywhere" preferredPlacement="anywhere" ratio="0.5" textColor="#000000" verticalTextPosition="bottom" visible="true" width="44.681640625" x="-22.34078776041656" xml:space="preserve" y="84.1044921875">[merge]<y:PreferredPlacementDescriptor angle="0.0" angleOffsetOnRightSide="0" angleReference="absolute" angleRotationOnRightSide="co" distance="-1.0" frozen="true" placement="anywhere" side="anywhere" sideReference="relative_to_edge_flow"/></y:EdgeLabel>
@@ -1465,12 +1468,12 @@ stand a chance against the Red Chinese!
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="20.291015625" tx="-5.599999999999909" ty="-15.0">
-            <y:Point x="1551.3404761904762" y="2343.6494140625"/>
-            <y:Point x="3153.3579365079368" y="2343.6494140625"/>
+            <y:Point x="1515.722619047619" y="2333.0673828125"/>
+            <y:Point x="3153.3579365079368" y="2333.0673828125"/>
           </y:Path>
           <y:LineStyle color="#000000" type="line" width="1.0"/>
           <y:Arrows source="none" target="standard"/>
-          <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" horizontalTextPosition="center" iconTextGap="4" modelName="free" modelPosition="anywhere" preferredPlacement="anywhere" ratio="0.5" textColor="#000000" verticalTextPosition="bottom" visible="true" width="44.681640625" x="-22.340798223586262" xml:space="preserve" y="36.0">[merge]<y:PreferredPlacementDescriptor angle="0.0" angleOffsetOnRightSide="0" angleReference="absolute" angleRotationOnRightSide="co" distance="-1.0" frozen="true" placement="anywhere" side="anywhere" sideReference="relative_to_edge_flow"/></y:EdgeLabel>
+          <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" horizontalTextPosition="center" iconTextGap="4" modelName="free" modelPosition="anywhere" preferredPlacement="anywhere" ratio="0.5" textColor="#000000" verticalTextPosition="bottom" visible="true" width="44.681640625" x="-22.34085751488101" xml:space="preserve" y="36.0">[merge]<y:PreferredPlacementDescriptor angle="0.0" angleOffsetOnRightSide="0" angleReference="absolute" angleRotationOnRightSide="co" distance="-1.0" frozen="true" placement="anywhere" side="anywhere" sideReference="relative_to_edge_flow"/></y:EdgeLabel>
           <y:BendStyle smoothed="false"/>
         </y:PolyLineEdge>
       </data>
@@ -1546,12 +1549,12 @@ stand a chance against the Red Chinese!
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="28.9365234375" tx="5.599999999999909" ty="-15.0">
-            <y:Point x="3450.30873015873" y="2321.6494140625"/>
-            <y:Point x="3164.5579365079366" y="2321.6494140625"/>
+            <y:Point x="3450.30873015873" y="2311.0673828125"/>
+            <y:Point x="3164.5579365079366" y="2311.0673828125"/>
           </y:Path>
           <y:LineStyle color="#000000" type="line" width="1.0"/>
           <y:Arrows source="none" target="standard"/>
-          <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" horizontalTextPosition="center" iconTextGap="4" modelName="free" modelPosition="anywhere" preferredPlacement="anywhere" ratio="0.5" textColor="#000000" verticalTextPosition="bottom" visible="true" width="44.681640625" x="-22.340928044394786" xml:space="preserve" y="502.2900390625">[merge]<y:PreferredPlacementDescriptor angle="0.0" angleOffsetOnRightSide="0" angleReference="absolute" angleRotationOnRightSide="co" distance="-1.0" frozen="true" placement="anywhere" side="anywhere" sideReference="relative_to_edge_flow"/></y:EdgeLabel>
+          <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" horizontalTextPosition="center" iconTextGap="4" modelName="free" modelPosition="anywhere" preferredPlacement="anywhere" ratio="0.5" textColor="#000000" verticalTextPosition="bottom" visible="true" width="44.681640625" x="-22.340928044394786" xml:space="preserve" y="491.7080078125">[merge]<y:PreferredPlacementDescriptor angle="0.0" angleOffsetOnRightSide="0" angleReference="absolute" angleRotationOnRightSide="co" distance="-1.0" frozen="true" placement="anywhere" side="anywhere" sideReference="relative_to_edge_flow"/></y:EdgeLabel>
           <y:BendStyle smoothed="false"/>
         </y:PolyLineEdge>
       </data>
@@ -1571,10 +1574,10 @@ stand a chance against the Red Chinese!
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="3.5" sy="15.0" tx="-153.38802083333348" ty="-80.8095703125">
-            <y:Point x="3162.4579365079367" y="2394.6494140625"/>
-            <y:Point x="3250.3126984126984" y="2394.6494140625"/>
-            <y:Point x="3250.3126984126984" y="2444.3505859375"/>
-            <y:Point x="3614.613566468254" y="2444.3505859375"/>
+            <y:Point x="3162.4579365079367" y="2384.0673828125"/>
+            <y:Point x="3250.3126984126984" y="2384.0673828125"/>
+            <y:Point x="3250.3126984126984" y="2433.7685546875"/>
+            <y:Point x="3614.613566468254" y="2433.7685546875"/>
           </y:Path>
           <y:LineStyle color="#000000" type="line" width="1.0"/>
           <y:Arrows source="none" target="standard"/>
@@ -1586,9 +1589,9 @@ stand a chance against the Red Chinese!
     <edge id="e14" source="n3" target="n1">
       <data key="d10">
         <y:PolyLineEdge>
-          <y:Path sx="0.0" sy="28.9365234375" tx="-24.9490966796875" ty="-15.0">
-            <y:Point x="3155.4579365079367" y="2665.6708984375"/>
-            <y:Point x="3436.7806652250742" y="2665.6708984375"/>
+          <y:Path sx="0.0" sy="28.9365234375" tx="-20.68505859375" ty="-15.0">
+            <y:Point x="3155.4579365079367" y="2655.0888671875"/>
+            <y:Point x="3438.4953258696055" y="2655.0888671875"/>
           </y:Path>
           <y:LineStyle color="#000000" type="line" width="1.0"/>
           <y:Arrows source="none" target="standard"/>
@@ -1603,7 +1606,7 @@ stand a chance against the Red Chinese!
           <y:Path sx="0.0" sy="28.9365234375" tx="0.0" ty="-80.8095703125"/>
           <y:LineStyle color="#000000" type="line" width="1.0"/>
           <y:Arrows source="none" target="standard"/>
-          <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" horizontalTextPosition="center" iconTextGap="4" modelName="free" modelPosition="anywhere" preferredPlacement="anywhere" ratio="0.5" textColor="#000000" verticalTextPosition="bottom" visible="true" width="44.681640625" x="-22.34094199528772" xml:space="preserve" y="1007.77001953125">[merge]<y:PreferredPlacementDescriptor angle="0.0" angleOffsetOnRightSide="0" angleReference="absolute" angleRotationOnRightSide="co" distance="-1.0" frozen="true" placement="anywhere" side="anywhere" sideReference="relative_to_edge_flow"/></y:EdgeLabel>
+          <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" horizontalTextPosition="center" iconTextGap="4" modelName="free" modelPosition="anywhere" preferredPlacement="anywhere" ratio="0.5" textColor="#000000" verticalTextPosition="bottom" visible="true" width="44.681640625" x="-22.34094199528772" xml:space="preserve" y="997.18798828125">[merge]<y:PreferredPlacementDescriptor angle="0.0" angleOffsetOnRightSide="0" angleReference="absolute" angleRotationOnRightSide="co" distance="-1.0" frozen="true" placement="anywhere" side="anywhere" sideReference="relative_to_edge_flow"/></y:EdgeLabel>
           <y:BendStyle smoothed="false"/>
         </y:PolyLineEdge>
       </data>
@@ -1700,14 +1703,11 @@ stand a chance against the Red Chinese!
     <edge id="n4::e5" source="n4::n4" target="n4::n5">
       <data key="d10">
         <y:PolyLineEdge>
-          <y:Path sx="0.0" sy="20.291015625" tx="0.0" ty="-15.0">
-            <y:Point x="521.3805555555556" y="623.74755859375"/>
-            <y:Point x="517.1690476190477" y="623.74755859375"/>
-          </y:Path>
+          <y:Path sx="0.0" sy="20.291015625" tx="0.0" ty="-15.0"/>
           <y:LineStyle color="#000000" type="line" width="1.0"/>
           <y:Arrows source="none" target="standard"/>
-          <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="33.40234375" horizontalTextPosition="center" iconTextGap="4" modelName="free" modelPosition="anywhere" preferredPlacement="anywhere" ratio="0.5" textColor="#000000" verticalTextPosition="bottom" visible="true" width="103.38671875" x="-55.90486595517109" xml:space="preserve" y="291.4248046875">Turn it off.
-[when scene.tvOn]
+          <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="33.40234375" horizontalTextPosition="center" iconTextGap="4" modelName="free" modelPosition="anywhere" preferredPlacement="anywhere" ratio="0.5" textColor="#000000" verticalTextPosition="bottom" visible="true" width="68.03125" x="-34.01562364366316" xml:space="preserve" y="291.4248046875">Turn it off.
+[when tvOn]
 <y:PreferredPlacementDescriptor angle="0.0" angleOffsetOnRightSide="0" angleReference="absolute" angleRotationOnRightSide="co" distance="-1.0" frozen="true" placement="anywhere" side="anywhere" sideReference="relative_to_edge_flow"/></y:EdgeLabel>
           <y:BendStyle smoothed="false"/>
         </y:PolyLineEdge>
@@ -1737,8 +1737,8 @@ stand a chance against the Red Chinese!
           <y:Path sx="120.18343098958337" sy="20.291015625" tx="0.0" ty="-15.0"/>
           <y:LineStyle color="#000000" type="line" width="1.0"/>
           <y:Arrows source="none" target="standard"/>
-          <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="33.40234375" horizontalTextPosition="center" iconTextGap="4" modelName="free" modelPosition="anywhere" preferredPlacement="anywhere" ratio="0.5" textColor="#000000" verticalTextPosition="bottom" visible="true" width="123.40234375" x="-61.70124782986113" xml:space="preserve" y="291.4248046875">Turn it on.
-[when not scene.tvOn]<y:PreferredPlacementDescriptor angle="0.0" angleOffsetOnRightSide="0" angleReference="absolute" angleRotationOnRightSide="co" distance="-1.0" frozen="true" placement="anywhere" side="anywhere" sideReference="relative_to_edge_flow"/></y:EdgeLabel>
+          <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="33.40234375" horizontalTextPosition="center" iconTextGap="4" modelName="free" modelPosition="anywhere" preferredPlacement="anywhere" ratio="0.5" textColor="#000000" verticalTextPosition="bottom" visible="true" width="88.046875" x="-44.02351345486113" xml:space="preserve" y="291.4248046875">Turn it on.
+[when not tvOn]<y:PreferredPlacementDescriptor angle="0.0" angleOffsetOnRightSide="0" angleReference="absolute" angleRotationOnRightSide="co" distance="-1.0" frozen="true" placement="anywhere" side="anywhere" sideReference="relative_to_edge_flow"/></y:EdgeLabel>
           <y:BendStyle smoothed="false"/>
         </y:PolyLineEdge>
       </data>
@@ -1747,14 +1747,14 @@ stand a chance against the Red Chinese!
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="15.0" tx="63.99114990234375" ty="-37.58203125">
-            <y:Point x="517.1690476190477" y="1170.12646484375"/>
+            <y:Point x="521.3805555555556" y="1170.12646484375"/>
             <y:Point x="38.340873015873015" y="1170.12646484375"/>
             <y:Point x="38.340873015873015" y="74.07421875000001"/>
             <y:Point x="560.9193245055184" y="74.07421875000001"/>
           </y:Path>
           <y:LineStyle color="#000000" type="line" width="1.0"/>
           <y:Arrows source="none" target="standard"/>
-          <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" horizontalTextPosition="center" iconTextGap="4" modelName="free" modelPosition="anywhere" preferredPlacement="anywhere" ratio="0.5" textColor="#000000" verticalTextPosition="bottom" visible="true" width="44.681640625" x="-501.16901467943944" xml:space="preserve" y="-601.8256835937501">[merge]<y:PreferredPlacementDescriptor angle="0.0" angleOffsetOnRightSide="0" angleReference="absolute" angleRotationOnRightSide="co" distance="-1.0" frozen="true" placement="anywhere" side="anywhere" sideReference="relative_to_edge_flow"/></y:EdgeLabel>
+          <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" horizontalTextPosition="center" iconTextGap="4" modelName="free" modelPosition="anywhere" preferredPlacement="anywhere" ratio="0.5" textColor="#000000" verticalTextPosition="bottom" visible="true" width="44.681640625" x="-505.3805014958457" xml:space="preserve" y="-601.8256835937501">[merge]<y:PreferredPlacementDescriptor angle="0.0" angleOffsetOnRightSide="0" angleReference="absolute" angleRotationOnRightSide="co" distance="-1.0" frozen="true" placement="anywhere" side="anywhere" sideReference="relative_to_edge_flow"/></y:EdgeLabel>
           <y:BendStyle smoothed="false"/>
         </y:PolyLineEdge>
       </data>
@@ -1789,18 +1789,17 @@ stand a chance against the Red Chinese!
       </data>
     </edge>
     <edge id="e19" source="n8::n2" target="n1">
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
-          <y:Path sx="0.0" sy="106.74609375" tx="-74.8472900390625" ty="-15.0">
+          <y:Path sx="0.0" sy="115.3916015625" tx="-62.05517578124999" ty="-15.0">
             <y:Point x="1287.1349206349207" y="1321.80908203125"/>
             <y:Point x="1001.8884920634921" y="1321.80908203125"/>
-            <y:Point x="1001.8884920634921" y="2676.6708984375"/>
-            <y:Point x="3386.8824718656992" y="2676.6708984375"/>
+            <y:Point x="1001.8884920634921" y="2666.0888671875"/>
+            <y:Point x="3392.026453799293" y="2666.0888671875"/>
           </y:Path>
           <y:LineStyle color="#000000" type="line" width="1.0"/>
           <y:Arrows source="none" target="standard"/>
-          <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" horizontalTextPosition="center" iconTextGap="4" modelName="free" modelPosition="anywhere" preferredPlacement="anywhere" ratio="0.5" textColor="#000000" verticalTextPosition="bottom" visible="true" width="55.369140625" x="-312.9309659443204" xml:space="preserve" y="931.37451171875">Continue.<y:PreferredPlacementDescriptor angle="0.0" angleOffsetOnRightSide="0" angleReference="absolute" angleRotationOnRightSide="co" distance="-1.0" frozen="true" placement="anywhere" side="anywhere" sideReference="relative_to_edge_flow"/></y:EdgeLabel>
+          <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" horizontalTextPosition="center" iconTextGap="4" modelName="free" modelPosition="anywhere" preferredPlacement="anywhere" ratio="0.5" textColor="#000000" verticalTextPosition="bottom" visible="true" width="55.369140625" x="-312.930965944321" xml:space="preserve" y="903.50146484375">Continue.<y:PreferredPlacementDescriptor angle="0.0" angleOffsetOnRightSide="0" angleReference="absolute" angleRotationOnRightSide="co" distance="-1.0" frozen="true" placement="anywhere" side="anywhere" sideReference="relative_to_edge_flow"/></y:EdgeLabel>
           <y:BendStyle smoothed="false"/>
         </y:PolyLineEdge>
       </data>

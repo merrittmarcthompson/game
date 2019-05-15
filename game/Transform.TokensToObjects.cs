@@ -42,124 +42,46 @@ namespace Game
             return string.Format("line {0}: expected {1} but got '{2}'", actual.LineNumber, expected, actual.Value);
          }
 
-         string ExpectedIdOrVariable(
-           Token actual)
+         List<Expression> GetExpressions()
          {
-            return string.Format("line {0}: expected an ID or variable but got '{1}'", actual.LineNumber, actual.Value);
-         }
-
-         (string name, List<string> labels) GetLabels(
-           string startingIdOrVariable)
-         {
-            // Let's assume the ID is going to be the label with no name. This allows a variable as a label name, ex. 'hero.Foo', which isn't quite right, but I don't think that will cause any problems.
-            var resultLabels = new List<string>();
-            string resultName = "";
-            var tempLabel = startingIdOrVariable;
-            GetToken();
-            if (GottenToken.Type == Token.Period)
+            // ID
+            // NOT ID
+            // ID=ID
+            var result = new List<Expression>();
+            do
             {
-               // But if it's followed by a period, it turns out to be the name.
-               resultName = tempLabel;
+               var expression = new Expression();
+               expression.Not = true;
                GetToken();
-
-               // So the next ID must be the label.
+               if (GottenToken.Type != Token.Not)
+               {
+                  expression.Not = false;
+                  UngetToken();
+               }
+               GetToken();
                if (GottenToken.Type != Token.Id)
                {
                   Log.Fail(Expected(Token.Id.Name, GottenToken));
                }
-               resultLabels.Add(GottenToken.Value);
-
-               // Let's see if there are any more labels.
-               GetToken();
-               while (GottenToken.Type == Token.Period)
+               expression.LeftId = GottenToken.Value;
+               if (!expression.Not)
                {
                   GetToken();
-                  if (GottenToken.Type != Token.Id)
+                  if (GottenToken.Type != Token.Equal)
                   {
-                     Log.Fail(Expected(Token.Id.Name, GottenToken));
+                     UngetToken();
                   }
-                  resultLabels.Add(GottenToken.Value);
-                  GetToken();
-               }
-               // Put back the last non-period mystery token.
-               UngetToken();
-            }
-            else
-            {
-               // There's just this one label.
-               resultLabels.Add(tempLabel);
-               // Put back the token that wasn't a period.
-               UngetToken();
-            }
-            return (resultName, resultLabels);
-         }
-
-         Expression GetExpression()
-         {
-            // You can get one of these:
-            //  [ID|VARIABLE .] LABEL-ID {. LABEL-ID} [= [ID|VARIABLE .] LABEL-ID {. LABEL-ID}]
-            //  VARIABLE = [ID|VARIABLE .] LABEL-ID {. LABEL-ID}]
-            var result = new Expression();
-            GetToken();
-            if (GottenToken.Type != Token.Id && GottenToken.Type != Token.Variable)
-            {
-               Log.Fail(ExpectedIdOrVariable(GottenToken));
-            }
-
-            // Handle the special case of 'VARIABLE ='.
-            string firstId = GottenToken.Value;
-            if (GottenToken.Type == Token.Variable)
-            {
-               GetToken();
-               // If we get the '=', we're done on the left. Now get the right.
-               if (GottenToken.Type == Token.Equal)
-               {
-                  result.LeftName = firstId;
-                  GetToken();
-                  if (GottenToken.Type != Token.Id && GottenToken.Type != Token.Variable)
+                  else
                   {
-                     Log.Fail(ExpectedIdOrVariable(GottenToken));
+                     GetToken();
+                     if (GottenToken.Type != Token.Id)
+                     {
+                        Log.Fail(Expected(Token.Id.Name, GottenToken));
+                     }
+                     expression.RightId = GottenToken.Value;
                   }
-                  (result.RightName, result.RightLabels) = GetLabels(GottenToken.Value);
-                  return result;
                }
-               // Put back the token that isn't '=' for later processing.
-               UngetToken();
-            }
-            (result.LeftName, result.LeftLabels) = GetLabels(firstId);
-            GetToken();
-            if (GottenToken.Type == Token.Equal)
-            {
-               GetToken();
-               if (GottenToken.Type != Token.Id && GottenToken.Type != Token.Variable)
-               {
-                  Log.Fail(ExpectedIdOrVariable(GottenToken));
-               }
-               (result.RightName, result.RightLabels) = GetLabels(GottenToken.Value);
-            }
-            else
-            {
-               UngetToken();
-            }
-
-            return result;
-         }
-
-         List<NotExpression> GetNotExpressions()
-         {
-            var result = new List<NotExpression>();
-            do
-            {
-               var notExpression = new NotExpression();
-               notExpression.Not = true;
-               GetToken();
-               if (GottenToken.Type != Token.Not)
-               {
-                  notExpression.Not = false;
-                  UngetToken();
-               }
-               notExpression.Expression = GetExpression();
-               result.Add(notExpression);
+               result.Add(expression);
                GetToken();
             } while (GottenToken.Type == Token.Comma);
             UngetToken();
@@ -193,7 +115,7 @@ namespace Game
             //   [if brave]
             //   [if not killedInspector]
             var result = new IfObject();
-            result.NotExpressions = GetNotExpressions();
+            result.Expressions = GetExpressions();
 
             result.TrueSource = GetSequence();
 
@@ -223,22 +145,25 @@ namespace Game
             {
                GetToken();
 
-               if (GottenToken.Type == Token.Text)
+               if (GottenToken.Type == Token.Characters)
                {
-                  result.Objects.Add(new TextObject(GottenToken.Value));
+                  result.Objects.Add(new CharacterObject(GottenToken.Value));
                }
                else if (GottenToken.Type == Token.Special)
                {
                   // Ex. [he]
                   result.Objects.Add(new SpecialObject(GottenToken.Value));
                }
-               else if (GottenToken.Type == Token.Id || GottenToken.Type == Token.Variable)
+               // I think this lets by too many mistakes. You put in some wrong ID somewhere, and it says, okay, it's a substitution, rather than complaining. Maybe have something like [insert bobsShoeSize] instead of [bobsShoeSize]?
+               /*
+               else if (GottenToken.Type == Token.Id)
                {
                   // This is a text substitution.
                   var substitutionObject = new SubstitutionObject();
-                  (substitutionObject.Expression.LeftName, substitutionObject.Expression.LeftLabels) = GetLabels(GottenToken.Value);
+                  substitutionObject.Id = GottenToken.Value;
                   result.Objects.Add(substitutionObject);
                }
+               */
                else if (GottenToken.Type == Token.Merge)
                {
                   // [merge]
@@ -268,48 +193,48 @@ namespace Game
                }
                else if (GottenToken.Type == Token.Score)
                {
-                  // [score brave]
+                  // SCORE ID [, ID...]
+                  List<string> ids = new List<string>();
+                  do
+                  {
+                     GetToken();
+                     if (GottenToken.Type != Token.Id)
+                     {
+                        Log.Fail(Expected(Token.Score.Name, GottenToken));
+                     }
+                     ids.Add(GottenToken.Value);
+                     GetToken();
+                  } while (GottenToken.Type == Token.Comma);
+                  UngetToken();
+                  result.Objects.Add(new ScoreObject(ids));
+               }
+               else if (GottenToken.Type == Token.Text)
+               {
                   GetToken();
                   if (GottenToken.Type != Token.Id)
                   {
-                     Log.Fail(Expected(Token.Score.Name, GottenToken));
+                     Log.Fail(Expected(Token.Id.Name, GottenToken));
                   }
-                  result.Objects.Add(new ScoreObject(GottenToken.Value));
-               }
-               else if (GottenToken.Type == Token.Tag || GottenToken.Type == Token.Untag || GottenToken.Type == Token.Bag)
-               {
-                  bool isUntag = GottenToken.Type == Token.Untag;
-                  bool isBag = GottenToken.Type == Token.Bag;
-                  var expression = GetExpression();
-                  if (expression == null)
+                  SequenceObject text = GetSequence();
+                  if (text == null)
                      return null;
-                  SequenceObject asSequenceObject = null;
-                  if (expression.RightName == null && !expression.RightLabels.Any())
+                  GetToken();
+                  if (GottenToken.Type != Token.End)
                   {
-                     // I.e. there wasn't any '='
-                     GetToken();
-                     if (GottenToken.Type == Token.As)
-                     {
-                        asSequenceObject = GetSequence();
-                        if (asSequenceObject == null)
-                           return null;
-                        GetToken();
-                        if (GottenToken.Type != Token.End)
-                        {
-                           Log.Fail(Expected(Token.End.Name, GottenToken));
-                        }
-                     }
-                     else
-                     {
-                        UngetToken();
-                     }
+                     Log.Fail(Expected(Token.End.Name, GottenToken));
                   }
-                  result.Objects.Add(new TagObject(expression, asSequenceObject, isUntag, isBag));
+                  result.Objects.Add(new TextObject(text));
+               }
+               else if (GottenToken.Type == Token.Set)
+               {
+                  var setObject = new SetObject();
+                  setObject.Expressions = GetExpressions();
+                  result.Objects.Add(setObject);
                }
                else if (GottenToken.Type == Token.When)
                {
                   var whenObject = new WhenObject();
-                  whenObject.NotExpressions = GetNotExpressions();
+                  whenObject.Expressions = GetExpressions();
                   result.Objects.Add(whenObject);
                }
                else if (GottenToken.Type == Token.If)
