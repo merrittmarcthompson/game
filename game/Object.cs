@@ -175,11 +175,14 @@ namespace Game
 
    public class TextObject : Object
    {
+      public string Id;
       public SequenceObject Text;
 
       public TextObject(
+         string id,
          SequenceObject text)
       {
+         Id = id;
          Text = text;
       }
       public override void Traverse(

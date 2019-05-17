@@ -9,20 +9,17 @@ namespace Game
 {
    public partial class MainWindow : Window
    {
-      private DateTime NextGoodClick = DateTime.Now;
-
       void UndoClicked(object sender, RoutedEventArgs e)
       {
          Engine.Undo();
-         SetupScreen();
+         SetupScreen(null);
       }
 
       private void HyperlinkClicked(object sender, RoutedEventArgs e)
       {
          var hyperlink = (Hyperlink)sender;
          var link = hyperlink.Inlines.FirstInline.ContentStart.GetTextInRun(LogicalDirection.Forward);
-         Engine.SelectReaction(link);
-         SetupScreen();
+         SetupScreen(link);
       }
 
       private TextBlock TextToWPF(
@@ -111,13 +108,14 @@ namespace Game
          return block;
          }
 
-      private void SetupScreen()
+      private void SetupScreen(
+         string reactionText)
       {
          // It's simple. The engine builds a text version of the screen. Then this main window code converts that into WPF objects for display.
          var storyArea = (ItemsControl)FindName("StoryArea");
          storyArea.Items.Clear();
          // Add an extra paragraph on the end just to have some white space.
-         var text = Engine.BuildNextText() + "@";
+         var text = Engine.BuildActionTextForReaction(reactionText) + "@";
          var first = true;
          foreach (var paragraph in text.Split('@'))
          {
@@ -138,7 +136,7 @@ namespace Game
          Log.Add("Started");
          InitializeComponent();
          Engine.LoadSource();
-         SetupScreen();
+         SetupScreen(null);
          //}
          //catch (Exception e)
          //{

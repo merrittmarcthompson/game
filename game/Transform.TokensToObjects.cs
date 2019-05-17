@@ -42,11 +42,14 @@ namespace Game
             return string.Format("line {0}: expected {1} but got '{2}'", actual.LineNumber, expected, actual.Value);
          }
 
-         List<Expression> GetExpressions()
+         List<Expression> GetExpressions(
+            bool allowNotEqual)
          {
             // ID
             // NOT ID
             // ID=ID
+            // NOT ID=ID
+            // allowNotEqual: [when not a=b] makes sense. But [set not a=b] doesn't mean anything.
             var result = new List<Expression>();
             do
             {
@@ -64,7 +67,7 @@ namespace Game
                   Log.Fail(Expected(Token.Id.Name, GottenToken));
                }
                expression.LeftId = GottenToken.Value;
-               if (!expression.Not)
+               if (allowNotEqual || !expression.Not)
                {
                   GetToken();
                   if (GottenToken.Type != Token.Equal)
@@ -115,7 +118,7 @@ namespace Game
             //   [if brave]
             //   [if not killedInspector]
             var result = new IfObject();
-            result.Expressions = GetExpressions();
+            result.Expressions = GetExpressions(true);
 
             result.TrueSource = GetSequence();
 
@@ -215,6 +218,7 @@ namespace Game
                   {
                      Log.Fail(Expected(Token.Id.Name, GottenToken));
                   }
+                  string id = GottenToken.Value;
                   SequenceObject text = GetSequence();
                   if (text == null)
                      return null;
@@ -223,18 +227,18 @@ namespace Game
                   {
                      Log.Fail(Expected(Token.End.Name, GottenToken));
                   }
-                  result.Objects.Add(new TextObject(text));
+                  result.Objects.Add(new TextObject(id, text));
                }
                else if (GottenToken.Type == Token.Set)
                {
                   var setObject = new SetObject();
-                  setObject.Expressions = GetExpressions();
+                  setObject.Expressions = GetExpressions(false);
                   result.Objects.Add(setObject);
                }
                else if (GottenToken.Type == Token.When)
                {
                   var whenObject = new WhenObject();
-                  whenObject.Expressions = GetExpressions();
+                  whenObject.Expressions = GetExpressions(true);
                   result.Objects.Add(whenObject);
                }
                else if (GottenToken.Type == Token.If)

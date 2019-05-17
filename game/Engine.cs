@@ -28,7 +28,7 @@ namespace Game
          public string ActionId = null;
 
          // The same story tree can apply to different characters, locations, objects, etc. As we go through a story tree, we collect what the current values of those are.
-         public Dictionary<string, string> ReactionsActionIds;
+         public Dictionary<string, string> ReactionTargetActionIds = new Dictionary<string, string>();
 
          // Stack of return merge locations for referential merges.
          public Stack<string> NextTargetActionIdOnReturn = new Stack<string>();
@@ -39,10 +39,10 @@ namespace Game
 
          public State(State other)
          {
-            Settings = other.Settings;
+            Settings = new Dictionary<string, object>(other.Settings);
             ActionId = other.ActionId;
-            ReactionsActionIds = other.ReactionsActionIds;
-            NextTargetActionIdOnReturn = other.NextTargetActionIdOnReturn;
+            ReactionTargetActionIds = new Dictionary<string, string>(other.ReactionTargetActionIds);
+            NextTargetActionIdOnReturn = new Stack<string>(other.NextTargetActionIdOnReturn);
          }
       }
 
@@ -62,13 +62,6 @@ namespace Game
          return UndoStack.Count != 0;
       }
 
-      public static void SelectReaction(
-         string reactionText)
-      {
-         UndoStack.Push(new State(Current));
-         Current.ActionId = Current.ReactionsActionIds[reactionText];
-      }
-
       private static string ValueString(
          object value)
       {
@@ -86,10 +79,13 @@ namespace Game
       {
          foreach (var expression in expressions)
          {
-            if (!Current.Settings.TryGetValue(expression.LeftId, out object leftValue))
+            if (Current.Settings.TryGetValue(expression.LeftId, out object leftValue) == expression.Not)
                return false;
-            if (expression.RightId != null && ValueString(leftValue) != expression.RightId)
-               return false;
+            if (expression.RightId != null)
+            {
+               if (ValueString(leftValue) == expression.RightId == expression.Not)
+                  return false;
+            }
          }
          return true;
       }
@@ -281,6 +277,9 @@ namespace Game
                      }
                   }
                   break;
+               case TextObject textObject:
+                  Current.Settings[textObject.Id] = textObject.Text;
+                  break;
             }
             return true;
          });
@@ -324,6 +323,8 @@ namespace Game
                MergeObject mergeObject = EvaluateMerge(Tags.FirstWithNameAndLabel(arrowName, "text"));
                if (mergeObject != null)
                {
+                  // There may be parameters for a referential merge.
+                  EvaluateSettings(Tags.FirstWithNameAndLabel(arrowName, "text"));
                   // It's a merge arrow. There are two kinds of merge arrows.
                   string targetActionName;
                   if (mergeObject.SceneId != null)
@@ -366,7 +367,7 @@ namespace Game
                      accumulatedReactionTexts += "@~";
                      accumulatedReactionTexts += "{" + reactionText + "}";
                   }
-                  Current.ReactionsActionIds[reactionText] = ValueString(Tags.FirstWithNameAndLabel(arrowName, "target"));
+                  Current.ReactionTargetActionIds[reactionText] = ValueString(Tags.FirstWithNameAndLabel(arrowName, "target"));
                }
             }
             if (arrowCount == 0)
@@ -380,10 +381,21 @@ namespace Game
          }
       }
 
-      public static string BuildNextText()
+      public static string BuildActionTextForReaction(
+         string reactionText)
       {
          // The UI calls this to obtain a text representation of the next screen to appear.
-         Current.ReactionsActionIds = new Dictionary<string, string>();
+         if (reactionText != null)
+         {
+            UndoStack.Push(new State(Current));
+            if (!Current.ReactionTargetActionIds.TryGetValue(reactionText, out Current.ActionId))
+            {
+               Log.SetSourceText(null);
+               Log.Fail(String.Format("No arrow for reaction '{0}'", reactionText));
+            }
+            Current.ActionId = Current.ReactionTargetActionIds[reactionText];
+         }
+         Current.ReactionTargetActionIds = new Dictionary<string, string>();
 
          if (Current.ActionId != null)
          {
