@@ -9,16 +9,62 @@ namespace Game
 {
    public partial class MainWindow : Window
    {
-      void UndoClicked(object sender, RoutedEventArgs e)
+      private void FinishTemporaryItems()
+      {
+         var hamburgerMenu = (ListBox)FindName("HamburgerMenu");
+         hamburgerMenu.Visibility = Visibility.Hidden;
+         var characterInfoBox = (Border)FindName("CharacterInfoBox");
+         characterInfoBox.Visibility = Visibility.Hidden;
+         var firstNameBox = (TextBox)FindName("FirstNameBox");
+         Engine.Set("jane", firstNameBox.Text);
+         var lastNameBox = (TextBox)FindName("LastNameBox");
+         Engine.Set("smith", lastNameBox.Text);
+         SetupScreen(null);
+      }
+
+      private void StoryAreaClicked(object sender, MouseButtonEventArgs e)
+      {
+         FinishTemporaryItems();
+      }
+
+      private void UndoItemSelected(object sender, RoutedEventArgs e)
       {
          Engine.Undo();
          SetupScreen(null);
+      }
+
+      private void DebugModeItemSelected(object sender, RoutedEventArgs e)
+      {
+         Engine.DebugMode = !Engine.DebugMode;
+         var debugModeItem = (ListBoxItem)FindName("DebugModeItem");
+         debugModeItem.Content = Engine.DebugMode? "Turn off debug mode": "Turn on debug mode";
+         SetupScreen(null);
+      }
+
+      private void CharacterInfoItemSelected(object sender, RoutedEventArgs e)
+      {
+         var characterInfoBox = (Border)FindName("CharacterInfoBox");
+         characterInfoBox.Visibility = Visibility.Visible;
+      }
+
+      void HamburgerClicked(object sender, RoutedEventArgs e)
+      {
+         var hamburgerMenu = (ListBox)FindName("HamburgerMenu");
+         hamburgerMenu.Visibility = Visibility.Visible;
+      }
+
+      private void HamburgerMenu_SelectionChanged(object sender, SelectionChangedEventArgs e)
+      {
+         var hamburgerMenu = (ListBox)FindName("HamburgerMenu");
+         hamburgerMenu.Visibility = Visibility.Hidden;
+         hamburgerMenu.SelectedIndex = -1;
       }
 
       private void HyperlinkClicked(object sender, RoutedEventArgs e)
       {
          var hyperlink = (Hyperlink)sender;
          var link = hyperlink.Inlines.FirstInline.ContentStart.GetTextInRun(LogicalDirection.Forward);
+         FinishTemporaryItems();
          SetupScreen(link);
       }
 
@@ -34,12 +80,22 @@ namespace Game
          var accumulator = "";
          var start = 0;
          var isBullet = false;
-         if (paragraph.Length > 0 && paragraph[0] == '~')
+         var isDebug = false;
+         if (paragraph.Length > 0)
          {
-            // Bullet
-            accumulator = "•  ";
-            start = 1;
-            isBullet = true;
+            if (paragraph[0] == '~')
+            {
+               // Bullet
+               accumulator = "•  ";
+               start = 1;
+               isBullet = true;
+            }
+            else if (paragraph[0] == '`')
+            {
+               // Debug logging
+               start = 1;
+               isDebug = true;
+            }
          }
 
          // TO DO: no way to put italic in a hyperlink or vice versa.
@@ -99,14 +155,19 @@ namespace Game
             // Indent more and make them closer together.
             block.Margin = new Thickness(14, 2, 5, 2);
          }
+         else if (isDebug)
+         {
+            block.Margin = new Thickness(0, 0, 5, 0);
+            block.Foreground = new SolidColorBrush(Color.FromRgb(0x00, 0xb0, 0x00));
+         }
          else
          {
             block.Margin = new Thickness(5, 4, 5, 4);
          }
          block.LineHeight = 18;
-         
+
          return block;
-         }
+      }
 
       private void SetupScreen(
          string reactionText)
@@ -124,8 +185,10 @@ namespace Game
             first = false;
             storyArea.Items.Add(TextToWPF(paragraph));
          }
-         var undoButton = (Button)FindName("UndoButton");
-         undoButton.Visibility = Engine.canUndo()? Visibility.Visible: Visibility.Hidden;
+         var undoItem = (ListBoxItem)FindName("UndoItem");
+         undoItem.IsEnabled = Engine.canUndo();
+         var characterInfoBox = (Border)FindName("CharacterInfoBox");
+         characterInfoBox.Visibility = Visibility.Hidden;
       }
 
       public MainWindow()
@@ -137,6 +200,12 @@ namespace Game
          InitializeComponent();
          Engine.LoadSource();
          SetupScreen(null);
+         var hamburgerMenu = (ListBox)FindName("HamburgerMenu");
+         hamburgerMenu.Visibility = Visibility.Hidden;
+         var firstNameBox = (TextBox)FindName("FirstNameBox");
+         firstNameBox.Text = Engine.Get("jane");
+         var lastNameBox = (TextBox)FindName("LastNameBox");
+         lastNameBox.Text = Engine.Get("smith");
          //}
          //catch (Exception e)
          //{

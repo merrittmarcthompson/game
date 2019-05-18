@@ -18,6 +18,8 @@ namespace Game
       // This contains the scenes.
       public static Tags Tags = new Tags();
 
+      public static bool DebugMode = false;
+
       // State represents the state of the game. It implements undoing game choices and going back to previous game states.
       private class State
       {
@@ -75,24 +77,65 @@ namespace Game
       }
 
       private static bool EvaluateConditions(
-         List<Expression> expressions)
+         List<Expression> expressions,
+         out string outTrace)
       {
+         outTrace = "";
          foreach (var expression in expressions)
          {
-            if (Current.Settings.TryGetValue(expression.LeftId, out object leftValue) == expression.Not)
+            var found = Current.Settings.TryGetValue(expression.LeftId, out object leftObject);
+            var leftValue = "";
+            string traceLeftValue;
+            if (found)
+            {
+               if (leftObject == null)
+               {
+                  traceLeftValue = "<true>";
+               }
+               else
+               {
+                  leftValue = ValueString(leftObject);
+                  traceLeftValue = leftValue;
+               }
+            }
+            else
+            {
+               traceLeftValue = "<false>";
+            }
+            if (found == expression.Not)
+            {
+               if (DebugMode)
+               {
+                  outTrace = "@`" + (expression.Not? "not ": "") + expression.LeftId + "(" + traceLeftValue + ")? <fail>";
+               }
                return false;
+            }
+            string traceEqualRight = "";
             if (expression.RightId != null)
             {
-               if (ValueString(leftValue) == expression.RightId == expression.Not)
+               traceEqualRight = "=" + expression.RightId;
+               if (leftValue == expression.RightId == expression.Not)
+               {
+                  if (DebugMode)
+                  {
+                     outTrace = "@`" + (expression.Not ? "not " : "") + expression.LeftId + "(" + traceLeftValue + ")" + traceEqualRight + "? <fail>";
+                  }
                   return false;
+               }
+            }
+            if (DebugMode)
+            {
+               outTrace = "@`" + (expression.Not ? "not " : "") + expression.LeftId + "(" + traceLeftValue + ")" + traceEqualRight + "?";
             }
          }
          return true;
       }
 
       private static bool EvaluateItemCondition(
-         string itemId)
+         string itemId,
+         out string outTrace)
       {
+         string trace = "";
          // When there are no 'when' directives, it always succeeds.
          var allSucceeded = true;
          var text = Tags.FirstWithNameAndLabel(itemId, "text");
@@ -100,13 +143,29 @@ namespace Game
          {
             if (!(@object is WhenObject whenObject))
                return true;
-            if (!EvaluateConditions(whenObject.Expressions))
+            if (!EvaluateConditions(whenObject.Expressions, out trace))
             {
                allSucceeded = false;
             }
             return true;
          });
+         outTrace = trace;
          return allSucceeded;
+      }
+
+      public static void Set(
+         string id,
+         string value)
+      {
+         Current.Settings[id] = value;
+      }
+
+      public static string Get(
+         string id)
+      {
+         if (Current.Settings.TryGetValue(id, out object value))
+            return ValueString(value);
+         return "";
       }
 
       private static string GetSpecialText(
@@ -206,7 +265,7 @@ namespace Game
                   accumulator += ValueString(substitutionObject.Id);
                   break;
                case IfObject ifObject:
-                  return EvaluateConditions(ifObject.Expressions);
+                  return EvaluateConditions(ifObject.Expressions, out var trace);
                case SpecialObject specialObject:
                   accumulator += GetSpecialText(specialObject.Id);
                   break;
@@ -257,8 +316,10 @@ namespace Game
       }
 
       private static void EvaluateSettings(
-         object text)
+         object text,
+         out string outTrace)
       {
+         string trace = "";
          (text as SequenceObject).Traverse((@object) =>
          {
             switch (@object)
@@ -275,14 +336,23 @@ namespace Game
                         // If it is [set tall], the right ID will be null.
                         Current.Settings[expression.LeftId] = expression.RightId;
                      }
+                     if (DebugMode)
+                     {
+                        trace += "@`set " + (expression.Not ? "not " : "") + expression.LeftId + (expression.RightId != null ? "=" + expression.RightId : "");
+                     }
                   }
                   break;
                case TextObject textObject:
                   Current.Settings[textObject.Id] = textObject.Text;
+                  if (DebugMode)
+                  {
+                     trace += "@`text " + textObject.Text;
+                  }
                   break;
             }
             return true;
          });
+         outTrace = trace;
       }
 
       private static string BuildOneActionText(
@@ -306,9 +376,11 @@ namespace Game
          void Accumulate(
             string actionName)
          {
+            string trace;
             // First append this action box's own text and execute any settings.
             accumulatedActionTexts += EvaluateItemText(actionName);
-            EvaluateSettings(Tags.FirstWithNameAndLabel(actionName, "text"));
+            EvaluateSettings(Tags.FirstWithNameAndLabel(actionName, "text"), out trace);
+            accumulatedActionTexts += trace;
 
             // Next examine all the arrows for the action.
             var arrowCount = 0;
@@ -316,15 +388,24 @@ namespace Game
             {
                var arrowName = ValueString(arrowNameObject);
                // If conditions in the arrow are false, then just ignore the arrow completely. This includes both reaction and merge arrows.
-               if (!EvaluateItemCondition(arrowName))
+               bool succeeded = EvaluateItemCondition(arrowName, out trace);
+               accumulatedActionTexts += trace;
+               if (!succeeded)
                   continue;
                ++arrowCount;
                // Check the arrow type. There are only two kinds of arrows.
                MergeObject mergeObject = EvaluateMerge(Tags.FirstWithNameAndLabel(arrowName, "text"));
                if (mergeObject != null)
                {
-                  // There may be parameters for a referential merge.
-                  EvaluateSettings(Tags.FirstWithNameAndLabel(arrowName, "text"));
+                  // There may be 'set' parameters for a referential merge.
+                  EvaluateSettings(Tags.FirstWithNameAndLabel(arrowName, "text"), out trace);
+                  accumulatedActionTexts += trace;
+
+                  if (DebugMode)
+                  {
+                     accumulatedActionTexts += "@`merge" + (mergeObject.SceneId != null ? " " + mergeObject.SceneId : "");
+                  }
+
                   // It's a merge arrow. There are two kinds of merge arrows.
                   string targetActionName;
                   if (mergeObject.SceneId != null)
@@ -410,12 +491,12 @@ namespace Game
          var accumulator = "";
          foreach (var actionId in RootActionIds)
          {
+            string trace;
             // Evaluate the actions's when clause. If true, the story is appropriate for the menu.
-            if (EvaluateItemCondition(actionId))
+            if (EvaluateItemCondition(actionId, out trace))
             {
-               // EvaluateItemCondition returned the variables that succeeded. Use them to build the result text.
+               EvaluateSettings(Tags.FirstWithNameAndLabel(actionId, "text"), out trace);
                // True means allow no reactions. This lets us put "description-only" scenes on a menu.
-               EvaluateSettings(Tags.FirstWithNameAndLabel(actionId, "text"));
                accumulator += BuildOneActionText(actionId, true);
             }
          }

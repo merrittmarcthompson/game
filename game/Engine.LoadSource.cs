@@ -56,7 +56,8 @@ namespace Game
          }
          string startText = File.ReadAllText(startFile);
          var text = CompileSourceText(startText);
-         EvaluateSettings(text);
+         string trace;
+         EvaluateSettings(text, out trace);
 
          // Load all the graphml files in the source directory.
          var sourcePaths = Directory.GetFiles(arguments[1], "*.graphml");

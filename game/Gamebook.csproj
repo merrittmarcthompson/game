@@ -155,5 +155,8 @@
     <Resource Include="books\fo4.gb\start.txt" />
     <Resource Include="books\unit-test.gb\start.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="images\hamburger-button.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
