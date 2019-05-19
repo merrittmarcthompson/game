@@ -47,18 +47,6 @@ namespace Game
             Log.Fail("usage: gamebook.exe source-directory");
          }
 
-         // Load the start file that has all the intial settings.
-         var startFile = Path.Combine(arguments[1], "start.txt");
-         Log.SetSourceName(startFile);
-         if (!File.Exists(startFile))
-         {
-            Log.Fail(String.Format("no {0} file", startFile));
-         }
-         string startText = File.ReadAllText(startFile);
-         var text = CompileSourceText(startText);
-         string trace;
-         EvaluateSettings(text, out trace);
-
          // Load all the graphml files in the source directory.
          var sourcePaths = Directory.GetFiles(arguments[1], "*.graphml");
          if (sourcePaths.Length < 1)
@@ -83,24 +71,30 @@ namespace Game
             Tags.Merge(fileBaseTags);
          }
          // Get the root story nodes and the merge nodes.
+         Current.ActionId = null;
          foreach (var nodeName in Tags.AllWithLabelAndValue("isNode", ""))
          {
             if (!Tags.AllWithLabelAndValue("target", nodeName).Any())
             {
-               // Nothing points to it. This can either be a root node where a scene starts, or it can be a referenced scene that gets merged into other scenes.
+               // Nothing points to it. This is a root node where a scene starts.
                var objectText = Tags.FirstWithNameAndLabel(nodeName, "text");
-               string sceneId = EvaluateName(objectText);
+               string sceneId = EvaluateScene(objectText);
                if (sceneId == null)
                {
-                  RootActionIds.Add(nodeName);
+                  Log.Fail("Root action of scene without name");
                }
-               else
+               RootSceneActionIds.Add(sceneId, nodeName);
+               if (sceneId == "start")
                {
-                  MergeActionIds.Add(sceneId, nodeName);
+                  Current.ActionId = nodeName;
                }
             }
          }
          Log.SetSourceName(null);
+         if (Current.ActionId == null)
+         {
+            Log.Fail("No start scene found.");
+         }
       }
    }
 }

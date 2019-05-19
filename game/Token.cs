@@ -15,7 +15,7 @@
       public static TokenType Not = new TokenType("'not'");
       public static TokenType Or = new TokenType("'or'");
       public static TokenType Merge = new TokenType("'merge'");
-      public static TokenType Name = new TokenType("'name'");
+      public static TokenType Scene = new TokenType("'scene'");
       public static TokenType Set = new TokenType("'set'");
       public static TokenType Text = new TokenType("'text'");
       public static TokenType When = new TokenType("'when'");

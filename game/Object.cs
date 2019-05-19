@@ -29,10 +29,7 @@ namespace Game
                previousSourceText = Log.SetSourceText(SourceText);
             }
             @object.Traverse(examine);
-            if (previousSourceText != null)
-            {
-               Log.SetSourceText(previousSourceText);
-            }
+            Log.SetSourceText(previousSourceText);
          }
       }
 
@@ -239,14 +236,14 @@ namespace Game
       }
    }
 
-   public class NameObject : Object
+   public class SceneObject : Object
    {
-      public string NameId;
+      public string SceneId;
 
-      public NameObject(
-         string nameId)
+      public SceneObject(
+         string sceneId)
       {
-         NameId = nameId;
+         SceneId = sceneId;
       }
       public override void Traverse(
         Func<Object, bool> examine)
@@ -255,7 +252,7 @@ namespace Game
       }
       public override string ToString()
       {
-         return "name";
+         return "scene";
       }
    }
    public class SpecialObject : Object

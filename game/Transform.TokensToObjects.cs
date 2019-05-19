@@ -184,15 +184,15 @@ namespace Game
                   }
                   result.Objects.Add(new MergeObject(sceneId));
                }
-               else if (GottenToken.Type == Token.Name)
+               else if (GottenToken.Type == Token.Scene)
                {
-                  // [name soundsLikeAScam]
+                  // [scene soundsLikeAScam]
                   GetToken();
                   if (GottenToken.Type != Token.Id)
                   {
-                     Log.Fail(Expected(Token.Name.Name, GottenToken));
+                     Log.Fail(Expected(Token.Scene.Name, GottenToken));
                   }
-                  result.Objects.Add(new NameObject(GottenToken.Value));
+                  result.Objects.Add(new SceneObject(GottenToken.Value));
                }
                else if (GottenToken.Type == Token.Score)
                {

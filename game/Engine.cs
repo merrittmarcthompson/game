@@ -10,10 +10,7 @@ namespace Game
       // The engine is all about the following global variables:
 
       // A list of all the root actions where scene trees start.
-      private static List<string> RootActionIds = new List<string>();
-
-      // A list of all the root actions that can be merged into other scenes.
-      private static Dictionary<string, string> MergeActionIds = new Dictionary<string, string>();
+      private static Dictionary<string, string> RootSceneActionIds = new Dictionary<string, string>();
 
       // This contains the scenes.
       public static Tags Tags = new Tags();
@@ -106,7 +103,7 @@ namespace Game
             {
                if (DebugMode)
                {
-                  outTrace = "@`" + (expression.Not? "not ": "") + expression.LeftId + "(" + traceLeftValue + ")? <fail>";
+                  outTrace += "@`" + (expression.Not? "not ": "") + expression.LeftId + "(" + traceLeftValue + ")? <fail>";
                }
                return false;
             }
@@ -118,14 +115,14 @@ namespace Game
                {
                   if (DebugMode)
                   {
-                     outTrace = "@`" + (expression.Not ? "not " : "") + expression.LeftId + "(" + traceLeftValue + ")" + traceEqualRight + "? <fail>";
+                     outTrace += "@`" + (expression.Not ? "not " : "") + expression.LeftId + "(" + traceLeftValue + ")" + traceEqualRight + "? <fail>";
                   }
                   return false;
                }
             }
             if (DebugMode)
             {
-               outTrace = "@`" + (expression.Not ? "not " : "") + expression.LeftId + "(" + traceLeftValue + ")" + traceEqualRight + "?";
+               outTrace += "@`" + (expression.Not ? "not " : "") + expression.LeftId + "(" + traceLeftValue + ")" + traceEqualRight + "?";
             }
          }
          return true;
@@ -298,7 +295,7 @@ namespace Game
          return result;
       }
 
-      private static string EvaluateName(
+      private static string EvaluateScene(
          object text)
       {
          string result = null;
@@ -306,8 +303,8 @@ namespace Game
          {
             switch (@object)
             {
-               case NameObject nameObject:
-                  result = nameObject.NameId;
+               case SceneObject sceneObject:
+                  result = sceneObject.SceneId;
                   return true;
             }
             return false;
@@ -346,7 +343,7 @@ namespace Game
                   Current.Settings[textObject.Id] = textObject.Text;
                   if (DebugMode)
                   {
-                     trace += "@`text " + textObject.Text;
+                     trace += "@`text " + textObject.Id + "=" + textObject.Text;
                   }
                   break;
             }
@@ -411,11 +408,11 @@ namespace Game
                   if (mergeObject.SceneId != null)
                   {
                      // It's a referential merge arrow. Merge the action it references by name.
-                     if (!MergeActionIds.ContainsKey(mergeObject.SceneId))
+                     if (!RootSceneActionIds.ContainsKey(mergeObject.SceneId))
                      {
                         Log.Fail("Unknown scene name " + mergeObject.SceneId);
                      }
-                     targetActionName = MergeActionIds[mergeObject.SceneId];
+                     targetActionName = RootSceneActionIds[mergeObject.SceneId];
                      // When we finish the jump to the other scene, we will continue merging with the action this arrow points to.
                      Current.NextTargetActionIdOnReturn.Push(Tags.FirstWithNameAndLabel(arrowName, "target") as string);
                   }
@@ -478,29 +475,9 @@ namespace Game
          }
          Current.ReactionTargetActionIds = new Dictionary<string, string>();
 
-         if (Current.ActionId != null)
-         {
-            // This means we are in the middle of a scene. We have just moved to this action.
-            // Show the current action box and its reaction arrows. False means, if there are no reactions, fail. You always have to have a way to move forward.
-            var resultText = BuildOneActionText(Current.ActionId, false);
-            // Null result means it got to a terminal action (with no reactions), so it's time to go back to a menu.
-            if (resultText != null)
-               return resultText;
-         }
-         // If we get here, we have never entered or we are just exiting a scene. Present a menu of all the root scene actions which are appropriate to the current situation. For example, if the hero is located on a street, show the beginnings of all the scenes that start on that street.
-         var accumulator = "";
-         foreach (var actionId in RootActionIds)
-         {
-            string trace;
-            // Evaluate the actions's when clause. If true, the story is appropriate for the menu.
-            if (EvaluateItemCondition(actionId, out trace))
-            {
-               EvaluateSettings(Tags.FirstWithNameAndLabel(actionId, "text"), out trace);
-               // True means allow no reactions. This lets us put "description-only" scenes on a menu.
-               accumulator += BuildOneActionText(actionId, true);
-            }
-         }
-         return accumulator;
+         // Show the current action box and its reaction arrows. False means, if there are no reactions, fail. You always have to have a way to move forward.
+         var resultText = BuildOneActionText(Current.ActionId, false);
+         return resultText;
       }
    }
 }

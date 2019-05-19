@@ -259,9 +259,9 @@ namespace Game
                            {
                               result.Add(new Token(Token.Merge, id, lineNumber));
                            }
-                           else if (id == "name")
+                           else if (id == "scene")
                            {
-                              result.Add(new Token(Token.Name, id, lineNumber));
+                              result.Add(new Token(Token.Scene, id, lineNumber));
                            }
                            else if (specialIds.Contains(id))
                            {

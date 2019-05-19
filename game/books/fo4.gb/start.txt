@@ -1,3 +1,0 @@
-[set situation=vaultTecMan]
-[text jane]Sarah[end]
-[text smith]Spaulding[end]
