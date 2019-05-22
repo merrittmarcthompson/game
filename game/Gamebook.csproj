@@ -82,6 +82,7 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Transform.JoinTexts.cs" />
     <Compile Include="Transform.VerticalToMatchingQuotes.cs" />
     <Compile Include="Engine.LoadSource.cs" />
     <Compile Include="Token.cs" />
@@ -92,7 +93,7 @@
     <Compile Include="Engine.cs" />
     <Compile Include="Transform.IntoId.cs" />
     <Compile Include="Transform.RemoveBlanksAfterNewLines.cs" />
-    <Compile Include="Transform.RemoveExtraBlanks.cs" />
+    <Compile Include="Transform.NormalizeText.cs" />
     <Compile Include="Transform.SourceTextToTokens.cs" />
     <Compile Include="Object.cs" />
     <Compile Include="Transform.TokensToObjects.cs" />

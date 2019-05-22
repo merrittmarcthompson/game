@@ -269,7 +269,8 @@ namespace Game
             }
             return true;
          });
-         return Transform.RemoveExtraBlanks(accumulator);
+         // Always returns an empty string if there is no useful text.
+         return Transform.NormalizeText(accumulator);
       }
 
       private static string EvaluateItemText(
@@ -353,8 +354,7 @@ namespace Game
       }
 
       private static string BuildOneActionText(
-         string firstActionName,
-         bool allowNoReactions)
+         string firstActionName)
       {
          // Starting with the given action box, a) merge the texts of all actions connected below it into one text, and b) collect all the reaction arrows and append them at the end.
          // Reaction arrows and merge arrows can be intermingled, but we want all the reaction arrows at the bottom. So we're going to accumulate the reaction texts in a separate variable and append it later.
@@ -366,8 +366,6 @@ namespace Game
          // This recursive routine will accumulate all the action and reaction text values in the above variables.
          Accumulate(firstActionName);
 
-         if (accumulatedReactionTexts.Length == 0 && !allowNoReactions)
-            return null;
          return accumulatedActionTexts + accumulatedReactionTexts;
 
          void Accumulate(
@@ -375,7 +373,7 @@ namespace Game
          {
             string trace;
             // First append this action box's own text and execute any settings.
-            accumulatedActionTexts += EvaluateItemText(actionName);
+            accumulatedActionTexts = Transform.JoinTexts(accumulatedActionTexts, EvaluateItemText(actionName));
             EvaluateSettings(Tags.FirstWithNameAndLabel(actionName, "text"), out trace);
             accumulatedActionTexts += trace;
 
@@ -442,8 +440,7 @@ namespace Game
                   }
                   else
                   {
-                     accumulatedReactionTexts += "@~";
-                     accumulatedReactionTexts += "{" + reactionText + "}";
+                     accumulatedReactionTexts += "@~{" + reactionText + "}";
                   }
                   Current.ReactionTargetActionIds[reactionText] = ValueString(Tags.FirstWithNameAndLabel(arrowName, "target"));
                }
@@ -471,12 +468,11 @@ namespace Game
                Log.SetSourceText(null);
                Log.Fail(String.Format("No arrow for reaction '{0}'", reactionText));
             }
-            Current.ActionId = Current.ReactionTargetActionIds[reactionText];
          }
          Current.ReactionTargetActionIds = new Dictionary<string, string>();
 
          // Show the current action box and its reaction arrows. False means, if there are no reactions, fail. You always have to have a way to move forward.
-         var resultText = BuildOneActionText(Current.ActionId, false);
+         var resultText = BuildOneActionText(Current.ActionId);
          return resultText;
       }
    }

@@ -96,7 +96,7 @@ namespace Game
             {
                case '\n':
                   // @ lets you explicitly put in a paragraph break. We'll clean up any extra spaces later. This lets you break contiguous text up into multiple lines within 'if' groups without having it affect formatting.
-                  textAccumulator += " ";
+                  textAccumulator += " \n";
                   ++lineNumber;
                   break;
 
@@ -105,7 +105,7 @@ namespace Game
                   break;
 
                case '\t':
-                  textAccumulator += " ";
+                  textAccumulator += " \t";
                   break;
 
                // Didn't want to put this way at the bottom--gets lost.

@@ -2,15 +2,16 @@
 {
    public static partial class Transform
    {
-      public static string RemoveExtraBlanks(
+      public static string NormalizeText(
         string text)
       {
+         // Remove sequences of more than one space within text, plus remove all leading and trailing spaces. This ensures that strings with no information are zero-length.
          string fixedText = "";
          // true: skip leading spaces too.
          bool hadSpace = true;
          foreach (char letter in text)
          {
-            if (letter == ' ')
+            if (letter == ' ' || letter == '\t' || letter == '\n')
             {
                if (!hadSpace)
                {
