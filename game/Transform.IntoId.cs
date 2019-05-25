@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Game
+namespace Gamebook
 {
    public static partial class Transform
    {

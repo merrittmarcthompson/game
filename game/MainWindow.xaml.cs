@@ -5,7 +5,7 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 
-namespace Game
+namespace Gamebook
 {
    public partial class MainWindow : Window
    {
@@ -198,7 +198,7 @@ namespace Game
          Log.Open("game.log");
          Log.Add("Started");
          InitializeComponent();
-         Engine.LoadSource();
+         Engine.Start();
          SetupScreen(null);
          var hamburgerMenu = (ListBox)FindName("HamburgerMenu");
          hamburgerMenu.Visibility = Visibility.Hidden;

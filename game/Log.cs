@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Windows;
 
-namespace Game
+namespace Gamebook
 {
    // Have a global log that can be written to as a side effect from anywhere without access to any class object.
    public static class Log
@@ -63,7 +63,7 @@ namespace Game
          FileName = fileName;
       }
 
-      public static string SetSourceText(
+      public static string SetSourceCode(
         string sourceText)
       {
          var previousSourceText = SourceText;

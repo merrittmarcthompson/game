@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Game
+namespace Gamebook
 {
    // Put this abstract class and all its short children in this one file so I don't have to flip betweent them all the time.
 
@@ -26,10 +26,10 @@ namespace Game
             string previousSourceText = null;
             if (SourceText != null)
             {
-               previousSourceText = Log.SetSourceText(SourceText);
+               previousSourceText = Log.SetSourceCode(SourceText);
             }
             @object.Traverse(examine);
-            Log.SetSourceText(previousSourceText);
+            Log.SetSourceCode(previousSourceText);
          }
       }
 
@@ -41,12 +41,12 @@ namespace Game
             string previousSourceText = null;
             if (SourceText != null)
             {
-               previousSourceText = Log.SetSourceText(SourceText);
+               previousSourceText = Log.SetSourceCode(SourceText);
             }
             examine(@object);
             if (previousSourceText != null)
             {
-               Log.SetSourceText(previousSourceText);
+               Log.SetSourceCode(previousSourceText);
             }
          }
       }
