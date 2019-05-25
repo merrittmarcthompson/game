@@ -59,7 +59,7 @@ namespace Gamebook
             // Create and attach merges and reactions to the actions we just created.
             foreach (var (sourceNodeId, targetNodeId, label) in graphml.Edges())
             {
-               SequenceObject sequence = CompileSourceCode(label);
+               SequenceOperation sequence = CompileSourceCode(label);
                var (isMerge, referencedSceneId) = EvaluateMerge(sequence);
                Arrow arrow;
                if (isMerge)
@@ -109,15 +109,15 @@ namespace Gamebook
          // Some helper functions.
 
          string EvaluateScene(
-            SequenceObject sequence)
+            SequenceOperation sequence)
          {
             string result = null;
-            sequence.Traverse((@object) =>
+            sequence.Traverse((operation) =>
             {
-               switch (@object)
+               switch (operation)
                {
-                  case SceneObject sceneObject:
-                     result = sceneObject.SceneId;
+                  case SceneOperation sceneOperation:
+                     result = sceneOperation.SceneId;
                      return true;
                }
                return false;
@@ -126,17 +126,17 @@ namespace Gamebook
          }
 
          (bool, string) EvaluateMerge(
-            SequenceObject sequence)
+            SequenceOperation sequence)
          {
             bool isMerge = false;
             string referencedSceneId = null;
-            sequence.Traverse((@object) =>
+            sequence.Traverse((operation) =>
             {
-               switch (@object)
+               switch (operation)
                {
-                  case MergeObject mergeObject:
+                  case MergeOperation mergeOperation:
                      isMerge = true;
-                     referencedSceneId = mergeObject.SceneId;
+                     referencedSceneId = mergeOperation.SceneId;
                      return true;
                }
                return false;
@@ -144,7 +144,7 @@ namespace Gamebook
             return (isMerge, referencedSceneId);
          }
 
-         SequenceObject CompileSourceCode(
+         SequenceOperation CompileSourceCode(
            string sourceCode)
          {
             // Compile the text to an object sequence.
@@ -152,7 +152,7 @@ namespace Gamebook
             var tokens = Transform.SourceTextToTokens(sourceCode);
             if (tokens == null)
                return null;
-            return Transform.TokensToObjects(tokens, sourceCode);
+            return Transform.TokensToOperations(tokens, sourceCode);
          }
       }
    }

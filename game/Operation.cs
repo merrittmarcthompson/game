@@ -5,45 +5,45 @@ namespace Gamebook
 {
    // Put this abstract class and all its short children in this one file so I don't have to flip betweent them all the time.
 
-   public abstract class Object
+   public abstract class Operation
    {
       public abstract void Traverse(
-        Func<Object, bool> examine);
+        Func<Operation, bool> examine);
       public abstract override string ToString();
    }
 
-   public class SequenceObject : Object
+   public class SequenceOperation : Operation
    {
       // This is the sequence of objects.
-      public List<Object> Objects { get; set; } = new List<Object>();
+      public List<Operation> Operations { get; set; } = new List<Operation>();
       public string SourceText = null;
 
       public override void Traverse(
-        Func<Object, bool> examine)
+        Func<Operation, bool> examine)
       {
-         foreach (var @object in Objects)
+         foreach (var operation in Operations)
          {
             string previousSourceText = null;
             if (SourceText != null)
             {
                previousSourceText = Log.SetSourceCode(SourceText);
             }
-            @object.Traverse(examine);
+            operation.Traverse(examine);
             Log.SetSourceCode(previousSourceText);
          }
       }
 
       public void Scan(
-        Func<Object, bool> examine)
+        Func<Operation, bool> examine)
       {
-         foreach (var @object in Objects)
+         foreach (var operation in Operations)
          {
             string previousSourceText = null;
             if (SourceText != null)
             {
                previousSourceText = Log.SetSourceCode(SourceText);
             }
-            examine(@object);
+            examine(operation);
             if (previousSourceText != null)
             {
                Log.SetSourceCode(previousSourceText);
@@ -55,9 +55,9 @@ namespace Gamebook
       {
          string result = "";
          string separator = "";
-         foreach (var @object in Objects)
+         foreach (var operation in Operations)
          {
-            string objectString = @object.ToString();
+            string objectString = operation.ToString();
             if (objectString.Length > 16)
             {
                objectString = objectString.Substring(0, 16) + "...";
@@ -68,23 +68,23 @@ namespace Gamebook
          return result;
       }
 
-      public SequenceObject Append(
-         SequenceObject other)
+      public SequenceOperation Append(
+         SequenceOperation other)
       {
          // Implements the [merge] arrow feature that merges nodes.
-         Objects.AddRange(other.Objects);
+         Operations.AddRange(other.Operations);
          return this;
       }
    }
 
-   public class IfObject : Object
+   public class IfOperation : Operation
    {
       public List<Expression> Expressions;
-      public Object TrueSource;
-      public Object FalseSource;
+      public Operation TrueSource;
+      public Operation FalseSource;
 
       public override void Traverse(
-        Func<Object, bool> examine)
+        Func<Operation, bool> examine)
       {
          if (examine(this))
          {
@@ -101,12 +101,12 @@ namespace Gamebook
       }
    }
 
-   public class WhenObject : Object
+   public class WhenOperation : Operation
    {
       public List<Expression> Expressions;
 
       public override void Traverse(
-        Func<Object, bool> examine)
+        Func<Operation, bool> examine)
       {
          examine(this);
       }
@@ -116,12 +116,12 @@ namespace Gamebook
       }
    }
 
-   public class SetObject : Object
+   public class SetOperation : Operation
    {
       public List<Expression> Expressions;
 
       public override void Traverse(
-         Func<Object, bool> examine)
+         Func<Operation, bool> examine)
       {
          examine(this);
       }
@@ -131,17 +131,17 @@ namespace Gamebook
       }
    }
 
-   public class ScoreObject : Object
+   public class ScoreOperation : Operation
    {
       public List<string> Ids = null;
 
-      public ScoreObject(
+      public ScoreOperation(
          List<string> ids)
       {
          Ids = ids;
       }
       public override void Traverse(
-        Func<Object, bool> examine)
+        Func<Operation, bool> examine)
       {
          examine(this);
       }
@@ -151,7 +151,7 @@ namespace Gamebook
       }
    }
 
-   public class SubstitutionObject : Object
+   public class SubstitutionOperation : Operation
    {
       // This is produced by code like this:
       //  His name was [hero.first].
@@ -160,7 +160,7 @@ namespace Gamebook
       public string Id = null;
 
       public override void Traverse(
-        Func<Object, bool> examine)
+        Func<Operation, bool> examine)
       {
          examine(this);
       }
@@ -170,20 +170,20 @@ namespace Gamebook
       }
    }
 
-   public class TextObject : Object
+   public class TextOperation : Operation
    {
       public string Id;
-      public SequenceObject Text;
+      public SequenceOperation Text;
 
-      public TextObject(
+      public TextOperation(
          string id,
-         SequenceObject text)
+         SequenceOperation text)
       {
          Id = id;
          Text = text;
       }
       public override void Traverse(
-        Func<Object, bool> examine)
+        Func<Operation, bool> examine)
       {
          examine(this);
       }
@@ -193,18 +193,18 @@ namespace Gamebook
       }
    }
 
-   public class CharacterObject : Object
+   public class CharacterOperation : Operation
    {
       public string Characters;
 
-      public CharacterObject(
+      public CharacterOperation(
         string characters)
       {
          Characters = characters;
       }
 
       public override void Traverse(
-        Func<Object, bool> examine)
+        Func<Operation, bool> examine)
       {
          examine(this);
       }
@@ -214,18 +214,18 @@ namespace Gamebook
       }
    }
 
-   public class MergeObject : Object
+   public class MergeOperation : Operation
    {
       public string SceneId;
 
-      public MergeObject(
+      public MergeOperation(
          string sceneId)
       {
          SceneId = sceneId;
       }
 
       public override void Traverse(
-        Func<Object, bool> examine)
+        Func<Operation, bool> examine)
       {
          examine(this);
       }
@@ -236,17 +236,17 @@ namespace Gamebook
       }
    }
 
-   public class SceneObject : Object
+   public class SceneOperation : Operation
    {
       public string SceneId;
 
-      public SceneObject(
+      public SceneOperation(
          string sceneId)
       {
          SceneId = sceneId;
       }
       public override void Traverse(
-        Func<Object, bool> examine)
+        Func<Operation, bool> examine)
       {
          examine(this);
       }
@@ -255,18 +255,18 @@ namespace Gamebook
          return "scene";
       }
    }
-   public class SpecialObject : Object
+   public class SpecialOperation : Operation
    {
       public string Id;
 
-      public SpecialObject(
+      public SpecialOperation(
         string id)
       {
          Id = id;
       }
 
       public override void Traverse(
-        Func<Object, bool> examine)
+        Func<Operation, bool> examine)
       {
          examine(this);
       }

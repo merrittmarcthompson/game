@@ -96,8 +96,8 @@
     <Compile Include="Transform.RemoveBlanksAfterNewLines.cs" />
     <Compile Include="Transform.NormalizeText.cs" />
     <Compile Include="Transform.SourceTextToTokens.cs" />
-    <Compile Include="Object.cs" />
-    <Compile Include="Transform.TokensToObjects.cs" />
+    <Compile Include="Operation.cs" />
+    <Compile Include="Transform.TokensToOperations.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>

@@ -58,7 +58,7 @@ namespace Gamebook
             Log.Fail("Value is null");
          if (value is string)
             return value as string;
-         return EvaluateText(value as SequenceObject);
+         return EvaluateText(value as SequenceOperation);
       }
 
       private static bool EvaluateConditions(
@@ -107,17 +107,17 @@ namespace Gamebook
       }
 
       private static bool EvaluateCondition(
-         SequenceObject sequence,
+         SequenceOperation sequence,
          out string outTrace)
       {
          string trace = "";
          // When there are no 'when' directives, it always succeeds.
          var allSucceeded = true;
-         sequence.Traverse((@object) =>
+         sequence.Traverse((operation) =>
          {
-            if (!(@object is WhenObject whenObject))
+            if (!(operation is WhenOperation whenOperation))
                return true;
-            if (!EvaluateConditions(whenObject.Expressions, out trace))
+            if (!EvaluateConditions(whenOperation.Expressions, out trace))
                allSucceeded = false;
             return true;
          });
@@ -193,23 +193,23 @@ namespace Gamebook
       }
 
       private static string EvaluateText(
-         SequenceObject value)
+         SequenceOperation value)
       {
          string accumulator = "";
-         value.Traverse((@object) =>
+         value.Traverse((operation) =>
          {
-            switch (@object)
+            switch (operation)
             {
-               case CharacterObject characterObject:
-                  accumulator += characterObject.Characters;
+               case CharacterOperation characterOperation:
+                  accumulator += characterOperation.Characters;
                   break;
-               case SubstitutionObject substitutionObject:
-                  accumulator += ValueString(substitutionObject.Id);
+               case SubstitutionOperation substitutionOperation:
+                  accumulator += ValueString(substitutionOperation.Id);
                   break;
-               case IfObject ifObject:
-                  return EvaluateConditions(ifObject.Expressions, out var trace);
-               case SpecialObject specialObject:
-                  accumulator += GetSpecialText(specialObject.Id);
+               case IfOperation ifOperation:
+                  return EvaluateConditions(ifOperation.Expressions, out var trace);
+               case SpecialOperation specialOperation:
+                  accumulator += GetSpecialText(specialOperation.Id);
                   break;
             }
             return true;
@@ -219,16 +219,16 @@ namespace Gamebook
       }
 
       private static void EvaluateSettings(
-         SequenceObject sequence,
+         SequenceOperation sequence,
          out string outTrace)
       {
          string trace = "";
-         sequence.Traverse((@object) =>
+         sequence.Traverse((operation) =>
          {
-            switch (@object)
+            switch (operation)
             {
-               case SetObject setObject:
-                  foreach (var expression in setObject.Expressions)
+               case SetOperation setOperation:
+                  foreach (var expression in setOperation.Expressions)
                   {
                      if (expression.Not)
                         Current.Settings.Remove(expression.LeftId);
@@ -239,10 +239,10 @@ namespace Gamebook
                         trace += "@`set " + (expression.Not ? "not " : "") + expression.LeftId + (expression.RightId != null ? "=" + expression.RightId : "");
                   }
                   break;
-               case TextObject textObject:
-                  Current.Settings[textObject.Id] = textObject.Text;
+               case TextOperation textOperation:
+                  Current.Settings[textOperation.Id] = textOperation.Text;
                   if (DebugMode)
-                     trace += "@`text " + textObject.Id + "=" + textObject.Text;
+                     trace += "@`text " + textOperation.Id + "=" + textOperation.Text;
                   break;
             }
             return true;
@@ -258,6 +258,9 @@ namespace Gamebook
 
          // The action text will contain all the merged action texts.
          var accumulatedActionTexts = "";
+
+         // Build these too.
+         Current.ReactionTargetActions = new Dictionary<string, Action>();
 
          // This recursive routine will accumulate all the action and reaction text values in the above variables.
          Accumulate(firstAction);
@@ -345,8 +348,6 @@ namespace Gamebook
             if (!Current.ReactionTargetActions.TryGetValue(reactionText, out Current.Action))
                Log.Fail(String.Format("No arrow for reaction '{0}'", reactionText));
          }
-         Current.ReactionTargetActions = new Dictionary<string, Action>();
-
          // Show the current action box and its reaction arrows.
          return BuildActionText(Current.Action);
       }

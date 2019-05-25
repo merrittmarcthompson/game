@@ -73,15 +73,15 @@ namespace Gamebook
 
       public static object FailWhenNull(
          bool doCheck,
-         object @object,
+         object operation,
          string sourceName)
       {
-         if (doCheck && @object == null)
+         if (doCheck && operation == null)
          {
             Log.Fail(String.Format("{0} must not be null", sourceName));
             return null;
          }
-         return @object;
+         return operation;
       }
    }
 }

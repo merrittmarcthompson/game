@@ -4,14 +4,14 @@ namespace Gamebook
 {
    public class Action
    {
-      public SequenceObject Sequence;
+      public SequenceOperation Sequence;
       public List<Arrow> Arrows = new List<Arrow>();
    }
 
    public class Arrow
    {
       public Action TargetAction;
-      public SequenceObject Sequence;
+      public SequenceOperation Sequence;
    }
 
    public class MergeArrow: Arrow
