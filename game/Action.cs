@@ -2,6 +2,8 @@
 
 namespace Gamebook
 {
+   //  All of the graphml source code gets converted into this data structure.
+
    public class Action
    {
       public SequenceOperation Sequence;

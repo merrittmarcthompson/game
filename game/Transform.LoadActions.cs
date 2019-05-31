@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 namespace Gamebook
 {
@@ -17,7 +16,7 @@ namespace Gamebook
          // Load all the graphml files in the source directory.
          var sourcePaths = Directory.GetFiles(arguments[1], "*.graphml");
          if (sourcePaths.Length < 1)
-            Log.Fail(String.Format("no .graphml files in directory {0}", arguments[1]));
+            Log.Fail(String.Format($"no .graphml files in directory {arguments[1]}"));
 
          Action startAction = null;
 

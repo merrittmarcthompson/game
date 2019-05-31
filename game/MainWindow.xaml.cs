@@ -86,7 +86,7 @@ namespace Gamebook
             if (paragraph[0] == '~')
             {
                // Bullet
-               accumulator = "•  ";
+               accumulator = "–­­­­­  ";
                start = 1;
                isBullet = true;
             }
@@ -153,7 +153,7 @@ namespace Gamebook
          if (isBullet)
          {
             // Indent more and make them closer together.
-            block.Margin = new Thickness(14, 2, 5, 2);
+            block.Margin = new Thickness(5, 2, 5, 2);
          }
          else if (isDebug)
          {
@@ -195,7 +195,7 @@ namespace Gamebook
       {
          //try
          //{
-         Log.Open("game.log");
+         Log.Open("gamebook.log");
          Log.Add("Started");
          InitializeComponent();
          Engine.Start();

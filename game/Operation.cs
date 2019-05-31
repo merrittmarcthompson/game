@@ -80,19 +80,19 @@ namespace Gamebook
    public class IfOperation : Operation
    {
       public List<Expression> Expressions;
-      public Operation TrueSource;
-      public Operation FalseSource;
+      public Operation TrueOperation;
+      public Operation FalseOperation;
 
       public override void Traverse(
         Func<Operation, bool> examine)
       {
          if (examine(this))
          {
-            TrueSource.Traverse(examine);
+            TrueOperation.Traverse(examine);
          }
-         else if (FalseSource != null)
+         else if (FalseOperation != null)
          {
-            FalseSource.Traverse(examine);
+            FalseOperation.Traverse(examine);
          }
       }
       public override string ToString()

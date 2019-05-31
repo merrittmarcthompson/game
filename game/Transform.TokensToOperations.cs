@@ -120,22 +120,22 @@ namespace Gamebook
             var result = new IfOperation();
             result.Expressions = GetExpressions(true);
 
-            result.TrueSource = GetSequence();
+            result.TrueOperation = GetSequence();
 
             GetToken();
             if (GottenToken.Type == Token.Else)
             {
-               result.FalseSource = GetSequence();
+               result.FalseOperation = GetSequence();
             }
             else if (GottenToken.Type == Token.Or)
             {
-               result.FalseSource = GetIf();
+               result.FalseOperation = GetIf();
             }
             else
             {
                // Must be 'end'. Let caller handle it.
                UngetToken();
-               result.FalseSource = null;
+               result.FalseOperation = null;
             }
             return result;
          }
