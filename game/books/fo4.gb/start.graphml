@@ -131,7 +131,7 @@ set tomVaultTecMan=didntSee]</y:NodeLabel>
               <y:Fill color="#FFFFFF" transparent="false"/>
               <y:BorderStyle color="#000000" type="line" width="1.0"/>
               <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="57.873046875" horizontalTextPosition="center" iconTextGap="4" modelName="internal" modelPosition="c" textColor="#000000" verticalTextPosition="bottom" visible="true" width="517.5341796875" x="0.0" xml:space="preserve" y="0.0">@"Relations with China have become even more strained,"
-came a voice from {the TV} Tom had set up on a pile of moving boxes.
+came a voice. Tom had set up {the TV} on a pile of moving boxes.
 "With the latest on America's defenses in the event of nuclear war, here's Jack Winslow."</y:NodeLabel>
             </y:GenericNode>
           </data>
@@ -1818,7 +1818,6 @@ merge soundsLikeAScam]<y:PreferredPlacementDescriptor angle="0.0" angleOffsetOnR
       </data>
     </edge>
     <edge id="n5::e10" source="n5::n8" target="n5::n6">
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="15.0" tx="60.784423828125" ty="-46.2275390625"/>

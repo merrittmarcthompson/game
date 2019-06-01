@@ -7,10 +7,8 @@
         Title="Gamebook - Mobile Phone Game" Height="545" Width="305"
         ResizeMode="NoResize">
     <Grid Background="Beige" Margin="0,0,0,0">
-        <ScrollViewer VerticalScrollBarVisibility="Hidden">
-            <ItemsControl x:Name="StoryArea" Margin="8,10,0,0" FontFamily="Segoe UI" FontSize="12" Height="auto" VerticalAlignment="Top" HorizontalAlignment="Left" Width="270" MouseDown="StoryAreaClicked">
-            </ItemsControl>
-        </ScrollViewer>
+        <FlowDocumentScrollViewer VerticalScrollBarVisibility="Hidden" x:Name="StoryArea" >
+        </FlowDocumentScrollViewer>
         <Button x:Name="HamburgerButton" HorizontalAlignment="Left" VerticalAlignment="Top" Width="26" Height="26" Margin="260,476,0,0" Click="HamburgerClicked" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
             <Image Source="images\hamburger-button.png"></Image>
         </Button>

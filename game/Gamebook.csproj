@@ -93,7 +93,6 @@
     <Compile Include="Expression.cs" />
     <Compile Include="Engine.cs" />
     <Compile Include="Transform.IntoId.cs" />
-    <Compile Include="Transform.RemoveBlanksAfterNewLines.cs" />
     <Compile Include="Transform.NormalizeText.cs" />
     <Compile Include="Transform.SourceTextToTokens.cs" />
     <Compile Include="Operation.cs" />

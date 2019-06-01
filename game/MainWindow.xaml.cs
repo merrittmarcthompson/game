@@ -1,9 +1,10 @@
-﻿using System;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Collections.Generic;
+using System.Windows.Controls.Primitives;
 
 namespace Gamebook
 {
@@ -68,29 +69,93 @@ namespace Gamebook
          SetupScreen(link);
       }
 
-      private TextBlock TextToWPF(
-        string paragraph)
-      // Transform the text into a WPF TextBlock. Representing paragraphs with TextBlocks lets us make space after the paragraph, which isn't possible with continuous text. 
+      private List<Inline> BuildInlines(
+         string text)
       {
-         var block = new TextBlock();
-         paragraph = Transform.RemoveBlanksAfterNewLines(paragraph);
-         paragraph = Transform.VerticalToMatchingQuotes(paragraph);
+         // We need to add inlines to both Paragraphs and TextBoxes. They have Inlines properties, but you can't pass properties to functions as ref parameters, so we make a list of inlines and add them outside this function.
+
+         // TO DO: there's no way to put italic in a hyperlink or vice versa.
+
+         var inlines = new List<Inline>();
+
+         text = Transform.VerticalToMatchingQuotes(text);
          // Em dashes
-         paragraph = paragraph.Replace("--", "—");
+         text = text.Replace("--", "—");
          var accumulator = "";
-         var start = 0;
-         var isBullet = false;
-         var isDebug = false;
-         if (paragraph.Length > 0)
+         for (var i = 0; i < text.Length; ++i)
          {
-            if (paragraph[0] == '~')
+            // Hyperlink
+            if (text[i] == '{')
             {
-               // Bullet
-               accumulator = "–­­­­­  ";
-               start = 1;
-               isBullet = true;
+               if (accumulator.Length > 0)
+               {
+                  inlines.Add(new Run(accumulator));
+                  accumulator = "";
+               }
+               for (++i; i < text.Length && text[i] != '}'; ++i)
+                  accumulator += text[i];
+               var run = new Run(accumulator);
+               var hyperlink = new Hyperlink(run);
+               hyperlink.TextDecorations = null;
+               hyperlink.Foreground = new SolidColorBrush(Color.FromRgb(0xc0, 0x00, 0x00));
+               hyperlink.Click += new RoutedEventHandler(HyperlinkClicked);
+               hyperlink.Cursor = Cursors.Hand;
+               inlines.Add(hyperlink);
+               accumulator = "";
             }
-            else if (paragraph[0] == '`')
+            // Italic
+            else if (text[i] == '<')
+            {
+               if (accumulator.Length > 0)
+               {
+                  inlines.Add(new Run(accumulator));
+                  accumulator = "";
+               }
+               for (++i; i < text.Length && text[i] != '>'; ++i)
+                  accumulator += text[i];
+               var run = new Run(accumulator);
+               inlines.Add(new Italic(run));
+               accumulator = "";
+            }
+            else
+               accumulator += text[i];
+         }
+         if (accumulator.Length > 0)
+            inlines.Add(new Run(accumulator));
+
+         return inlines;
+      }
+
+      private Paragraph BuildBullet(
+         string paragraphText)
+      {
+         var textBlock = new TextBlock();
+         foreach (var inline in BuildInlines(paragraphText))
+            textBlock.Inlines.Add(inline);
+         textBlock.TextWrapping = TextWrapping.Wrap;
+         textBlock.Margin = new Thickness(10, 0, 0, 0);
+
+         var bulletDecorator = new BulletDecorator();
+         bulletDecorator.Bullet = new TextBlock(new Run("○"));
+         bulletDecorator.Child = textBlock;
+         
+         var paragraph = new Paragraph();
+         paragraph.Inlines.Add(bulletDecorator);
+         paragraph.Margin = new Thickness(0, 0, 0, 6);
+         paragraph.LineHeight = 18;
+
+         return paragraph;
+      }
+
+      private Paragraph BuildParagraph(
+        string paragraphText)
+      {
+         var paragraph = new Paragraph();
+         var start = 0;
+         var isDebug = false;
+         if (paragraphText.Length > 0)
+         {
+            if (paragraphText[0] == '`')
             {
                // Debug logging
                start = 1;
@@ -98,93 +163,41 @@ namespace Gamebook
             }
          }
 
-         // TO DO: no way to put italic in a hyperlink or vice versa.
+         foreach (var inline in BuildInlines(paragraphText.Substring(start)))
+            paragraph.Inlines.Add(inline);
 
-         for (var i = start; i < paragraph.Length; ++i)
-         {
-            // Hyperlink
-            if (paragraph[i] == '{')
-            {
-               if (accumulator.Length > 0)
-               {
-                  block.Inlines.Add(new Run(accumulator));
-                  accumulator = "";
-               }
-               for (++i; i < paragraph.Length && paragraph[i] != '}'; ++i)
-               {
-                  accumulator += paragraph[i];
-               }
-               var run = new Run(accumulator);
-               var hyperlink = new Hyperlink(run);
-               hyperlink.TextDecorations = null;
-               hyperlink.Foreground = new SolidColorBrush(Color.FromRgb(0xc0, 0x00, 0x00));
-               hyperlink.Click += new RoutedEventHandler(HyperlinkClicked);
-               hyperlink.Cursor = Cursors.Hand;
-               block.Inlines.Add(hyperlink);
-               accumulator = "";
-            }
-            // Italic
-            else if (paragraph[i] == '<')
-            {
-               if (accumulator.Length > 0)
-               {
-                  block.Inlines.Add(new Run(accumulator));
-                  accumulator = "";
-               }
-               for (++i; i < paragraph.Length && paragraph[i] != '>'; ++i)
-               {
-                  accumulator += paragraph[i];
-               }
-               var run = new Run(accumulator);
-               block.Inlines.Add(new Italic(run));
-               accumulator = "";
-            }
-            else
-            {
-               accumulator += paragraph[i];
-            }
-         }
-         if (accumulator.Length > 0)
-         {
-            block.Inlines.Add(new Run(accumulator));
-         }
+         paragraph.Margin = new Thickness(0, 0, 0, 6);
+         if (isDebug)
+            paragraph.Foreground = new SolidColorBrush(Color.FromRgb(0x00, 0xb0, 0x00));
+         paragraph.LineHeight = 18;
 
-         block.TextWrapping = TextWrapping.Wrap;
-         if (isBullet)
-         {
-            // Indent more and make them closer together.
-            block.Margin = new Thickness(5, 2, 5, 2);
-         }
-         else if (isDebug)
-         {
-            block.Margin = new Thickness(0, 0, 5, 0);
-            block.Foreground = new SolidColorBrush(Color.FromRgb(0x00, 0xb0, 0x00));
-         }
-         else
-         {
-            block.Margin = new Thickness(5, 4, 5, 4);
-         }
-         block.LineHeight = 18;
-
-         return block;
+         return paragraph;
       }
 
       private void SetupScreen(
-         string reactionText)
+         string selectedReactionText)
       {
          // It's simple. The engine builds a text version of the screen. Then this main window code converts that into WPF objects for display.
-         var storyArea = (ItemsControl)FindName("StoryArea");
-         storyArea.Items.Clear();
-         // Add an extra paragraph on the end just to have some white space.
-         var text = Engine.BuildActionTextForReaction(reactionText) + "@";
+         var storyArea = (FlowDocumentScrollViewer)FindName("StoryArea");
+         var (actionText, reactionTexts) = Engine.BuildActionTextForReaction(selectedReactionText);
          var first = true;
-         foreach (var paragraph in text.Split('@'))
+         FlowDocument document = new FlowDocument();
+         document.FontFamily = new FontFamily("Segoe UI");
+         document.FontSize = 12;
+         document.MouseDown += StoryAreaClicked;
+         document.TextAlignment = TextAlignment.Left;
+         foreach (var paragraphText in actionText.Split('@'))
          {
-            if (first && paragraph.Length < 1)
+            if (first && paragraphText.Length < 1)
                continue;
             first = false;
-            storyArea.Items.Add(TextToWPF(paragraph));
+            document.Blocks.Add(BuildParagraph(paragraphText));
          }
+         foreach (var reactionText in reactionTexts)
+         {
+            document.Blocks.Add(BuildBullet(reactionText));
+         }
+         storyArea.Document = document;
          var undoItem = (ListBoxItem)FindName("UndoItem");
          undoItem.IsEnabled = Engine.canUndo();
          var characterInfoBox = (Border)FindName("CharacterInfoBox");

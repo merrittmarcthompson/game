@@ -250,11 +250,11 @@ namespace Gamebook
          outTrace = trace;
       }
 
-      private static string BuildActionText(
+      private static (string, List<string>) BuildActionText(
          Action firstAction)
       {
          // Starting with the given action box, a) merge the texts of all actions connected below it into one text, and b) collect all the reaction arrows and append them at the end. Reaction arrows and merge arrows can be intermingled, but we want all the reaction arrows at the bottom. So we're going to accumulate the reaction texts in a separate variable and append it later.
-         var accumulatedReactionTexts = "";
+         List<string> accumulatedReactionTexts = new List<string>();
 
          // The action text will contain all the merged action texts.
          var accumulatedActionTexts = "";
@@ -265,7 +265,7 @@ namespace Gamebook
          // This recursive routine will accumulate all the action and reaction text values in the above variables.
          Accumulate(firstAction);
 
-         return accumulatedActionTexts + accumulatedReactionTexts;
+         return (accumulatedActionTexts, accumulatedReactionTexts);
 
          void Accumulate(
             Action action)
@@ -323,7 +323,7 @@ namespace Gamebook
                            reactionText = reactionText.Substring(0, end);
                      }
                      else
-                        accumulatedReactionTexts += "@~{" + reactionText + "}";
+                        accumulatedReactionTexts.Add("{" + reactionText + "}");
                      Current.ReactionTargetActions[reactionText] = reactionArrow.TargetAction;
                      break;
                }
@@ -337,7 +337,7 @@ namespace Gamebook
          }
       }
 
-      public static string BuildActionTextForReaction(
+      public static (string, List<string>) BuildActionTextForReaction(
          string reactionText)
       {
          // The UI calls this to obtain a text representation of the next screen to appear.

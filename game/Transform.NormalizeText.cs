@@ -16,7 +16,7 @@
                if (!hadSpace)
                {
                   hadSpace = true;
-                  fixedText += letter;
+                  fixedText += ' ';
                }
             }
             else
