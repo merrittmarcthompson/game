@@ -5,45 +5,56 @@ namespace Gamebook
 {
    // Put this abstract class and all its short children in this one file so I don't have to flip betweent them all the time.
 
-   public abstract class Operation
+   public abstract class Code
    {
       public abstract void Traverse(
-        Func<Operation, bool> examine);
+        Func<Code, bool> examine);
       public abstract override string ToString();
+
+      public static Code Compile(
+        string sourceCode)
+      {
+         // Compile the text to an object sequence.
+         Log.SetSourceCode(sourceCode);
+         var tokens = Transform.SourceTextToTokens(sourceCode);
+         if (tokens == null)
+            return null;
+         return Transform.TokensToCode(tokens, sourceCode);
+      }
    }
 
-   public class SequenceOperation : Operation
+   public class SequenceCode : Code
    {
       // This is the sequence of objects.
-      public List<Operation> Operations { get; set; } = new List<Operation>();
+      public List<Code> Codes { get; set; } = new List<Code>();
       public string SourceText = null;
 
       public override void Traverse(
-        Func<Operation, bool> examine)
+        Func<Code, bool> examine)
       {
-         foreach (var operation in Operations)
+         foreach (var code in Codes)
          {
             string previousSourceText = null;
             if (SourceText != null)
             {
                previousSourceText = Log.SetSourceCode(SourceText);
             }
-            operation.Traverse(examine);
+            code.Traverse(examine);
             Log.SetSourceCode(previousSourceText);
          }
       }
 
       public void Scan(
-        Func<Operation, bool> examine)
+        Func<Code, bool> examine)
       {
-         foreach (var operation in Operations)
+         foreach (var code in Codes)
          {
             string previousSourceText = null;
             if (SourceText != null)
             {
                previousSourceText = Log.SetSourceCode(SourceText);
             }
-            examine(operation);
+            examine(code);
             if (previousSourceText != null)
             {
                Log.SetSourceCode(previousSourceText);
@@ -55,9 +66,9 @@ namespace Gamebook
       {
          string result = "";
          string separator = "";
-         foreach (var operation in Operations)
+         foreach (var code in Codes)
          {
-            string objectString = operation.ToString();
+            string objectString = code.ToString();
             if (objectString.Length > 16)
             {
                objectString = objectString.Substring(0, 16) + "...";
@@ -68,31 +79,40 @@ namespace Gamebook
          return result;
       }
 
-      public SequenceOperation Append(
-         SequenceOperation other)
+      public SequenceCode Append(
+         SequenceCode other)
       {
          // Implements the [merge] arrow feature that merges nodes.
-         Operations.AddRange(other.Operations);
+         Codes.AddRange(other.Codes);
          return this;
       }
    }
 
-   public class IfOperation : Operation
+   public class IfCode : Code
    {
-      public List<Expression> Expressions;
-      public Operation TrueOperation;
-      public Operation FalseOperation;
+      public List<Expression> Expressions { get; private set; }
+      public Code TrueCode { get; private set; }
+      public Code FalseCode { get; private set; }
 
+      public IfCode(
+         List<Expression> expressions,
+         Code trueCode,
+         Code falseCode)
+      {
+         Expressions = expressions;
+         TrueCode = trueCode;
+         FalseCode = falseCode;
+      }
       public override void Traverse(
-        Func<Operation, bool> examine)
+        Func<Code, bool> examine)
       {
          if (examine(this))
          {
-            TrueOperation.Traverse(examine);
+            TrueCode.Traverse(examine);
          }
-         else if (FalseOperation != null)
+         else if (FalseCode != null)
          {
-            FalseOperation.Traverse(examine);
+            FalseCode.Traverse(examine);
          }
       }
       public override string ToString()
@@ -101,12 +121,12 @@ namespace Gamebook
       }
    }
 
-   public class WhenOperation : Operation
+   public class WhenCode : Code
    {
       public List<Expression> Expressions;
 
       public override void Traverse(
-        Func<Operation, bool> examine)
+        Func<Code, bool> examine)
       {
          examine(this);
       }
@@ -116,12 +136,12 @@ namespace Gamebook
       }
    }
 
-   public class SetOperation : Operation
+   public class SetCode : Code
    {
       public List<Expression> Expressions;
 
       public override void Traverse(
-         Func<Operation, bool> examine)
+         Func<Code, bool> examine)
       {
          examine(this);
       }
@@ -131,17 +151,17 @@ namespace Gamebook
       }
    }
 
-   public class ScoreOperation : Operation
+   public class ScoreCode : Code
    {
       public List<string> Ids = null;
 
-      public ScoreOperation(
+      public ScoreCode(
          List<string> ids)
       {
          Ids = ids;
       }
       public override void Traverse(
-        Func<Operation, bool> examine)
+        Func<Code, bool> examine)
       {
          examine(this);
       }
@@ -151,7 +171,7 @@ namespace Gamebook
       }
    }
 
-   public class SubstitutionOperation : Operation
+   public class SubstitutionCode : Code
    {
       // This is produced by code like this:
       //  His name was [hero.first].
@@ -160,7 +180,7 @@ namespace Gamebook
       public string Id = null;
 
       public override void Traverse(
-        Func<Operation, bool> examine)
+        Func<Code, bool> examine)
       {
          examine(this);
       }
@@ -170,20 +190,20 @@ namespace Gamebook
       }
    }
 
-   public class TextOperation : Operation
+   public class TextCode : Code
    {
       public string Id;
-      public SequenceOperation Text;
+      public SequenceCode Text;
 
-      public TextOperation(
+      public TextCode(
          string id,
-         SequenceOperation text)
+         SequenceCode text)
       {
          Id = id;
          Text = text;
       }
       public override void Traverse(
-        Func<Operation, bool> examine)
+        Func<Code, bool> examine)
       {
          examine(this);
       }
@@ -193,18 +213,18 @@ namespace Gamebook
       }
    }
 
-   public class CharacterOperation : Operation
+   public class CharacterCode : Code
    {
       public string Characters;
 
-      public CharacterOperation(
+      public CharacterCode(
         string characters)
       {
          Characters = characters;
       }
 
       public override void Traverse(
-        Func<Operation, bool> examine)
+        Func<Code, bool> examine)
       {
          examine(this);
       }
@@ -214,18 +234,18 @@ namespace Gamebook
       }
    }
 
-   public class MergeOperation : Operation
+   public class MergeCode : Code
    {
       public string SceneId;
 
-      public MergeOperation(
+      public MergeCode(
          string sceneId)
       {
          SceneId = sceneId;
       }
 
       public override void Traverse(
-        Func<Operation, bool> examine)
+        Func<Code, bool> examine)
       {
          examine(this);
       }
@@ -236,17 +256,17 @@ namespace Gamebook
       }
    }
 
-   public class SceneOperation : Operation
+   public class SceneCode : Code
    {
       public string SceneId;
 
-      public SceneOperation(
+      public SceneCode(
          string sceneId)
       {
          SceneId = sceneId;
       }
       public override void Traverse(
-        Func<Operation, bool> examine)
+        Func<Code, bool> examine)
       {
          examine(this);
       }
@@ -255,18 +275,18 @@ namespace Gamebook
          return "scene";
       }
    }
-   public class SpecialOperation : Operation
+   public class SpecialCode : Code
    {
       public string Id;
 
-      public SpecialOperation(
+      public SpecialCode(
         string id)
       {
          Id = id;
       }
 
       public override void Traverse(
-        Func<Operation, bool> examine)
+        Func<Code, bool> examine)
       {
          examine(this);
       }

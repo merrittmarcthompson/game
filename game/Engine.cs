@@ -16,22 +16,22 @@ namespace Gamebook
          public Dictionary<string, object> Settings = new Dictionary<string, object>();
 
          // This is the one action within a story tree that we are on right now. If it is null, we aren't in a story tree. In that case, we show a list of all the starting actions that are appropriate for the current situation.
-         public Action Action = null;
+         public Round Round = null;
 
          // The same story tree can apply to different characters, locations, objects, etc. As we go through a story tree, we collect what the current values of those are.
-         public Dictionary<string, Action> ReactionTargetActions = new Dictionary<string, Action>();
+         public Dictionary<string, Round> ReactionTargetRounds = new Dictionary<string, Round>();
 
          // Stack of return merge locations for referential merges.
-         public Stack<Action> NextTargetActionOnReturn = new Stack<Action>();
+         public Stack<Round> NextTargetRoundOnReturn = new Stack<Round>();
 
          public State() { }
 
          public State(State other)
          {
             Settings = new Dictionary<string, object>(other.Settings);
-            Action = other.Action;
-            ReactionTargetActions = new Dictionary<string, Action>(other.ReactionTargetActions);
-            NextTargetActionOnReturn = new Stack<Action>(other.NextTargetActionOnReturn);
+            Round = other.Round;
+            ReactionTargetRounds = new Dictionary<string, Round>(other.ReactionTargetRounds);
+            NextTargetRoundOnReturn = new Stack<Round>(other.NextTargetRoundOnReturn);
          }
       }
 
@@ -58,7 +58,7 @@ namespace Gamebook
             Log.Fail("Value is null");
          if (value is string)
             return value as string;
-         return EvaluateText(value as SequenceOperation);
+         return EvaluateText(value as SequenceCode);
       }
 
       private static bool EvaluateConditions(
@@ -107,17 +107,17 @@ namespace Gamebook
       }
 
       private static bool EvaluateCondition(
-         SequenceOperation sequence,
+         Code topCode,
          out string outTrace)
       {
          string trace = "";
          // When there are no 'when' directives, it always succeeds.
          var allSucceeded = true;
-         sequence.Traverse((operation) =>
+         topCode.Traverse((code) =>
          {
-            if (!(operation is WhenOperation whenOperation))
+            if (!(code is WhenCode whenCode))
                return true;
-            if (!EvaluateConditions(whenOperation.Expressions, out trace))
+            if (!EvaluateConditions(whenCode.Expressions, out trace))
                allSucceeded = false;
             return true;
          });
@@ -193,23 +193,23 @@ namespace Gamebook
       }
 
       private static string EvaluateText(
-         SequenceOperation value)
+         Code value)
       {
          string accumulator = "";
-         value.Traverse((operation) =>
+         value.Traverse((code) =>
          {
-            switch (operation)
+            switch (code)
             {
-               case CharacterOperation characterOperation:
-                  accumulator += characterOperation.Characters;
+               case CharacterCode characterCode:
+                  accumulator += characterCode.Characters;
                   break;
-               case SubstitutionOperation substitutionOperation:
-                  accumulator += ValueString(substitutionOperation.Id);
+               case SubstitutionCode substitutionCode:
+                  accumulator += ValueString(substitutionCode.Id);
                   break;
-               case IfOperation ifOperation:
-                  return EvaluateConditions(ifOperation.Expressions, out var trace);
-               case SpecialOperation specialOperation:
-                  accumulator += GetSpecialText(specialOperation.Id);
+               case IfCode ifCode:
+                  return EvaluateConditions(ifCode.Expressions, out var trace);
+               case SpecialCode specialCode:
+                  accumulator += GetSpecialText(specialCode.Id);
                   break;
             }
             return true;
@@ -219,16 +219,16 @@ namespace Gamebook
       }
 
       private static void EvaluateSettings(
-         SequenceOperation sequence,
+         Code topCode,
          out string outTrace)
       {
          string trace = "";
-         sequence.Traverse((operation) =>
+         topCode.Traverse((code) =>
          {
-            switch (operation)
+            switch (code)
             {
-               case SetOperation setOperation:
-                  foreach (var expression in setOperation.Expressions)
+               case SetCode setCode:
+                  foreach (var expression in setCode.Expressions)
                   {
                      if (expression.Not)
                         Current.Settings.Remove(expression.LeftId);
@@ -239,10 +239,10 @@ namespace Gamebook
                         trace += "@`set " + (expression.Not ? "not " : "") + expression.LeftId + (expression.RightId != null ? "=" + expression.RightId : "");
                   }
                   break;
-               case TextOperation textOperation:
-                  Current.Settings[textOperation.Id] = textOperation.Text;
+               case TextCode textCode:
+                  Current.Settings[textCode.Id] = textCode.Text;
                   if (DebugMode)
-                     trace += "@`text " + textOperation.Id + "=" + textOperation.Text;
+                     trace += "@`text " + textCode.Id + "=" + textCode.Text;
                   break;
             }
             return true;
@@ -250,38 +250,38 @@ namespace Gamebook
          outTrace = trace;
       }
 
-      private static (string, List<string>) BuildActionText(
-         Action firstAction)
+      private static (string, List<string>) BuildRoundText(
+         Round firstRound)
       {
-         // Starting with the given action box, a) merge the texts of all actions connected below it into one text, and b) collect all the reaction arrows and append them at the end. Reaction arrows and merge arrows can be intermingled, but we want all the reaction arrows at the bottom. So we're going to accumulate the reaction texts in a separate variable and append it later.
+         // Starting with the given round box, a) merge the texts of all rounds connected below it into one text, and b) collect all the reaction arrows.
          List<string> accumulatedReactionTexts = new List<string>();
 
          // The action text will contain all the merged action texts.
          var accumulatedActionTexts = "";
 
          // Build these too.
-         Current.ReactionTargetActions = new Dictionary<string, Action>();
+         Current.ReactionTargetRounds = new Dictionary<string, Round>();
 
          // This recursive routine will accumulate all the action and reaction text values in the above variables.
-         Accumulate(firstAction);
+         Accumulate(firstRound);
 
          return (accumulatedActionTexts, accumulatedReactionTexts);
 
          void Accumulate(
-            Action action)
+            Round round)
          {
             string trace;
             // First append this action box's own text and execute any settings.
-            accumulatedActionTexts = Transform.JoinTexts(accumulatedActionTexts, EvaluateText(action.Sequence));
-            EvaluateSettings(action.Sequence, out trace);
+            accumulatedActionTexts = Transform.JoinTexts(accumulatedActionTexts, EvaluateText(round.ActionCode));
+            EvaluateSettings(round.ActionCode, out trace);
             accumulatedActionTexts += trace;
 
             // Next examine all the arrows for the action.
             var arrowCount = 0;
-            foreach (var arrow in action.Arrows)
+            foreach (var arrow in round.GetArrows())
             {
                // If conditions in the arrow are false, then just ignore the arrow completely. This includes both reaction and merge arrows.
-               bool succeeded = EvaluateCondition(arrow.Sequence, out trace);
+               bool succeeded = EvaluateCondition(arrow.Code, out trace);
                accumulatedActionTexts += trace;
                if (!succeeded)
                   continue;
@@ -290,29 +290,29 @@ namespace Gamebook
                {
                   case MergeArrow mergeArrow:
                      // There may be 'set' parameters for a referential merge.
-                     EvaluateSettings(arrow.Sequence, out trace);
+                     EvaluateSettings(arrow.Code, out trace);
                      accumulatedActionTexts += trace;
 
                      if (DebugMode)
                         accumulatedActionTexts += "@`merge" + (mergeArrow.DebugSceneId != null ? " " + mergeArrow.DebugSceneId : "");
 
                      // There are two kinds of merge arrows.
-                     Action targetAction;
-                     if (mergeArrow.TargetSceneAction != null)
+                     Round targetAction;
+                     if (mergeArrow.TargetSceneRound != null)
                      {
-                        targetAction = mergeArrow.TargetSceneAction;
+                        targetAction = mergeArrow.TargetSceneRound;
                         // When we finish the jump to the other scene, we will continue merging with the action this arrow points to.
-                        Current.NextTargetActionOnReturn.Push(mergeArrow.TargetAction);
+                        Current.NextTargetRoundOnReturn.Push(mergeArrow.TargetRound);
                      }
                      else
                         // It's a local merge arrow. Merge the action it points to.
                         // It should be impossible for it to have no target. Let it crash if that's the case.
-                        targetAction = mergeArrow.TargetAction;
+                        targetAction = mergeArrow.TargetRound;
                      // Call this routine again recursively. It will append the target's text and examine the target's arrows.
                      Accumulate(targetAction);
                      break;
                   case ReactionArrow reactionArrow:
-                     var reactionText = EvaluateText(reactionArrow.Sequence);
+                     var reactionText = EvaluateText(reactionArrow.Code);
                      // There's a little trickiness with links here...
                      if (reactionText.Length > 0 && reactionText[0] == '{')
                      {
@@ -324,15 +324,15 @@ namespace Gamebook
                      }
                      else
                         accumulatedReactionTexts.Add("{" + reactionText + "}");
-                     Current.ReactionTargetActions[reactionText] = reactionArrow.TargetAction;
+                     Current.ReactionTargetRounds[reactionText] = reactionArrow.TargetRound;
                      break;
                }
             }
             if (arrowCount == 0)
             {
                // This is a terminal action of a scene. If this scene was referenced by another scene, we need to continue merging back in the referencing scene.
-               if (Current.NextTargetActionOnReturn.Any())
-                  Accumulate(Current.NextTargetActionOnReturn.Pop());
+               if (Current.NextTargetRoundOnReturn.Any())
+                  Accumulate(Current.NextTargetRoundOnReturn.Pop());
             }
          }
       }
@@ -345,16 +345,16 @@ namespace Gamebook
          {
             // Move to new state. Otherwise, redisplay existing state.
             UndoStack.Push(new State(Current));
-            if (!Current.ReactionTargetActions.TryGetValue(reactionText, out Current.Action))
+            if (!Current.ReactionTargetRounds.TryGetValue(reactionText, out Current.Round))
                Log.Fail(String.Format("No arrow for reaction '{0}'", reactionText));
          }
          // Show the current action box and its reaction arrows.
-         return BuildActionText(Current.Action);
+         return BuildRoundText(Current.Round);
       }
 
       public static void Start()
       {
-         Current.Action = Transform.LoadActions();
+         Current.Round = Round.Load();
       }
    }
 }

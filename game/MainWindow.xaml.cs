@@ -133,7 +133,7 @@ namespace Gamebook
          foreach (var inline in BuildInlines(paragraphText))
             textBlock.Inlines.Add(inline);
          textBlock.TextWrapping = TextWrapping.Wrap;
-         textBlock.Margin = new Thickness(10, 0, 0, 0);
+         textBlock.Margin = new Thickness(8, 0, 0, 0);
 
          var bulletDecorator = new BulletDecorator();
          bulletDecorator.Bullet = new TextBlock(new Run("○"));

@@ -5,7 +5,7 @@ namespace Gamebook
 {
    public static partial class Transform
    {
-      public static SequenceOperation TokensToOperations(
+      public static Code TokensToCode(
         List<Token> tokens,
         string sourceText)
       {
@@ -111,38 +111,36 @@ namespace Gamebook
              else
                C
          */
-         IfOperation GetIf()
+         IfCode GetIf()
          {
             // This is called after getting 'if' or 'or'.
             // First get the expression. It's like one of these:
             //   [if brave]
             //   [if not killedInspector]
-            var result = new IfOperation();
-            result.Expressions = GetExpressions(true);
-
-            result.TrueOperation = GetSequence();
+            var expressions = GetExpressions(true);
+            var trueCode = GetSequence();
+            Code falseCode = null;
 
             GetToken();
             if (GottenToken.Type == Token.Else)
             {
-               result.FalseOperation = GetSequence();
+               falseCode = GetSequence();
             }
             else if (GottenToken.Type == Token.Or)
             {
-               result.FalseOperation = GetIf();
+               falseCode = GetIf();
             }
             else
             {
                // Must be 'end'. Let caller handle it.
                UngetToken();
-               result.FalseOperation = null;
             }
-            return result;
+            return new IfCode (expressions, trueCode, falseCode);
          }
 
-         SequenceOperation GetSequence()
+         SequenceCode GetSequence()
          {
-            var result = new SequenceOperation();
+            var result = new SequenceCode();
 
             while (true)
             {
@@ -150,21 +148,21 @@ namespace Gamebook
 
                if (GottenToken.Type == Token.Characters)
                {
-                  result.Operations.Add(new CharacterOperation(GottenToken.Value));
+                  result.Codes.Add(new CharacterCode(GottenToken.Value));
                }
                else if (GottenToken.Type == Token.Special)
                {
                   // Ex. [he]
-                  result.Operations.Add(new SpecialOperation(GottenToken.Value));
+                  result.Codes.Add(new SpecialCode(GottenToken.Value));
                }
                // I think this lets by too many mistakes. You put in some wrong ID somewhere, and it says, okay, it's a substitution, rather than complaining. Maybe have something like [insert bobsShoeSize] instead of [bobsShoeSize]?
                /*
                else if (GottenToken.Type == Token.Id)
                {
                   // This is a text substitution.
-                  var substitutionOperation = new SubstitutionOperation();
-                  substitutionOperation.Id = GottenToken.Value;
-                  result.Objects.Add(substitutionOperation);
+                  var substitutionCode = new SubstitutionCode();
+                  substitutionCode.Id = GottenToken.Value;
+                  result.Objects.Add(substitutionCode);
                }
                */
                else if (GottenToken.Type == Token.Merge)
@@ -182,7 +180,7 @@ namespace Gamebook
                   {
                      UngetToken();
                   }
-                  result.Operations.Add(new MergeOperation(sceneId));
+                  result.Codes.Add(new MergeCode(sceneId));
                }
                else if (GottenToken.Type == Token.Scene)
                {
@@ -192,7 +190,7 @@ namespace Gamebook
                   {
                      Log.Fail(Expected(Token.Scene.Name, GottenToken));
                   }
-                  result.Operations.Add(new SceneOperation(GottenToken.Value));
+                  result.Codes.Add(new SceneCode(GottenToken.Value));
                }
                else if (GottenToken.Type == Token.Score)
                {
@@ -209,7 +207,7 @@ namespace Gamebook
                      GetToken();
                   } while (GottenToken.Type == Token.Comma);
                   UngetToken();
-                  result.Operations.Add(new ScoreOperation(ids));
+                  result.Codes.Add(new ScoreCode(ids));
                }
                else if (GottenToken.Type == Token.Text)
                {
@@ -219,7 +217,7 @@ namespace Gamebook
                      Log.Fail(Expected(Token.Id.Name, GottenToken));
                   }
                   string id = GottenToken.Value;
-                  SequenceOperation text = GetSequence();
+                  SequenceCode text = GetSequence();
                   if (text == null)
                      return null;
                   GetToken();
@@ -227,24 +225,24 @@ namespace Gamebook
                   {
                      Log.Fail(Expected(Token.End.Name, GottenToken));
                   }
-                  result.Operations.Add(new TextOperation(id, text));
+                  result.Codes.Add(new TextCode(id, text));
                }
                else if (GottenToken.Type == Token.Set)
                {
-                  var setOperation = new SetOperation();
-                  setOperation.Expressions = GetExpressions(false);
-                  result.Operations.Add(setOperation);
+                  var setCode = new SetCode();
+                  setCode.Expressions = GetExpressions(false);
+                  result.Codes.Add(setCode);
                }
                else if (GottenToken.Type == Token.When)
                {
-                  var whenOperation = new WhenOperation();
-                  whenOperation.Expressions = GetExpressions(true);
-                  result.Operations.Add(whenOperation);
+                  var whenCode = new WhenCode();
+                  whenCode.Expressions = GetExpressions(true);
+                  result.Codes.Add(whenCode);
                }
                else if (GottenToken.Type == Token.If)
                {
-                  var ifOperation = GetIf();
-                  result.Operations.Add(ifOperation);
+                  var ifCode = GetIf();
+                  result.Codes.Add(ifCode);
 
                   // The whole if/or case statement is terminated by 'end'.
                   GetToken();
@@ -264,8 +262,8 @@ namespace Gamebook
          }
 
          // Start here
-         var sequenceOperation = GetSequence();
-         if (sequenceOperation == null)
+         var sequenceCode = GetSequence();
+         if (sequenceCode == null)
             return null;
          GetToken();
          if (GottenToken.Type != Token.EndOfSourceText)
@@ -273,8 +271,8 @@ namespace Gamebook
             Log.Fail(Expected(Token.EndOfSourceText.Name, GottenToken));
             return null;
          }
-         sequenceOperation.SourceText = sourceText;
-         return sequenceOperation;
+         sequenceCode.SourceText = sourceText;
+         return sequenceCode;
       }
    }
 }
