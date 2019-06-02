@@ -62,7 +62,7 @@ namespace Gamebook
       }
 
       private static bool EvaluateConditions(
-         List<Expression> expressions,
+         IEnumerable<Expression> expressions,
          out string outTrace)
       {
          outTrace = "";
@@ -117,7 +117,7 @@ namespace Gamebook
          {
             if (!(code is WhenCode whenCode))
                return true;
-            if (!EvaluateConditions(whenCode.Expressions, out trace))
+            if (!EvaluateConditions(whenCode.GetExpressions(), out trace))
                allSucceeded = false;
             return true;
          });
@@ -228,7 +228,7 @@ namespace Gamebook
             switch (code)
             {
                case SetCode setCode:
-                  foreach (var expression in setCode.Expressions)
+                  foreach (var expression in setCode.GetExpressions())
                   {
                      if (expression.Not)
                         Current.Settings.Remove(expression.LeftId);

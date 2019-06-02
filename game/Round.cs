@@ -23,11 +23,11 @@ namespace Gamebook
 
    public class MergeArrow: Arrow
    {
-      public Round TargetSceneRound { get; set; }
       public string DebugSceneId { get; private set; }
       public string DebugSourceName { get; private set; }
 
       private MergeArrow() { }
+      // This lets the Load function make arrows. 
       public MergeArrow(
          Round targetRound,
          Code code,
@@ -37,11 +37,14 @@ namespace Gamebook
          DebugSceneId = debugSceneId;
          DebugSourceName = debugSourceName;
       }
+      // This lets the Load function add the target scene in a second pass after construction.
+      public Round TargetSceneRound { get; set; }
    }
 
    public class ReactionArrow: Arrow
    {
       private ReactionArrow() { }
+      // This lets the Load function make arrows. 
       public ReactionArrow(
          Round targetRound,
          Code code): base (targetRound, code)
