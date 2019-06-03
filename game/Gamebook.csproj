@@ -84,15 +84,9 @@
     </Compile>
     <Compile Include="Round.cs" />
     <Compile Include="Graphml.cs" />
-    <Compile Include="Transform.JoinTexts.cs" />
-    <Compile Include="Transform.VerticalToMatchingQuotes.cs" />
     <Compile Include="Token.cs" />
-    <Compile Include="TokenType.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="Engine.cs" />
-    <Compile Include="Transform.IntoId.cs" />
-    <Compile Include="Transform.NormalizeText.cs" />
-    <Compile Include="Transform.SourceTextToTokens.cs" />
     <Compile Include="Code.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>

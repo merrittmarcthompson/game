@@ -16,9 +16,9 @@ namespace Gamebook
       public static Code Compile(
         string sourceCode)
       {
-         // Compile the text to an object sequence.
+         // Compile the text to a code sequence.
          Log.SetSourceCode(sourceCode);
-         var tokens = Transform.SourceTextToTokens(sourceCode);
+         var tokens = Token.Tokenize(sourceCode);
          if (tokens == null)
             return null;
          return SequenceCode.BuildFromTokens(tokens, sourceCode);
@@ -73,8 +73,8 @@ namespace Gamebook
          // Start here
          var sequenceCode = GetSequence();
          GetToken();
-         if (GottenToken.Type != Token.EndOfSourceText)
-            Log.Fail(Expected(Token.EndOfSourceText.Name, GottenToken));
+         if (GottenToken.Type != TokenType.EndOfSourceText)
+            Log.Fail(Expected(TokenType.EndOfSourceText.Name, GottenToken));
          sequenceCode.SourceText = sourceText;
          return sequenceCode;
 
@@ -88,14 +88,14 @@ namespace Gamebook
             {
                GetToken();
 
-               if (GottenToken.Type == Token.Characters)
+               if (GottenToken.Type == TokenType.Characters)
                   result.Codes.Add(new CharacterCode(GottenToken.Value));
-               else if (GottenToken.Type == Token.Special)
+               else if (GottenToken.Type == TokenType.Special)
                   // Ex. [he]
                   result.Codes.Add(new SpecialCode(GottenToken.Value));
                // I think this lets by too many mistakes. You put in some wrong ID somewhere, and it says, okay, it's a substitution, rather than complaining. Maybe have something like [insert bobsShoeSize] instead of [bobsShoeSize]?
                /*
-               else if (GottenToken.Type == Token.Id)
+               else if (GottenToken.Type == TokenType.Id)
                {
                   // This is a text substitution.
                   var substitutionCode = new SubstitutionCode();
@@ -103,69 +103,69 @@ namespace Gamebook
                   result.Objects.Add(substitutionCode);
                }
                */
-               else if (GottenToken.Type == Token.Merge)
+               else if (GottenToken.Type == TokenType.Merge)
                {
                   // [merge]
                   // [merge sceneId]
                   string sceneId = null;
 
                   GetToken();
-                  if (GottenToken.Type == Token.Id)
+                  if (GottenToken.Type == TokenType.Id)
                      sceneId = GottenToken.Value;
                   else
                      UngetToken();
                   result.Codes.Add(new MergeCode(sceneId));
                }
-               else if (GottenToken.Type == Token.Scene)
+               else if (GottenToken.Type == TokenType.Scene)
                {
                   // [scene soundsLikeAScam]
                   GetToken();
-                  if (GottenToken.Type != Token.Id)
-                     Log.Fail(Expected(Token.Scene.Name, GottenToken));
+                  if (GottenToken.Type != TokenType.Id)
+                     Log.Fail(Expected(TokenType.Scene.Name, GottenToken));
                   result.Codes.Add(new SceneCode(GottenToken.Value));
                }
-               else if (GottenToken.Type == Token.Score)
+               else if (GottenToken.Type == TokenType.Score)
                {
                   // SCORE ID [, ID...]
                   List<string> ids = new List<string>();
                   do
                   {
                      GetToken();
-                     if (GottenToken.Type != Token.Id)
-                        Log.Fail(Expected(Token.Score.Name, GottenToken));
+                     if (GottenToken.Type != TokenType.Id)
+                        Log.Fail(Expected(TokenType.Score.Name, GottenToken));
                      ids.Add(GottenToken.Value);
                      GetToken();
-                  } while (GottenToken.Type == Token.Comma);
+                  } while (GottenToken.Type == TokenType.Comma);
                   UngetToken();
                   result.Codes.Add(new ScoreCode(ids));
                }
-               else if (GottenToken.Type == Token.Text)
+               else if (GottenToken.Type == TokenType.Text)
                {
                   GetToken();
-                  if (GottenToken.Type != Token.Id)
-                     Log.Fail(Expected(Token.Id.Name, GottenToken));
+                  if (GottenToken.Type != TokenType.Id)
+                     Log.Fail(Expected(TokenType.Id.Name, GottenToken));
                   string id = GottenToken.Value;
                   SequenceCode text = GetSequence();
                   if (text == null)
                      return null;
                   GetToken();
-                  if (GottenToken.Type != Token.End)
-                     Log.Fail(Expected(Token.End.Name, GottenToken));
+                  if (GottenToken.Type != TokenType.End)
+                     Log.Fail(Expected(TokenType.End.Name, GottenToken));
                   result.Codes.Add(new TextCode(id, text));
                }
-               else if (GottenToken.Type == Token.Set)
+               else if (GottenToken.Type == TokenType.Set)
                   result.Codes.Add(new SetCode(GetExpressions(false)));
-               else if (GottenToken.Type == Token.When)
+               else if (GottenToken.Type == TokenType.When)
                   result.Codes.Add(new WhenCode(GetExpressions(true)));
-               else if (GottenToken.Type == Token.If)
+               else if (GottenToken.Type == TokenType.If)
                {
                   var ifCode = GetIf();
                   result.Codes.Add(ifCode);
 
                   // The whole if/or case statement is terminated by 'end'.
                   GetToken();
-                  if (GottenToken.Type != Token.End)
-                     Log.Fail(Expected(Token.End.Name, GottenToken));
+                  if (GottenToken.Type != TokenType.End)
+                     Log.Fail(Expected(TokenType.End.Name, GottenToken));
                }
                else
                {
@@ -216,34 +216,34 @@ namespace Gamebook
             {
                var not = true;
                GetToken();
-               if (GottenToken.Type != Token.Not)
+               if (GottenToken.Type != TokenType.Not)
                {
                   not = false;
                   UngetToken();
                }
                GetToken();
-               if (GottenToken.Type != Token.Id)
-                  Log.Fail(Expected(Token.Id.Name, GottenToken));
+               if (GottenToken.Type != TokenType.Id)
+                  Log.Fail(Expected(TokenType.Id.Name, GottenToken));
                var leftId = GottenToken.Value;
                string rightId = null;
                if (allowNotEqual || !not)
                {
                   GetToken();
-                  if (GottenToken.Type != Token.Equal)
+                  if (GottenToken.Type != TokenType.Equal)
                      UngetToken();
                   else
                   {
                      GetToken();
-                     if (GottenToken.Type != Token.Id)
+                     if (GottenToken.Type != TokenType.Id)
                      {
-                        Log.Fail(Expected(Token.Id.Name, GottenToken));
+                        Log.Fail(Expected(TokenType.Id.Name, GottenToken));
                      }
                      rightId = GottenToken.Value;
                   }
                }
                result.Add(new Expression(not, leftId, rightId));
                GetToken();
-            } while (GottenToken.Type == Token.Comma);
+            } while (GottenToken.Type == TokenType.Comma);
             UngetToken();
             return result;
          }
@@ -279,9 +279,9 @@ namespace Gamebook
             Code falseCode = null;
 
             GetToken();
-            if (GottenToken.Type == Token.Else)
+            if (GottenToken.Type == TokenType.Else)
                falseCode = GetSequence();
-            else if (GottenToken.Type == Token.Or)
+            else if (GottenToken.Type == TokenType.Or)
                falseCode = GetIf();
             else
                // Must be 'end'. Let caller handle it.

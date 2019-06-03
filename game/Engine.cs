@@ -4,8 +4,7 @@ using System.Linq;
 
 namespace Gamebook
 {
-   // Partial: there's also the LoadSource function in its own file.
-   public static partial class Engine
+   public static class Engine
    {
       public static bool DebugMode = false;
 
@@ -192,6 +191,33 @@ namespace Gamebook
          return "";
       }
 
+      private static string NormalizeText(
+         string text)
+      {
+         // Remove sequences of more than one space within text, plus remove all leading and trailing spaces. This ensures that strings with no information are zero-length.
+         string fixedText = "";
+         // true: skip leading spaces too.
+         bool hadSpace = true;
+         foreach (char letter in text)
+         {
+            if (letter == ' ' || letter == '\t' || letter == '\n')
+            {
+               if (!hadSpace)
+               {
+                  hadSpace = true;
+                  fixedText += ' ';
+               }
+            }
+            else
+            {
+               hadSpace = false;
+               fixedText += letter;
+            }
+         }
+         // Get rid of trailing spaces too.
+         return fixedText.Trim();
+      }
+
       private static string EvaluateText(
          Code value)
       {
@@ -215,7 +241,7 @@ namespace Gamebook
             return true;
          });
          // Always returns an empty string if there is no useful text.
-         return Transform.NormalizeText(accumulator);
+         return NormalizeText(accumulator);
       }
 
       private static void EvaluateSettings(
@@ -250,6 +276,18 @@ namespace Gamebook
          outTrace = trace;
       }
 
+      private static string JoinTexts(
+         string left,
+         string right)
+      {
+         // When you concatenate normalized texts, always put a space between them, unless the left one ends in a plus sign, ex. "hello" joined with "there" => "hello there", but "hello+" joined with "there" => "hellothere".  Useful for things like 'He said "+' joined with "'I am a fish."' => 'He said "I am a fish."'
+         if (left.Length == 0)
+            return right;
+         if (left[left.Length - 1] != '+')
+            return left + " " + right;
+         return left.Substring(0, left.Length - 1) + right;
+      }
+
       private static (string, List<string>) BuildRoundText(
          Round firstRound)
       {
@@ -272,7 +310,7 @@ namespace Gamebook
          {
             string trace;
             // First append this action box's own text and execute any settings.
-            accumulatedActionTexts = Transform.JoinTexts(accumulatedActionTexts, EvaluateText(round.ActionCode));
+            accumulatedActionTexts = JoinTexts(accumulatedActionTexts, EvaluateText(round.ActionCode));
             EvaluateSettings(round.ActionCode, out trace);
             accumulatedActionTexts += trace;
 
@@ -337,7 +375,7 @@ namespace Gamebook
          }
       }
 
-      public static (string, List<string>) BuildActionTextForReaction(
+      public static (string, List<string>) BuildRoundTextForReaction(
          string reactionText)
       {
          // The UI calls this to obtain a text representation of the next screen to appear.

@@ -10,6 +10,34 @@ namespace Gamebook
 {
    public partial class MainWindow : Window
    {
+      // ex. change "hello" to “hello”.
+      private string VerticalToMatchingQuotes(
+        string text)
+      {
+         var result = "";
+         var testText = " " + text;
+         for (int i = 1; i < testText.Length; ++i)
+         {
+            var letter = testText[i];
+            if (letter == '"')
+            {
+               if (testText[i - 1] == ' ')
+               {
+                  result += '“';
+               }
+               else
+               {
+                  result += '”';
+               }
+            }
+            else
+            {
+               result += letter;
+            }
+         }
+         return result;
+      }
+
       private void FinishTemporaryItems()
       {
          var hamburgerMenu = (ListBox)FindName("HamburgerMenu");
@@ -78,7 +106,7 @@ namespace Gamebook
 
          var inlines = new List<Inline>();
 
-         text = Transform.VerticalToMatchingQuotes(text);
+         text = VerticalToMatchingQuotes(text);
          // Em dashes
          text = text.Replace("--", "—");
          var accumulator = "";
@@ -179,7 +207,7 @@ namespace Gamebook
       {
          // It's simple. The engine builds a text version of the screen. Then this main window code converts that into WPF objects for display.
          var storyArea = (FlowDocumentScrollViewer)FindName("StoryArea");
-         var (actionText, reactionTexts) = Engine.BuildActionTextForReaction(selectedReactionText);
+         var (actionText, reactionTexts) = Engine.BuildRoundTextForReaction(selectedReactionText);
          var first = true;
          FlowDocument document = new FlowDocument();
          document.FontFamily = new FontFamily("Segoe UI");
