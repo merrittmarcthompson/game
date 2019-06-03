@@ -15,7 +15,7 @@
         <ListBox x:Name="HamburgerMenu" HorizontalAlignment="Left" Height="66" Margin="130,436,0,0" VerticalAlignment="Top" Width="156" SelectionChanged="HamburgerMenu_SelectionChanged">
             <ListBoxItem x:Name="CharacterInfoItem" Selected="CharacterInfoItemSelected">Set character information</ListBoxItem>
             <ListBoxItem x:Name="DebugModeItem" Selected="DebugModeItemSelected">Turn on debug mode</ListBoxItem>
-            <ListBoxItem x:Name="UndoItem" Selected="UndoItemSelected">Undo last selection</ListBoxItem>
+            <ListBoxItem x:Name="UndoItem" Selected="UndoItemSelected">Go back</ListBoxItem>
         </ListBox>
         <Border x:Name="CharacterInfoBox" BorderBrush="DarkGray" Background="White" BorderThickness="1" Margin="31,348,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Height="83" Width="229">
             <Grid HorizontalAlignment="Left" Height="105" VerticalAlignment="Top" Width="222">

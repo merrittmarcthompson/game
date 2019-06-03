@@ -54,6 +54,9 @@ namespace Gamebook
 
    public class Round
    {
+      // Each Round represents a round of play. It has two parts:
+      // a. The text that describes the opposing turn (the "action"), ex. "@Black Bart said, "I'm gonna burn this town to the ground!"
+      // b. The list of texts that describes the options for your turn, ex. "Try to reason with him.", "Shoot him.", etc.
       public Code ActionCode { get; private set; }
    
       private List<Arrow> Arrows = new List<Arrow>();

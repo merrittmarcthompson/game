@@ -546,6 +546,7 @@ namespace Gamebook
       //    tvOn
       //    not tvOn
       //    tvOn=mr_rogers
+      //    not tvOn=mr_rogers
       public string LeftId { get; private set; }
       public string RightId { get; private set; }
       public bool Not { get; private set; }
