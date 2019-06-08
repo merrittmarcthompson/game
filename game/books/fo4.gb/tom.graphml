@@ -59,10 +59,10 @@
     <node id="n4">
       <data key="d6">
         <y:GenericNode configuration="com.yworks.flowchart.process">
-          <y:Geometry height="40.58203125" width="224.6533203125" x="963.9804827008929" y="111.28320312500006"/>
+          <y:Geometry height="40.58203125" width="224.6533203125001" x="963.9804827008929" y="111.28320312500006"/>
           <y:Fill color="#FFFFFF" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
-          <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="40.58203125" horizontalTextPosition="center" iconTextGap="4" modelName="internal" modelPosition="c" textColor="#000000" verticalTextPosition="bottom" visible="true" width="224.6533203125" x="0.0" xml:space="preserve" y="0.0">@"Hey, honey," Tom said.
+          <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="40.58203125" horizontalTextPosition="center" iconTextGap="4" modelName="internal" modelPosition="c" textColor="#000000" verticalTextPosition="bottom" visible="true" width="224.6533203125001" x="0.0" xml:space="preserve" y="0.0">@"Hey, honey," Tom said.
 So what are you going to do today?"</y:NodeLabel>
         </y:GenericNode>
       </data>
@@ -101,11 +101,10 @@ So what are you going to do today?"</y:NodeLabel>
     <node id="n8">
       <data key="d6">
         <y:GenericNode configuration="com.yworks.flowchart.process">
-          <y:Geometry height="40.58203125" width="280.29052734375" x="825.5267601376488" y="627.2363281250003"/>
+          <y:Geometry height="30.0" width="280.29052734375" x="825.5267601376488" y="627.2363281250003"/>
           <y:Fill color="#FFFFFF" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
-          <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="40.58203125" horizontalTextPosition="center" iconTextGap="4" modelName="internal" modelPosition="c" textColor="#000000" verticalTextPosition="bottom" visible="true" width="280.29052734375" x="0.0" xml:space="preserve" y="0.0">@"Well, there's penty of unpacking left to do."
-@[Jane] went back to the living room.</y:NodeLabel>
+          <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="30.0" horizontalTextPosition="center" iconTextGap="4" modelName="internal" modelPosition="c" textColor="#000000" verticalTextPosition="bottom" visible="true" width="280.29052734375" x="0.0" xml:space="preserve" y="0.0">@"Well, there's penty of unpacking left to do."</y:NodeLabel>
         </y:GenericNode>
       </data>
     </node>
@@ -132,10 +131,10 @@ So what are you going to do today?"</y:NodeLabel>
     <node id="n11">
       <data key="d6">
         <y:GenericNode configuration="com.yworks.flowchart.process">
-          <y:Geometry height="75.1640625" width="300.51416015625" x="869.8865707155257" y="222.5664062500001"/>
+          <y:Geometry height="75.1640625" width="300.5141601562501" x="869.8865707155257" y="222.5664062500001"/>
           <y:Fill color="#FFFFFF" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
-          <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="75.1640625" horizontalTextPosition="center" iconTextGap="4" modelName="internal" modelPosition="c" textColor="#000000" verticalTextPosition="bottom" visible="true" width="300.51416015625" x="0.0" xml:space="preserve" y="0.0">"I wonder if any of the neighbors have been taken
+          <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="75.1640625" horizontalTextPosition="center" iconTextGap="4" modelName="internal" modelPosition="c" textColor="#000000" verticalTextPosition="bottom" visible="true" width="300.5141601562501" x="0.0" xml:space="preserve" y="0.0">"I wonder if any of the neighbors have been taken
 in by this Vault Tec Scam?" [Jane] said.
 @"Why don't you go out and see?"
 @"Yeah! Good idea."</y:NodeLabel>
@@ -165,20 +164,20 @@ in by this Vault Tec Scam?" [Jane] said.
     <node id="n14">
       <data key="d6">
         <y:GenericNode configuration="com.yworks.flowchart.process">
-          <y:Geometry height="30.0" width="14.0" x="1013.1436507936507" y="358.1328125000002"/>
+          <y:Geometry height="30.0" width="105.0" x="967.6436507936507" y="358.1328125000002"/>
           <y:Fill color="#FFFFFF" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
-          <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" hasText="false" height="30.0" horizontalTextPosition="center" iconTextGap="4" modelName="internal" modelPosition="c" textColor="#000000" verticalTextPosition="bottom" visible="true" width="14.0" x="0.0" y="0.0"/>
+          <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="30.0" horizontalTextPosition="center" iconTextGap="4" modelName="internal" modelPosition="c" textColor="#000000" verticalTextPosition="bottom" visible="true" width="105.0" x="0.0" xml:space="preserve" y="0.0">[set tom.goOut]</y:NodeLabel>
         </y:GenericNode>
       </data>
     </node>
     <node id="n15">
       <data key="d6">
         <y:GenericNode configuration="com.yworks.flowchart.process">
-          <y:Geometry height="30.0" width="14.0" x="674.7359126984127" y="716.5195312500003"/>
+          <y:Geometry height="30.0" width="105.0" x="629.2359126984127" y="716.5195312500003"/>
           <y:Fill color="#FFFFFF" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
-          <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" hasText="false" height="30.0" horizontalTextPosition="center" iconTextGap="4" modelName="internal" modelPosition="c" textColor="#000000" verticalTextPosition="bottom" visible="true" width="14.0" x="0.0" y="0.0"/>
+          <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="30.0" horizontalTextPosition="center" iconTextGap="4" modelName="internal" modelPosition="c" textColor="#000000" verticalTextPosition="bottom" visible="true" width="105.0" x="0.0" xml:space="preserve" y="0.0">[set tom.goOut]</y:NodeLabel>
         </y:GenericNode>
       </data>
     </node>
@@ -281,7 +280,7 @@ in by this Vault Tec Scam?" [Jane] said.
     <edge id="e7" source="n10" target="n8">
       <data key="d10">
         <y:PolyLineEdge>
-          <y:Path sx="3.5" sy="15.0" tx="0.0" ty="-20.291015625">
+          <y:Path sx="3.5" sy="15.0" tx="0.0" ty="-15.0">
             <y:Point x="827.2039682539682" y="578.0351562500003"/>
             <y:Point x="965.6720238095238" y="578.0351562500003"/>
           </y:Path>

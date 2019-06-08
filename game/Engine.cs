@@ -233,7 +233,7 @@ namespace Gamebook
                   accumulator += ValueString(substitutionCode.Id);
                   break;
                case IfCode ifCode:
-                  return EvaluateConditions(ifCode.Expressions, out var trace);
+                  return EvaluateConditions(ifCode.GetExpressions(), out var trace);
                case SpecialCode specialCode:
                   accumulator += GetSpecialText(specialCode.Id);
                   break;
@@ -276,20 +276,32 @@ namespace Gamebook
          outTrace = trace;
       }
 
-      private static string JoinTexts(
-         string left,
-         string right)
+      private static string FixPlus(
+         string text)
       {
-         // When you concatenate normalized texts, always put a space between them, unless the left one ends in a plus sign, ex. "hello" joined with "there" => "hello there", but "hello+" joined with "there" => "hellothere".  Useful for things like 'He said "+' joined with "'I am a fish."' => 'He said "I am a fish."'
-         if (left.Length == 0)
-            return right;
-         if (left[left.Length - 1] != '+')
-            return left + " " + right;
-         return left.Substring(0, left.Length - 1) + right;
+         // We always put in a space when we concatenate different text parts, but sometimes you don't want that, so you can put in a plus sign to stop that. Ex. "hello" joined with "there" => "hello there", but "hello+" joined with "there" => "hellothere".  Useful for things like 'He said "+' joined with "'I am a fish."' => 'He said "I am a fish."'
+         string fixedText = "";
+         bool addSpaces = true;
+         foreach (char letter in text)
+         {
+            if (letter == '+')
+               addSpaces = false;
+            else if (letter == ' ')
+            {
+               if (addSpaces)
+                  fixedText += ' ';
+            }
+            else
+            {
+               fixedText += letter;
+               addSpaces = true;
+            }
+         }
+         return fixedText;
       }
 
       private static (string, List<string>) BuildRoundText(
-         Round firstRound)
+            Round firstRound)
       {
          // Starting with the given round box, a) merge the texts of all rounds connected below it into one text, and b) collect all the reaction arrows.
          List<string> accumulatedReactionTexts = new List<string>();
@@ -303,21 +315,25 @@ namespace Gamebook
          // This recursive routine will accumulate all the action and reaction text values in the above variables.
          Accumulate(firstRound);
 
-         return (accumulatedActionTexts, accumulatedReactionTexts);
+         return (FixPlus(accumulatedActionTexts), accumulatedReactionTexts);
 
          void Accumulate(
             Round round)
          {
             string trace;
             // First append this action box's own text and execute any settings.
-            accumulatedActionTexts = JoinTexts(accumulatedActionTexts, EvaluateText(round.ActionCode));
+            if (accumulatedActionTexts.Length == 0)
+               accumulatedActionTexts = EvaluateText(round.ActionCode);
+            else
+               accumulatedActionTexts += " " + EvaluateText(round.ActionCode);
+
             EvaluateSettings(round.ActionCode, out trace);
             accumulatedActionTexts += trace;
 
             // Next examine all the arrows for the action.
             var arrowCount = 0;
             foreach (var arrow in round.GetArrows())
-            {
+            { 
                // If conditions in the arrow are false, then just ignore the arrow completely. This includes both reaction and merge arrows.
                bool succeeded = EvaluateCondition(arrow.Code, out trace);
                accumulatedActionTexts += trace;

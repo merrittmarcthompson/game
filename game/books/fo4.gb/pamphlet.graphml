@@ -17,18 +17,18 @@
     <node id="n0">
       <data key="d6">
         <y:GenericNode configuration="com.yworks.flowchart.process">
-          <y:Geometry height="299.947265625" width="957.06494140625" x="-30.32294689360117" y="0.0"/>
+          <y:Geometry height="299.947265625" width="966.00244140625" x="-34.79169689360117" y="0.0"/>
           <y:Fill color="#FFFFFF" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
-          <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="299.947265625" horizontalTextPosition="center" iconTextGap="4" modelName="internal" modelPosition="c" textColor="#000000" verticalTextPosition="bottom" visible="true" width="957.06494140625" x="0.0" xml:space="preserve" y="0.0">[scene pamphlet]
+          <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="299.947265625" horizontalTextPosition="center" iconTextGap="4" modelName="internal" modelPosition="c" textColor="#000000" verticalTextPosition="bottom" visible="true" width="966.00244140625" x="0.0" xml:space="preserve" y="0.0">[scene pamphlet]
 @THE VAULT OF THE FUTURE
-@&lt;A picture shows a smiling couple, waiting in line to enter a large, gear-shaped door in the side of a mountain, while mushroom clouds loom over the landscape.&gt;
+@&lt;A picture showed a smiling couple, waiting in line to enter a large, gear-shaped door in the side of a mountain, while mushroom clouds loom over the landscape.&gt;
 @EVACUATION INSTRUCTIONS
 @Your vault is located at 16 Copper Mountain Road, Concord, Massachusetts, 01742.
-@&lt;A map shows the subdivision.
-An X is penned where Jane's house is, on the south side of Persimmon Street.
-Evacuation arrows run down the streets, all ending at a cartoon rendering of the Copper Mountain bluffs.
-A curving road winds to the top, where there is a gear-shaped door symbol.&gt;
+@&lt;A map showed the subdivision.
+An X was penned where Jane's house was, on the south side of Persimmon Lane.
+Evacuation arrows ran down the streets, all ending at a cartoon rendering of the Copper Mountain bluffs.
+A curving road wound to the top, where there was a gear-shaped door symbol.&gt;
 @When the distinctive siren sounds, leave what you are doing immediately.
 @To minimize nuclear contamination inside, you will have ONE HALF HOUR to reach the vault door before it closes.
 @You may bring one (1) suitcase of personal belongings per family.

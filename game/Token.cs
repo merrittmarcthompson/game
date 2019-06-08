@@ -279,7 +279,7 @@ namespace Gamebook
 
                               if (!GetLetter())
                                  break;
-                           } while (Char.IsLetterOrDigit(gottenLetter) || gottenLetter == '_');
+                           } while (Char.IsLetterOrDigit(gottenLetter) || gottenLetter == '_' || gottenLetter == '.');
 
                            UngetLetter();
                            if (id == "if")

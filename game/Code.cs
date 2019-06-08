@@ -293,7 +293,11 @@ namespace Gamebook
 
    public class IfCode: Code
    {
-      public List<Expression> Expressions { get; private set; }
+      private List<Expression> Expressions;
+      public IEnumerable<Expression> GetExpressions()
+      {
+         return Expressions;
+      }
       public Code TrueCode { get; private set; }
       public Code FalseCode { get; private set; }
 

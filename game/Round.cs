@@ -87,6 +87,9 @@ namespace Gamebook
          // Create a temporary list of merges that need to be linked to actions by scene ID.
          var mergeFixups = new List<MergeArrow>();
 
+         var settingsReportWriter = new StreamWriter("settings.csv", false);
+         settingsReportWriter.WriteLine("SETTING,OPERATION,VALUE,FILE");
+
          foreach (var sourcePath in sourcePaths)
          {
             var sourceName = Path.GetFileName(sourcePath);
@@ -101,17 +104,20 @@ namespace Gamebook
             {
                Round round = new Round();
                round.ActionCode = Code.Compile(label);
+               EvaluateSettingsReport(round.ActionCode, sourceName, settingsReportWriter);
                roundsByNodeId.Add(nodeId, round);
 
                // Check if there's a [scene ID] declaration.
                var declaredSceneId = EvaluateScene(round.ActionCode);
                if (declaredSceneId != null)
                {
+                  if (roundsBySceneId.ContainsKey(declaredSceneId))
+                     Log.Fail(String.Format($"Scene '{declaredSceneId}' declared twice"));
                   roundsBySceneId.Add(declaredSceneId, round);
                   if (declaredSceneId == "start")
                   {
                      if (startRound != null)
-                        Log.Fail("More than one start scene.");
+                        Log.Fail("More than one start scene");
                      startRound = round;
                   }
                }
@@ -125,6 +131,7 @@ namespace Gamebook
                   Log.Fail($"Internal error: no node declaration for referenced target node '{targetNodeId}'");
 
                Code code = Code.Compile(label);
+               EvaluateSettingsReport(code, sourceName, settingsReportWriter);
                var (isMerge, referencedSceneId) = EvaluateMerge(code);
                Arrow arrow;
                if (isMerge)
@@ -153,6 +160,8 @@ namespace Gamebook
                Log.Fail($"No scene declaration for referenced scene ID '{mergeArrow.DebugSceneId}'");
             mergeArrow.TargetSceneRound = targetSceneRound;
          }
+
+         settingsReportWriter.Close();
 
          Log.SetSourceName(null);
 
@@ -197,6 +206,51 @@ namespace Gamebook
                return false;
             });
             return (isMerge, referencedSceneId);
+         }
+
+         void EvaluateSettingsReport(
+            Code topCode,
+            string sourceName,
+            StreamWriter writer)
+         {
+            var sourceNameWithoutExtension = Path.GetFileNameWithoutExtension(sourceName);
+            topCode.Traverse((code) =>
+            {
+               switch (code)
+               {
+                  case SetCode setCode:
+                     Write("set", setCode.GetExpressions());
+                     return true;
+                  case WhenCode whenCode:
+                     Write("when", whenCode.GetExpressions());
+                     return true;
+                  case IfCode ifCode:
+                     Write("if", ifCode.GetExpressions());
+                     return true;
+               }
+               return false;
+            });
+
+            void Write(
+               string operation,
+               IEnumerable<Expression> expressions)
+            {
+               foreach (var expression in expressions)
+               {
+                  var line = "";
+                  line += expression.LeftId;
+                  line += ",";
+                  line += operation;
+                  if (expression.Not)
+                     line += " not";
+                  line += ",";
+                  if (expression.RightId != null)
+                     line += expression.RightId;
+                  line += ",";
+                  line += sourceNameWithoutExtension;
+                  writer.WriteLine(line);
+               }
+            }
          }
       }
    }
