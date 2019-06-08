@@ -145,6 +145,20 @@ namespace Gamebook
                inlines.Add(new Italic(run));
                accumulator = "";
             }
+            else if (text[i] == '`')
+            {
+               if (accumulator.Length > 0)
+               {
+                  inlines.Add(new Run(accumulator));
+                  accumulator = "";
+               }
+               for (++i; i < text.Length && text[i] != '`'; ++i)
+                  accumulator += text[i];
+               var run = new Run(accumulator);
+               run.Foreground = new SolidColorBrush(Color.FromRgb(0x00, 0xb0, 0x00));
+               inlines.Add(run);
+               accumulator = "";
+            }
             else
                accumulator += text[i];
          }
@@ -179,24 +193,11 @@ namespace Gamebook
         string paragraphText)
       {
          var paragraph = new Paragraph();
-         var start = 0;
-         var isDebug = false;
-         if (paragraphText.Length > 0)
-         {
-            if (paragraphText[0] == '`')
-            {
-               // Debug logging
-               start = 1;
-               isDebug = true;
-            }
-         }
 
-         foreach (var inline in BuildInlines(paragraphText.Substring(start)))
+         foreach (var inline in BuildInlines(paragraphText))
             paragraph.Inlines.Add(inline);
 
          paragraph.Margin = new Thickness(0, 0, 0, 6);
-         if (isDebug)
-            paragraph.Foreground = new SolidColorBrush(Color.FromRgb(0x00, 0xb0, 0x00));
          paragraph.LineHeight = 18;
 
          return paragraph;

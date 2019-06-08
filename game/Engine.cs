@@ -85,7 +85,7 @@ namespace Gamebook
             if (found == expression.Not)
             {
                if (DebugMode)
-                  outTrace += "@`" + (expression.Not ? "not " : "") + expression.LeftId + "(" + traceLeftValue + ")? <fail>";
+                  outTrace += "@`" + (expression.Not ? "not " : "") + expression.LeftId + "(" + traceLeftValue + ")? <fail>`";
                return false;
             }
             string traceEqualRight = "";
@@ -95,12 +95,12 @@ namespace Gamebook
                if (leftValue == expression.RightId == expression.Not)
                {
                   if (DebugMode)
-                     outTrace += "@`" + (expression.Not ? "not " : "") + expression.LeftId + "(" + traceLeftValue + ")" + traceEqualRight + "? <fail>";
+                     outTrace += "@`" + (expression.Not ? "not " : "") + expression.LeftId + "(" + traceLeftValue + ")" + traceEqualRight + "? <fail>`";
                   return false;
                }
             }
             if (DebugMode)
-               outTrace += "@`" + (expression.Not ? "not " : "") + expression.LeftId + "(" + traceLeftValue + ")" + traceEqualRight + "?";
+               outTrace += "@`" + (expression.Not ? "not " : "") + expression.LeftId + "(" + traceLeftValue + ")" + traceEqualRight + "?`";
          }
          return true;
       }
@@ -262,13 +262,13 @@ namespace Gamebook
                         // If it is [set tall], the right ID will be null.
                         Current.Settings[expression.LeftId] = expression.RightId;
                      if (DebugMode)
-                        trace += "@`set " + (expression.Not ? "not " : "") + expression.LeftId + (expression.RightId != null ? "=" + expression.RightId : "");
+                        trace += "@`set " + (expression.Not ? "not " : "") + expression.LeftId + (expression.RightId != null ? "=" + expression.RightId : "") + "`";
                   }
                   break;
                case TextCode textCode:
                   Current.Settings[textCode.Id] = textCode.Text;
                   if (DebugMode)
-                     trace += "@`text " + textCode.Id + "=" + textCode.Text;
+                     trace += "@`text " + textCode.Id + "=" + textCode.Text + "`";
                   break;
             }
             return true;
@@ -348,7 +348,7 @@ namespace Gamebook
                      accumulatedActionTexts += trace;
 
                      if (DebugMode)
-                        accumulatedActionTexts += "@`merge" + (mergeArrow.DebugSceneId != null ? " " + mergeArrow.DebugSceneId : "");
+                        accumulatedActionTexts += "@`merge" + (mergeArrow.DebugSceneId != null ? " " + mergeArrow.DebugSceneId : "") + "`";
 
                      // There are two kinds of merge arrows.
                      Round targetAction;
