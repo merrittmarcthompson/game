@@ -8,7 +8,7 @@ using System.Windows.Controls.Primitives;
 
 namespace Gamebook
 {
-   public partial class MainWindow : Window
+   public partial class MainWindow: Window
    {
       // ex. change "hello" to “hello”.
       private string VerticalToMatchingQuotes(
@@ -66,7 +66,7 @@ namespace Gamebook
       {
          Engine.DebugMode = !Engine.DebugMode;
          var debugModeItem = (ListBoxItem)FindName("DebugModeItem");
-         debugModeItem.Content = Engine.DebugMode? "Turn off debug mode": "Turn on debug mode";
+         debugModeItem.Content = Engine.DebugMode ? "Turn off debug mode" : "Turn on debug mode";
          SetupScreen(null);
       }
 
@@ -92,7 +92,7 @@ namespace Gamebook
       private void HyperlinkClicked(object sender, RoutedEventArgs e)
       {
          var hyperlink = (Hyperlink)sender;
-         var link = hyperlink.Inlines.FirstInline.ContentStart.GetTextInRun(LogicalDirection.Forward);
+         var link = hyperlink.CommandParameter as string;
          FinishTemporaryItems();
          SetupScreen(link);
       }
@@ -101,86 +101,89 @@ namespace Gamebook
          string text)
       {
          // We need to add inlines to both Paragraphs and TextBoxes. They have Inlines properties, but you can't pass properties to functions as ref parameters, so we make a list of inlines and add them outside this function.
-
-         // TO DO: there's no way to put italic in a hyperlink or vice versa.
-
-         var inlines = new List<Inline>();
-
          text = VerticalToMatchingQuotes(text);
          // Em dashes
          text = text.Replace("--", "—");
-         var accumulator = "";
-         for (var i = 0; i < text.Length; ++i)
-         {
-            // Hyperlink
-            if (text[i] == '{')
-            {
-               if (accumulator.Length > 0)
-               {
-                  inlines.Add(new Run(accumulator));
-                  accumulator = "";
-               }
-               for (++i; i < text.Length && text[i] != '}'; ++i)
-                  accumulator += text[i];
-               var run = new Run(accumulator);
-               var hyperlink = new Hyperlink(run);
-               hyperlink.TextDecorations = null;
-               hyperlink.Foreground = new SolidColorBrush(Color.FromRgb(0xc0, 0x00, 0x00));
-               hyperlink.Click += new RoutedEventHandler(HyperlinkClicked);
-               hyperlink.Cursor = Cursors.Hand;
-               inlines.Add(hyperlink);
-               accumulator = "";
-            }
-            // Italic
-            else if (text[i] == '<')
-            {
-               if (accumulator.Length > 0)
-               {
-                  inlines.Add(new Run(accumulator));
-                  accumulator = "";
-               }
-               for (++i; i < text.Length && text[i] != '>'; ++i)
-                  accumulator += text[i];
-               var run = new Run(accumulator);
-               inlines.Add(new Italic(run));
-               accumulator = "";
-            }
-            else if (text[i] == '`')
-            {
-               if (accumulator.Length > 0)
-               {
-                  inlines.Add(new Run(accumulator));
-                  accumulator = "";
-               }
-               for (++i; i < text.Length && text[i] != '`'; ++i)
-                  accumulator += text[i];
-               var run = new Run(accumulator);
-               run.Foreground = new SolidColorBrush(Color.FromRgb(0x00, 0xb0, 0x00));
-               inlines.Add(run);
-               accumulator = "";
-            }
-            else
-               accumulator += text[i];
-         }
-         if (accumulator.Length > 0)
-            inlines.Add(new Run(accumulator));
+         // Add a termination marker on the end.
+         text += '\0';
+         int index = 0;
+         // Search for the marker we stuck on the end.
+         return BuildInlinesTo('\0');
 
-         return inlines;
+         List<Inline> BuildInlinesTo(
+            char terminator)
+         {
+            var inlines = new List<Inline>();
+            var accumulator = "";
+            while (true)
+            {
+               switch (text[index++])
+               {
+                  case '{':
+                     AddAccumulation(inlines, ref accumulator);
+                     var hyperlink = new Hyperlink();
+                     // No underline.
+                     hyperlink.TextDecorations = null;
+                     hyperlink.Foreground = new SolidColorBrush(Color.FromRgb(0xc0, 0x00, 0x00));
+                     hyperlink.Click += new RoutedEventHandler(HyperlinkClicked);
+                     hyperlink.Cursor = Cursors.Hand;
+                     var position = text.IndexOfAny(new char[] { '}', '\0' }, index);
+                     hyperlink.CommandParameter = text.Substring(index, position - index);
+                     hyperlink.Inlines.AddRange(BuildInlinesTo('}'));
+                     inlines.Add(hyperlink);
+                     break;
+                  case '<':
+                     AddAccumulation(inlines, ref accumulator);
+                     var italic = new Italic();
+                     italic.Inlines.AddRange(BuildInlinesTo('>'));
+                     inlines.Add(italic);
+                     break;
+                  case '`':
+                     // Added debug stuff.
+                     AddAccumulation(inlines, ref accumulator);
+                     var span = new Span();
+                     span.Foreground = new SolidColorBrush(Color.FromRgb(0x00, 0xb0, 0x00));
+                     span.Inlines.AddRange(BuildInlinesTo('~'));
+                     inlines.Add(span);
+                     break;
+                  case '\0':
+                     // Could be that the terminator we're looking for is missing, so keep an eye out for the final terminator (which is always there) and stop on that always. Don't increment the index past this. It must stop all missing terminator searches.
+                     --index;
+                     return AddAccumulation(inlines, ref accumulator);
+                  case var letter:
+                     if (letter == terminator)
+                        return AddAccumulation(inlines, ref accumulator);
+                     accumulator += letter;
+                     break;
+               }
+            }
+         }
+
+         List<Inline> AddAccumulation(
+            List<Inline> inlines,
+            ref string accumulator)
+         {
+            if (accumulator.Length > 0)
+            {
+               inlines.Add(new Run(accumulator));
+               accumulator = "";
+            }
+            return inlines;
+         }
       }
 
       private Paragraph BuildBullet(
          string paragraphText)
       {
          var textBlock = new TextBlock();
-         foreach (var inline in BuildInlines(paragraphText))
-            textBlock.Inlines.Add(inline);
+         textBlock.Inlines.AddRange(BuildInlines(paragraphText));
          textBlock.TextWrapping = TextWrapping.Wrap;
          textBlock.Margin = new Thickness(8, 0, 0, 0);
 
          var bulletDecorator = new BulletDecorator();
          bulletDecorator.Bullet = new TextBlock(new Run("○"));
          bulletDecorator.Child = textBlock;
-         
+
          var paragraph = new Paragraph();
          paragraph.Inlines.Add(bulletDecorator);
          paragraph.Margin = new Thickness(0, 0, 0, 6);
@@ -194,8 +197,7 @@ namespace Gamebook
       {
          var paragraph = new Paragraph();
 
-         foreach (var inline in BuildInlines(paragraphText))
-            paragraph.Inlines.Add(inline);
+         paragraph.Inlines.AddRange(BuildInlines(paragraphText));
 
          paragraph.Margin = new Thickness(0, 0, 0, 6);
          paragraph.LineHeight = 18;
