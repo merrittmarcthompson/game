@@ -17,14 +17,14 @@
     <node id="n0">
       <data key="d6">
         <y:GenericNode configuration="com.yworks.flowchart.process">
-          <y:Geometry height="299.947265625" width="966.00244140625" x="-34.79169689360117" y="0.0"/>
+          <y:Geometry height="299.947265625" width="980.4560546875" x="-42.01850353422617" y="0.0"/>
           <y:Fill color="#FFFFFF" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
-          <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="299.947265625" horizontalTextPosition="center" iconTextGap="4" modelName="internal" modelPosition="c" textColor="#000000" verticalTextPosition="bottom" visible="true" width="966.00244140625" x="0.0" xml:space="preserve" y="0.0">[scene pamphlet]
+          <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="299.947265625" horizontalTextPosition="center" iconTextGap="4" modelName="internal" modelPosition="c" textColor="#000000" verticalTextPosition="bottom" visible="true" width="980.4560546875" x="0.0" xml:space="preserve" y="0.0">[scene pamphlet]
 @THE VAULT OF THE FUTURE
-@&lt;A picture showed a smiling couple, waiting in line to enter a large, gear-shaped door in the side of a mountain, while mushroom clouds loom over the landscape.&gt;
+@&lt;A picture showed a smiling couple, waiting in line to enter a large, gear-shaped door in the side of a mountain, while mushroom clouds loomed over the landscape.&gt;
 @EVACUATION INSTRUCTIONS
-@Your vault is located at 16 Copper Mountain Road, Concord, Massachusetts, 01742.
+@Your vault is located at 3 Copper Mountain Road, Concord, Massachusetts, 01742.
 @&lt;A map showed the subdivision.
 An X was penned where Jane's house was, on the south side of Persimmon Lane.
 Evacuation arrows ran down the streets, all ending at a cartoon rendering of the Copper Mountain bluffs.

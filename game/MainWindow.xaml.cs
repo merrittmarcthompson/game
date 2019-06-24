@@ -5,11 +5,17 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Collections.Generic;
 using System.Windows.Controls.Primitives;
+using Newtonsoft.Json;
+using System.IO;
+using Newtonsoft.Json.Serialization;
+using System;
 
 namespace Gamebook
 {
    public partial class MainWindow: Window
    {
+      private Game Game;
+
       // ex. change "hello" to “hello”.
       private string VerticalToMatchingQuotes(
         string text)
@@ -45,9 +51,9 @@ namespace Gamebook
          var characterInfoBox = (Border)FindName("CharacterInfoBox");
          characterInfoBox.Visibility = Visibility.Hidden;
          var firstNameBox = (TextBox)FindName("FirstNameBox");
-         Engine.Set("jane", firstNameBox.Text);
+         Game.Set("jane", firstNameBox.Text);
          var lastNameBox = (TextBox)FindName("LastNameBox");
-         Engine.Set("smith", lastNameBox.Text);
+         Game.Set("smith", lastNameBox.Text);
          SetupScreen(null);
       }
 
@@ -58,15 +64,15 @@ namespace Gamebook
 
       private void UndoItemSelected(object sender, RoutedEventArgs e)
       {
-         Engine.Undo();
+         Game.Undo();
          SetupScreen(null);
       }
 
       private void DebugModeItemSelected(object sender, RoutedEventArgs e)
       {
-         Engine.DebugMode = !Engine.DebugMode;
+         Game.DebugMode = !Game.DebugMode;
          var debugModeItem = (ListBoxItem)FindName("DebugModeItem");
-         debugModeItem.Content = Engine.DebugMode ? "Turn off debug mode" : "Turn on debug mode";
+         debugModeItem.Content = Game.DebugMode ? "Turn off debug mode" : "Turn on debug mode";
          SetupScreen(null);
       }
 
@@ -74,6 +80,14 @@ namespace Gamebook
       {
          var characterInfoBox = (Border)FindName("CharacterInfoBox");
          characterInfoBox.Visibility = Visibility.Visible;
+      }
+
+      private void SaveItemSelected(object sender, RoutedEventArgs e)
+      {
+         string json = JsonConvert.SerializeObject(Game, Formatting.Indented);
+         var writer = new StreamWriter("save.json", false);
+         writer.WriteLine(json);
+         writer.Close();
       }
 
       void HamburgerClicked(object sender, RoutedEventArgs e)
@@ -210,7 +224,7 @@ namespace Gamebook
       {
          // It's simple. The engine builds a text version of the screen. Then this main window code converts that into WPF objects for display.
          var storyArea = (FlowDocumentScrollViewer)FindName("StoryArea");
-         var (actionText, reactionTexts) = Engine.BuildRoundTextForReaction(selectedReactionText);
+         var (actionText, reactionTexts) = Game.BuildRoundTextForReaction(selectedReactionText);
          var first = true;
          FlowDocument document = new FlowDocument();
          document.FontFamily = new FontFamily("Segoe UI");
@@ -230,7 +244,7 @@ namespace Gamebook
          }
          storyArea.Document = document;
          var undoItem = (ListBoxItem)FindName("UndoItem");
-         undoItem.IsEnabled = Engine.canUndo();
+         undoItem.IsEnabled = Game.CanUndo();
          var characterInfoBox = (Border)FindName("CharacterInfoBox");
          characterInfoBox.Visibility = Visibility.Hidden;
       }
@@ -242,14 +256,25 @@ namespace Gamebook
          Log.Open("gamebook.log");
          Log.Add("Started");
          InitializeComponent();
-         Engine.Start();
+
+         // Get the source directory.
+         var arguments = Environment.GetCommandLineArgs();
+         if (arguments.Length < 2)
+            Log.Fail("usage: gamebook.exe source-directory");
+
+         // If there's a save game, deserialize it. Otherwise make a fresh game.
+         if (File.Exists("save.json"))
+            Game = JsonConvert.DeserializeObject<Game>(File.ReadAllText("save.json"), Round.LoadConverter(arguments[1]));
+         else
+            Game = new Game(Round.LoadFirst(arguments[1]));
+
          SetupScreen(null);
          var hamburgerMenu = (ListBox)FindName("HamburgerMenu");
          hamburgerMenu.Visibility = Visibility.Hidden;
          var firstNameBox = (TextBox)FindName("FirstNameBox");
-         firstNameBox.Text = Engine.Get("jane");
+         firstNameBox.Text = Game.Get("jane");
          var lastNameBox = (TextBox)FindName("LastNameBox");
-         lastNameBox.Text = Engine.Get("smith");
+         lastNameBox.Text = Game.Get("smith");
          //}
          //catch (Exception e)
          //{

@@ -1,25 +1,21 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Gamebook
 {
-   public static class Engine
+   // To save the game, we just serialize this whole class.
+   [JsonObject(MemberSerialization.OptOut)]
+   public class Game
    {
-      public static bool DebugMode = false;
-
       // State represents the state of the game. It implements undoing game choices and going back to previous game states.
       private class State
       {
          // The settings contain the state of the game: where you are, what people think of you, etc.
          public Dictionary<string, object> Settings = new Dictionary<string, object>();
-
-         // This is the one action within a story tree that we are on right now. If it is null, we aren't in a story tree. In that case, we show a list of all the starting actions that are appropriate for the current situation.
+         // This is the one action within a story tree that we are on right now.
          public Round Round = null;
-
-         // The same story tree can apply to different characters, locations, objects, etc. As we go through a story tree, we collect what the current values of those are.
-         public Dictionary<string, Round> ReactionTargetRounds = new Dictionary<string, Round>();
-
          // Stack of return merge locations for referential merges.
          public Stack<Round> NextTargetRoundOnReturn = new Stack<Round>();
 
@@ -29,28 +25,47 @@ namespace Gamebook
          {
             Settings = new Dictionary<string, object>(other.Settings);
             Round = other.Round;
-            ReactionTargetRounds = new Dictionary<string, Round>(other.ReactionTargetRounds);
             NextTargetRoundOnReturn = new Stack<Round>(other.NextTargetRoundOnReturn);
          }
       }
 
-      private static Stack<State> UndoStack = new Stack<State>();
+      // VARIABLES
 
-      private static State Current = new State();
+      // Add annotations about how merges were done, etc.
+      public bool DebugMode = false;
 
-      public static void Undo()
+      // This relates the user choice of reactions to the next rounds that are associated with them. It gets regenerated on every screen build, so it doesn't need to be part of the state.
+      private Dictionary<string, Round> ReactionTargetRounds = new Dictionary<string, Round>();
+
+      // The current state of the game: what round we are on, what are the current settings, etc.
+      [JsonProperty] // Have to add this for private members.
+      private State Current = new State();
+
+      // Pop back to old states to implement undo.
+      [JsonProperty] // Have to add this for private members.
+      private Stack<State> UndoStack = new Stack<State>();
+
+      // FUNCTIONS
+
+      public Game(
+         Round first)
+      {
+         Current.Round = first;
+      }
+
+      public void Undo()
       {
          if (UndoStack.Count == 0)
             return;
          Current = UndoStack.Pop();
       }
 
-      public static bool canUndo()
+      public bool CanUndo()
       {
          return UndoStack.Count != 0;
       }
 
-      private static string ValueString(
+      private string ValueString(
          object value)
       {
          if (value == null)
@@ -60,7 +75,7 @@ namespace Gamebook
          return EvaluateText(value as SequenceCode);
       }
 
-      private static bool EvaluateConditions(
+      private bool EvaluateConditions(
          IEnumerable<Expression> expressions,
          out string outTrace)
       {
@@ -85,7 +100,7 @@ namespace Gamebook
             if (found == expression.Not)
             {
                if (DebugMode)
-                  outTrace += "@`" + (expression.Not ? "not " : "") + expression.LeftId + "(" + traceLeftValue + ")? <fail>~";
+                  outTrace += "@`" + (expression.Not ? "not " : "") + expression.LeftId + "(" + traceLeftValue + ")? <false>~";
                return false;
             }
             string traceEqualRight = "";
@@ -95,17 +110,17 @@ namespace Gamebook
                if (leftValue == expression.RightId == expression.Not)
                {
                   if (DebugMode)
-                     outTrace += "@`" + (expression.Not ? "not " : "") + expression.LeftId + "(" + traceLeftValue + ")" + traceEqualRight + "? <fail>~";
+                     outTrace += "@`" + (expression.Not ? "not " : "") + expression.LeftId + "(" + traceLeftValue + ")" + traceEqualRight + "? <false>~";
                   return false;
                }
             }
             if (DebugMode)
-               outTrace += "@`" + (expression.Not ? "not " : "") + expression.LeftId + "(" + traceLeftValue + ")" + traceEqualRight + "?~";
+               outTrace += "@`" + (expression.Not ? "not " : "") + expression.LeftId + "(" + traceLeftValue + ")" + traceEqualRight + "? <true>~";
          }
          return true;
       }
 
-      private static bool EvaluateCondition(
+      private bool EvaluateCondition(
          Code topCode,
          out string outTrace)
       {
@@ -124,14 +139,14 @@ namespace Gamebook
          return allSucceeded;
       }
 
-      public static void Set(
+      public void Set(
          string id,
          string value)
       {
          Current.Settings[id] = value;
       }
 
-      public static string Get(
+      public string Get(
          string id)
       {
          if (Current.Settings.TryGetValue(id, out object value))
@@ -139,7 +154,7 @@ namespace Gamebook
          return "";
       }
 
-      private static string GetSpecialText(
+      private string GetSpecialText(
          string specialId)
       {
          if (specialId == "John" || specialId == "Jane")
@@ -166,9 +181,9 @@ namespace Gamebook
             else if (specialId == "Him" || specialId == "Her")
                return heroIsMale ? "Him" : "Her";
             else if (specialId == "his" || specialId == "hers")
-               return heroIsMale ? "his" : "her";
+               return heroIsMale ? "his" : "hers";
             else if (specialId == "His" || specialId == "Hers")
-               return heroIsMale ? "His" : "Her";
+               return heroIsMale ? "His" : "Hers";
             else if (specialId == "himself" || specialId == "herself")
                return heroIsMale ? "himself" : "herself";
             else if (specialId == "Himself" || specialId == "Herself")
@@ -191,7 +206,7 @@ namespace Gamebook
          return "";
       }
 
-      private static string NormalizeText(
+      private string NormalizeText(
          string text)
       {
          // Remove sequences of more than one space within text, plus remove all leading and trailing spaces. This ensures that strings with no information are zero-length.
@@ -218,7 +233,7 @@ namespace Gamebook
          return fixedText.Trim();
       }
 
-      private static string EvaluateText(
+      private string EvaluateText(
          Code value)
       {
          string accumulator = "";
@@ -244,7 +259,7 @@ namespace Gamebook
          return NormalizeText(accumulator);
       }
 
-      private static void EvaluateSettings(
+      private void EvaluateSettings(
          Code topCode,
          out string outTrace)
       {
@@ -276,7 +291,7 @@ namespace Gamebook
          outTrace = trace;
       }
 
-      private static string FixPlus(
+      private string FixPlus(
          string text)
       {
          // We always put in a space when we concatenate different text parts, but sometimes you don't want that, so you can put in a plus sign to stop that. Ex. "hello" joined with "there" => "hello there", but "hello+" joined with "there" => "hellothere".  Useful for things like 'He said "+' joined with "'I am a fish."' => 'He said "I am a fish."'
@@ -300,7 +315,7 @@ namespace Gamebook
          return fixedText;
       }
 
-      private static (string, List<string>) BuildRoundText(
+      private (string, List<string>) BuildRoundText(
             Round firstRound)
       {
          // Starting with the given round box, a) merge the texts of all rounds connected below it into one text, and b) collect all the reaction arrows.
@@ -310,7 +325,7 @@ namespace Gamebook
          var accumulatedActionTexts = "";
 
          // Build these too.
-         Current.ReactionTargetRounds = new Dictionary<string, Round>();
+         ReactionTargetRounds = new Dictionary<string, Round>();
 
          // This recursive routine will accumulate all the action and reaction text values in the above variables.
          Accumulate(firstRound);
@@ -378,7 +393,7 @@ namespace Gamebook
                      }
                      else
                         accumulatedReactionTexts.Add("{" + reactionText + "}");
-                     Current.ReactionTargetRounds[reactionText] = reactionArrow.TargetRound;
+                     ReactionTargetRounds[reactionText] = reactionArrow.TargetRound;
                      break;
                }
             }
@@ -391,7 +406,7 @@ namespace Gamebook
          }
       }
 
-      public static (string, List<string>) BuildRoundTextForReaction(
+      public (string, List<string>) BuildRoundTextForReaction(
          string reactionText)
       {
          // The UI calls this to obtain a text representation of the next screen to appear.
@@ -399,16 +414,11 @@ namespace Gamebook
          {
             // Move to new state. Otherwise, redisplay existing state.
             UndoStack.Push(new State(Current));
-            if (!Current.ReactionTargetRounds.TryGetValue(reactionText, out Current.Round))
+            if (!ReactionTargetRounds.TryGetValue(reactionText, out Current.Round))
                Log.Fail(String.Format("No arrow for reaction '{0}'", reactionText));
          }
          // Show the current action box and its reaction arrows.
          return BuildRoundText(Current.Round);
-      }
-
-      public static void Start()
-      {
-         Current.Round = Round.Load();
       }
    }
 }

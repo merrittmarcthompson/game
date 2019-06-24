@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -52,8 +54,39 @@ namespace Gamebook
       }
    }
 
+   [JsonObject(MemberSerialization.OptIn)]
    public class Round
    {
+      private class Converter: JsonConverter<Round>
+      {
+         Dictionary<string, Round> RoundsBySourceAndId;
+
+         public Converter(
+            Dictionary<string, Round> roundsBySourceAndId)
+         {
+            RoundsBySourceAndId = roundsBySourceAndId;
+         }
+
+         public override void WriteJson(JsonWriter writer, Round value, JsonSerializer serializer)
+         {
+            throw new NotImplementedException();
+         }
+
+         public override Round ReadJson(JsonReader reader, Type objectType, Round existingValue, bool hasExistingValue, JsonSerializer serializer)
+         {
+            var jsonObject = JObject.Load(reader);
+            var sourceName = (string)jsonObject["SourceName"];
+            var sourceId = (string)jsonObject["SourceId"];
+            return RoundsBySourceAndId[sourceName + ":" + sourceId];
+         }
+      }
+
+      // When we save the game state, we don't save the rounds, reactions, code, etc. That is already coming from the .graphml files. Instead, when there is a reference to a round, we just save the file name and internal ID of the round. We hook up to the actual rounds after deserialization based on the file and ID.
+      [JsonProperty]
+      private string SourceName;
+      [JsonProperty]
+      private string SourceId;
+
       // Each Round represents a round of play. It has two parts:
       // a. The text that describes the opposing turn (the "action"), ex. "@Black Bart said, "I'm gonna burn this town to the ground!"
       // b. The list of texts that describes the options for your turn, ex. "Try to reason with him.", "Shoot him.", etc.
@@ -68,24 +101,38 @@ namespace Gamebook
       // The only way to make a Round is through the Load function, which creates all of them.
       private Round() { }
 
-      public static Round Load()
+      public static JsonConverter LoadConverter(
+         string sourceDirectory)
       {
-         // Get the source directory.
-         var arguments = Environment.GetCommandLineArgs();
-         if (arguments.Length < 2)
-            Log.Fail("usage: gamebook.exe source-directory");
+         Load(sourceDirectory, out var first, out var roundsBySourceAndId);
+         return new Converter(roundsBySourceAndId);
+      }
 
+      public static Round LoadFirst(
+         string sourceDirectory)
+      {
+         Load(sourceDirectory, out var first, out var roundsBySourceAndId);
+         return first;
+      }
+
+      private static void Load(
+         string sourceDirectory,
+         out Round startRound,
+         out Dictionary<string, Round> roundsBySourceAndId)
+      {
          // Load all the graphml files in the source directory.
-         var sourcePaths = Directory.GetFiles(arguments[1], "*.graphml");
+         var sourcePaths = Directory.GetFiles(sourceDirectory, "*.graphml");
          if (sourcePaths.Length < 1)
-            Log.Fail(String.Format($"no .graphml files in directory {arguments[1]}"));
+            Log.Fail(String.Format($"no .graphml files in directory {sourceDirectory}"));
 
-         Round startRound = null;
+         startRound = null;
 
          // Create a temporary list of actions from the nodes in the graphml that have scene IDs, so we can link merges to them in this routine later.
          var roundsBySceneId = new Dictionary<string, Round>();
          // Create a temporary list of merges that need to be linked to actions by scene ID.
          var mergeFixups = new List<MergeArrow>();
+
+         roundsBySourceAndId = new Dictionary<string, Round>();
 
          var settingsReportWriter = new StreamWriter("settings.csv", false);
          settingsReportWriter.WriteLine("SETTING,OPERATION,VALUE,FILE");
@@ -103,6 +150,9 @@ namespace Gamebook
             foreach (var (nodeId, label) in graphml.Nodes())
             {
                Round round = new Round();
+               round.SourceName = sourceName;
+               round.SourceId = nodeId;
+               roundsBySourceAndId[sourceName + ":" + nodeId] = round;
                round.ActionCode = Code.Compile(label);
                EvaluateSettingsReport(round.ActionCode, sourceName, settingsReportWriter);
                roundsByNodeId.Add(nodeId, round);
@@ -168,7 +218,6 @@ namespace Gamebook
          if (startRound == null)
             Log.Fail("No start scene found.");
 
-         return startRound;
 
          // Some helper functions.
 

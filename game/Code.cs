@@ -145,9 +145,12 @@ namespace Gamebook
                   if (GottenToken.Type != TokenType.Id)
                      Log.Fail(Expected(TokenType.Id.Name, GottenToken));
                   string id = GottenToken.Value;
-                  SequenceCode text = GetSequence();
-                  if (text == null)
-                     return null;
+                  GetToken();
+                  string text = "";
+                  if (GottenToken.Type == TokenType.Characters)
+                     text = GottenToken.Value;
+                  else
+                     UngetToken();
                   GetToken();
                   if (GottenToken.Type != TokenType.End)
                      Log.Fail(Expected(TokenType.End.Name, GottenToken));
@@ -430,12 +433,12 @@ namespace Gamebook
    public class TextCode: Code
    {
       public string Id { get; private set; }
-      public SequenceCode Text { get; private set; }
+      public string Text { get; private set; }
 
       private TextCode() { }
       public TextCode(
          string id,
-         SequenceCode text)
+         string text)
       {
          Id = id;
          Text = text;

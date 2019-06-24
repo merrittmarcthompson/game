@@ -12,12 +12,13 @@
         <Button x:Name="HamburgerButton" HorizontalAlignment="Left" VerticalAlignment="Top" Width="26" Height="26" Margin="260,476,0,0" Click="HamburgerClicked" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
             <Image Source="images\hamburger-button.png"></Image>
         </Button>
-        <ListBox x:Name="HamburgerMenu" HorizontalAlignment="Left" Height="66" Margin="130,436,0,0" VerticalAlignment="Top" Width="156" SelectionChanged="HamburgerMenu_SelectionChanged">
+        <ListBox x:Name="HamburgerMenu" HorizontalAlignment="Left" Height="85" Margin="130,417,0,0" VerticalAlignment="Top" Width="156" SelectionChanged="HamburgerMenu_SelectionChanged">
+            <ListBoxItem x:Name="SaveItem" Selected="SaveItemSelected">Save game</ListBoxItem>
             <ListBoxItem x:Name="CharacterInfoItem" Selected="CharacterInfoItemSelected">Set character information</ListBoxItem>
             <ListBoxItem x:Name="DebugModeItem" Selected="DebugModeItemSelected">Turn on debug mode</ListBoxItem>
             <ListBoxItem x:Name="UndoItem" Selected="UndoItemSelected">Go back</ListBoxItem>
         </ListBox>
-        <Border x:Name="CharacterInfoBox" BorderBrush="DarkGray" Background="White" BorderThickness="1" Margin="31,348,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Height="83" Width="229">
+        <Border x:Name="CharacterInfoBox" BorderBrush="DarkGray" Background="White" BorderThickness="1" Margin="36,329,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Height="83" Width="229">
             <Grid HorizontalAlignment="Left" Height="105" VerticalAlignment="Top" Width="222">
                 <TextBox x:Name="FirstNameBox" HorizontalAlignment="Left" Height="22" Margin="105,15,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="102"/>
                 <TextBox x:Name="LastNameBox" HorizontalAlignment="Left" Height="22" Margin="105,43,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="102"/>
