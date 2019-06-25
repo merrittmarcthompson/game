@@ -264,7 +264,10 @@ namespace Gamebook
 
          // If there's a save game, deserialize it. Otherwise make a fresh game.
          if (File.Exists("save.json"))
+         {
             Game = JsonConvert.DeserializeObject<Game>(File.ReadAllText("save.json"), Round.LoadConverter(arguments[1]));
+            Game.FixAfterDeserialization();
+         }
          else
             Game = new Game(Round.LoadFirst(arguments[1]));
 

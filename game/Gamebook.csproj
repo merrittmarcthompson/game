@@ -115,12 +115,13 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <None Include="books\fo4.gb\bobby.graphml" />
-    <None Include="books\fo4.gb\butWhatAboutBobby.graphml" />
-    <None Include="books\fo4.gb\menuAfterVaultTecMan.graphml" />
+    <None Include="books\fo4.gb\neighbors.graphml" />
     <None Include="books\fo4.gb\pamphlet.graphml" />
-    <None Include="books\fo4.gb\soundsLikeAScam.graphml" />
     <None Include="books\fo4.gb\tom.graphml" />
     <None Include="books\fo4.gb\start.graphml" />
+    <None Include="books\fo4.gb\tom_butWhatAboutBobby.graphml" />
+    <None Include="books\fo4.gb\tom_soundsLikeAScam.graphml" />
+    <None Include="books\fo4.gb\vaultTecMan.graphml" />
     <None Include="books\unit-test.gb\test-scene1.graphml" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">

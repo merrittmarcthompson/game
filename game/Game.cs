@@ -53,6 +53,17 @@ namespace Gamebook
          Current.Round = first;
       }
 
+      public void FixAfterDeserialization()
+      {
+         // C# stacks incorrectly enumerate backwards, so when you serialize then deserialize them, they come back reversed! Therefore make a copy of the stack to fix it. Since stacks always enumerate backwards, the process of making the new copy will reverse it!
+         UndoStack = new Stack<State>(UndoStack);
+         Current.NextTargetRoundOnReturn = new Stack<Round>(Current.NextTargetRoundOnReturn);
+         foreach (var state in UndoStack)
+         {
+            state.NextTargetRoundOnReturn = new Stack<Round>(state.NextTargetRoundOnReturn);
+         }
+      }
+
       public void Undo()
       {
          if (UndoStack.Count == 0)
