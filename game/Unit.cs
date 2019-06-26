@@ -10,15 +10,15 @@ namespace Gamebook
 
    public class Arrow
    {
-      public Round TargetRound { get; protected set; }
+      public Unit TargetUnit { get; protected set; }
       public Code Code { get; protected set;  }
 
       protected Arrow() { }
       protected Arrow(
-         Round targetRound,
+         Unit targetUnit,
          Code code)
       {
-         TargetRound = targetRound;
+         TargetUnit = targetUnit;
          Code = code;
       }
    }
@@ -31,16 +31,16 @@ namespace Gamebook
       private MergeArrow() { }
       // This lets the Load function make arrows. 
       public MergeArrow(
-         Round targetRound,
+         Unit targetUnit,
          Code code,
          string debugSceneId,
-         string debugSourceName): base (targetRound, code)
+         string debugSourceName): base (targetUnit, code)
       {
          DebugSceneId = debugSceneId;
          DebugSourceName = debugSourceName;
       }
       // This lets the Load function add the target scene in a second pass after construction.
-      public Round TargetSceneRound { get; set; }
+      public Unit TargetSceneUnit { get; set; }
    }
 
    public class ReactionArrow: Arrow
@@ -48,47 +48,47 @@ namespace Gamebook
       private ReactionArrow() { }
       // This lets the Load function make arrows. 
       public ReactionArrow(
-         Round targetRound,
-         Code code): base (targetRound, code)
+         Unit targetUnit,
+         Code code): base (targetUnit, code)
       {
       }
    }
 
    [JsonObject(MemberSerialization.OptIn)]
-   public class Round
+   public class Unit
    {
-      private class Converter: JsonConverter<Round>
+      private class Converter: JsonConverter<Unit>
       {
-         Dictionary<string, Round> RoundsBySourceAndId;
+         Dictionary<string, Unit> UnitsBySourceAndId;
 
          public Converter(
-            Dictionary<string, Round> roundsBySourceAndId)
+            Dictionary<string, Unit> unitsBySourceAndId)
          {
-            RoundsBySourceAndId = roundsBySourceAndId;
+            UnitsBySourceAndId = unitsBySourceAndId;
          }
 
-         public override void WriteJson(JsonWriter writer, Round value, JsonSerializer serializer)
+         public override void WriteJson(JsonWriter writer, Unit value, JsonSerializer serializer)
          {
             throw new NotImplementedException();
          }
 
-         public override Round ReadJson(JsonReader reader, Type objectType, Round existingValue, bool hasExistingValue, JsonSerializer serializer)
+         public override Unit ReadJson(JsonReader reader, Type objectType, Unit existingValue, bool hasExistingValue, JsonSerializer serializer)
          {
             var jsonObject = JObject.Load(reader);
             var sourceName = (string)jsonObject["SourceName"];
             var sourceId = (string)jsonObject["SourceId"];
-            return RoundsBySourceAndId[sourceName + ":" + sourceId];
+            return UnitsBySourceAndId[sourceName + ":" + sourceId];
          }
       }
 
-      // When we save the game state, we don't save the rounds, reactions, code, etc. That is already coming from the .graphml files. Instead, when there is a reference to a round, we just save the file name and internal ID of the round. We hook up to the actual rounds after deserialization based on the file and ID.
+      // When we save the game state, we don't save the units, reactions, code, etc. That is already coming from the .graphml files. Instead, when there is a reference to a unit, we just save the file name and internal ID of the unit. We hook up to the actual units after deserialization based on the file and ID.
       [JsonProperty]
       private string SourceName;
       [JsonProperty]
       private string SourceId;
 
-      // Each Round represents a round of play. It has two parts:
-      // a. The text that describes the opposing turn (the "action"), ex. "@Black Bart said, "I'm gonna burn this town to the ground!"
+      // Each Unit represents a unit of play. It has two parts:
+      // a. The text that describes the opposing turn (the "action"), ex. "@Black Bart said, "I'm gonna burn this town to the gunit!"
       // b. The list of texts that describes the options for your turn, ex. "Try to reason with him.", "Shoot him.", etc.
       public Code ActionCode { get; private set; }
    
@@ -98,41 +98,41 @@ namespace Gamebook
          return Arrows;
       }
 
-      // The only way to make a Round is through the Load function, which creates all of them.
-      private Round() { }
+      // The only way to make a Unit is through the Load function, which creates all of them.
+      private Unit() { }
 
       public static JsonConverter LoadConverter(
          string sourceDirectory)
       {
-         Load(sourceDirectory, out var first, out var roundsBySourceAndId);
-         return new Converter(roundsBySourceAndId);
+         Load(sourceDirectory, out var first, out var unitsBySourceAndId);
+         return new Converter(unitsBySourceAndId);
       }
 
-      public static Round LoadFirst(
+      public static Unit LoadFirst(
          string sourceDirectory)
       {
-         Load(sourceDirectory, out var first, out var roundsBySourceAndId);
+         Load(sourceDirectory, out var first, out var unitsBySourceAndId);
          return first;
       }
 
       private static void Load(
          string sourceDirectory,
-         out Round startRound,
-         out Dictionary<string, Round> roundsBySourceAndId)
+         out Unit startUnit,
+         out Dictionary<string, Unit> unitsBySourceAndId)
       {
          // Load all the graphml files in the source directory.
          var sourcePaths = Directory.GetFiles(sourceDirectory, "*.graphml");
          if (sourcePaths.Length < 1)
             Log.Fail(String.Format($"no .graphml files in directory {sourceDirectory}"));
 
-         startRound = null;
+         startUnit = null;
 
          // Create a temporary list of actions from the nodes in the graphml that have scene IDs, so we can link merges to them in this routine later.
-         var roundsBySceneId = new Dictionary<string, Round>();
+         var unitsBySceneId = new Dictionary<string, Unit>();
          // Create a temporary list of merges that need to be linked to actions by scene ID.
          var mergeFixups = new List<MergeArrow>();
 
-         roundsBySourceAndId = new Dictionary<string, Round>();
+         unitsBySourceAndId = new Dictionary<string, Unit>();
 
          var settingsReportWriter = new StreamWriter("settings.csv", false);
          settingsReportWriter.WriteLine("SETTING,OPERATION,VALUE,FILE");
@@ -144,31 +144,31 @@ namespace Gamebook
             Log.SetSourceName(sourceName);
 
             // Create a temporary list of actions from the nodes in the graphml, so we can link arrows to them in this routine later.
-            var roundsByNodeId = new Dictionary<string, Round>();
+            var unitsByNodeId = new Dictionary<string, Unit>();
 
             var graphml = new Graphml(File.ReadAllText(sourcePath));
             foreach (var (nodeId, label) in graphml.Nodes())
             {
-               Round round = new Round();
-               round.SourceName = sourceName;
-               round.SourceId = nodeId;
-               roundsBySourceAndId[sourceName + ":" + nodeId] = round;
-               round.ActionCode = Code.Compile(label);
-               EvaluateSettingsReport(round.ActionCode, sourceName, settingsReportWriter);
-               roundsByNodeId.Add(nodeId, round);
+               Unit unit = new Unit();
+               unit.SourceName = sourceName;
+               unit.SourceId = nodeId;
+               unitsBySourceAndId[sourceName + ":" + nodeId] = unit;
+               unit.ActionCode = Code.Compile(label);
+               EvaluateSettingsReport(unit.ActionCode, sourceName, settingsReportWriter);
+               unitsByNodeId.Add(nodeId, unit);
 
                // Check if there's a [scene ID] declaration.
-               var declaredSceneId = EvaluateScene(round.ActionCode);
+               var declaredSceneId = EvaluateScene(unit.ActionCode);
                if (declaredSceneId != null)
                {
-                  if (roundsBySceneId.ContainsKey(declaredSceneId))
+                  if (unitsBySceneId.ContainsKey(declaredSceneId))
                      Log.Fail(String.Format($"Scene '{declaredSceneId}' declared twice"));
-                  roundsBySceneId.Add(declaredSceneId, round);
+                  unitsBySceneId.Add(declaredSceneId, unit);
                   if (declaredSceneId == "start")
                   {
-                     if (startRound != null)
+                     if (startUnit != null)
                         Log.Fail("More than one start scene");
-                     startRound = round;
+                     startUnit = unit;
                   }
                }
             }
@@ -177,7 +177,7 @@ namespace Gamebook
             foreach (var (sourceNodeId, targetNodeId, label) in graphml.Edges())
             {
                // Point the arrow to its target action.
-               if (!roundsByNodeId.TryGetValue(targetNodeId, out var targetRound))
+               if (!unitsByNodeId.TryGetValue(targetNodeId, out var targetUnit))
                   Log.Fail($"Internal error: no node declaration for referenced target node '{targetNodeId}'");
 
                Code code = Code.Compile(label);
@@ -186,17 +186,17 @@ namespace Gamebook
                Arrow arrow;
                if (isMerge)
                {
-                  arrow = new MergeArrow(targetRound, code, referencedSceneId, sourceName);
+                  arrow = new MergeArrow(targetUnit, code, referencedSceneId, sourceName);
                   if (referencedSceneId != null)
                      mergeFixups.Add(arrow as MergeArrow);
                }
                else
-                  arrow = new ReactionArrow(targetRound, code);
+                  arrow = new ReactionArrow(targetUnit, code);
 
                // Add the arrow to the source action's arrows.
-               if (!roundsByNodeId.TryGetValue(sourceNodeId, out var sourceRound))
+               if (!unitsByNodeId.TryGetValue(sourceNodeId, out var sourceUnit))
                   Log.Fail($"Internal error: no node declaration for referenced source node '{sourceNodeId}'");
-               sourceRound.Arrows.Add(arrow);
+               sourceUnit.Arrows.Add(arrow);
             }
          }
 
@@ -206,16 +206,16 @@ namespace Gamebook
          foreach (var mergeArrow in mergeFixups)
          {
             Log.SetSourceName(mergeArrow.DebugSourceName);
-            if (!roundsBySceneId.TryGetValue(mergeArrow.DebugSceneId, out var targetSceneRound))
+            if (!unitsBySceneId.TryGetValue(mergeArrow.DebugSceneId, out var targetSceneUnit))
                Log.Fail($"No scene declaration for referenced scene ID '{mergeArrow.DebugSceneId}'");
-            mergeArrow.TargetSceneRound = targetSceneRound;
+            mergeArrow.TargetSceneUnit = targetSceneUnit;
          }
 
          settingsReportWriter.Close();
 
          Log.SetSourceName(null);
 
-         if (startRound == null)
+         if (startUnit == null)
             Log.Fail("No start scene found.");
 
 

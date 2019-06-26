@@ -15,17 +15,17 @@ namespace Gamebook
          // The settings contain the state of the game: where you are, what people think of you, etc.
          public Dictionary<string, object> Settings = new Dictionary<string, object>();
          // This is the one action within a story tree that we are on right now.
-         public Round Round = null;
+         public Unit Unit = null;
          // Stack of return merge locations for referential merges.
-         public Stack<Round> NextTargetRoundOnReturn = new Stack<Round>();
+         public Stack<Unit> NextTargetUnitOnReturn = new Stack<Unit>();
 
          public State() { }
 
          public State(State other)
          {
             Settings = new Dictionary<string, object>(other.Settings);
-            Round = other.Round;
-            NextTargetRoundOnReturn = new Stack<Round>(other.NextTargetRoundOnReturn);
+            Unit = other.Unit;
+            NextTargetUnitOnReturn = new Stack<Unit>(other.NextTargetUnitOnReturn);
          }
       }
 
@@ -34,10 +34,10 @@ namespace Gamebook
       // Add annotations about how merges were done, etc.
       public bool DebugMode = false;
 
-      // This relates the user choice of reactions to the next rounds that are associated with them. It gets regenerated on every screen build, so it doesn't need to be part of the state.
-      private Dictionary<string, Round> ReactionTargetRounds = new Dictionary<string, Round>();
+      // This relates the user choice of reactions to the next units that are associated with them. It gets regenerated on every screen build, so it doesn't need to be part of the state.
+      private Dictionary<string, Unit> ReactionTargetUnits = new Dictionary<string, Unit>();
 
-      // The current state of the game: what round we are on, what are the current settings, etc.
+      // The current state of the game: what unit we are on, what are the current settings, etc.
       [JsonProperty] // Have to add this for private members.
       private State Current = new State();
 
@@ -48,19 +48,19 @@ namespace Gamebook
       // FUNCTIONS
 
       public Game(
-         Round first)
+         Unit first)
       {
-         Current.Round = first;
+         Current.Unit = first;
       }
 
       public void FixAfterDeserialization()
       {
          // C# stacks incorrectly enumerate backwards, so when you serialize then deserialize them, they come back reversed! Therefore make a copy of the stack to fix it. Since stacks always enumerate backwards, the process of making the new copy will reverse it!
          UndoStack = new Stack<State>(UndoStack);
-         Current.NextTargetRoundOnReturn = new Stack<Round>(Current.NextTargetRoundOnReturn);
+         Current.NextTargetUnitOnReturn = new Stack<Unit>(Current.NextTargetUnitOnReturn);
          foreach (var state in UndoStack)
          {
-            state.NextTargetRoundOnReturn = new Stack<Round>(state.NextTargetRoundOnReturn);
+            state.NextTargetUnitOnReturn = new Stack<Unit>(state.NextTargetUnitOnReturn);
          }
       }
 
@@ -326,39 +326,39 @@ namespace Gamebook
          return fixedText;
       }
 
-      private (string, List<string>) BuildRoundText(
-            Round firstRound)
+      private (string, List<string>) BuildUnitText(
+            Unit firstUnit)
       {
-         // Starting with the given round box, a) merge the texts of all rounds connected below it into one text, and b) collect all the reaction arrows.
+         // Starting with the given unit box, a) merge the texts of all units connected below it into one text, and b) collect all the reaction arrows.
          List<string> accumulatedReactionTexts = new List<string>();
 
          // The action text will contain all the merged action texts.
          var accumulatedActionTexts = "";
 
          // Build these too.
-         ReactionTargetRounds = new Dictionary<string, Round>();
+         ReactionTargetUnits = new Dictionary<string, Unit>();
 
          // This recursive routine will accumulate all the action and reaction text values in the above variables.
-         Accumulate(firstRound);
+         Accumulate(firstUnit);
 
          return (FixPlus(accumulatedActionTexts), accumulatedReactionTexts);
 
          void Accumulate(
-            Round round)
+            Unit unit)
          {
             string trace;
             // First append this action box's own text and execute any settings.
             if (accumulatedActionTexts.Length == 0)
-               accumulatedActionTexts = EvaluateText(round.ActionCode);
+               accumulatedActionTexts = EvaluateText(unit.ActionCode);
             else
-               accumulatedActionTexts += " " + EvaluateText(round.ActionCode);
+               accumulatedActionTexts += " " + EvaluateText(unit.ActionCode);
 
-            EvaluateSettings(round.ActionCode, out trace);
+            EvaluateSettings(unit.ActionCode, out trace);
             accumulatedActionTexts += trace;
 
             // Next examine all the arrows for the action.
             var arrowCount = 0;
-            foreach (var arrow in round.GetArrows())
+            foreach (var arrow in unit.GetArrows())
             { 
                // If conditions in the arrow are false, then just ignore the arrow completely. This includes both reaction and merge arrows.
                bool succeeded = EvaluateCondition(arrow.Code, out trace);
@@ -377,17 +377,17 @@ namespace Gamebook
                         accumulatedActionTexts += "@`merge" + (mergeArrow.DebugSceneId != null ? " " + mergeArrow.DebugSceneId : "") + "~";
 
                      // There are two kinds of merge arrows.
-                     Round targetAction;
-                     if (mergeArrow.TargetSceneRound != null)
+                     Unit targetAction;
+                     if (mergeArrow.TargetSceneUnit != null)
                      {
-                        targetAction = mergeArrow.TargetSceneRound;
+                        targetAction = mergeArrow.TargetSceneUnit;
                         // When we finish the jump to the other scene, we will continue merging with the action this arrow points to.
-                        Current.NextTargetRoundOnReturn.Push(mergeArrow.TargetRound);
+                        Current.NextTargetUnitOnReturn.Push(mergeArrow.TargetUnit);
                      }
                      else
                         // It's a local merge arrow. Merge the action it points to.
                         // It should be impossible for it to have no target. Let it crash if that's the case.
-                        targetAction = mergeArrow.TargetRound;
+                        targetAction = mergeArrow.TargetUnit;
                      // Call this routine again recursively. It will append the target's text and examine the target's arrows.
                      Accumulate(targetAction);
                      break;
@@ -404,20 +404,20 @@ namespace Gamebook
                      }
                      else
                         accumulatedReactionTexts.Add("{" + reactionText + "}");
-                     ReactionTargetRounds[reactionText] = reactionArrow.TargetRound;
+                     ReactionTargetUnits[reactionText] = reactionArrow.TargetUnit;
                      break;
                }
             }
             if (arrowCount == 0)
             {
                // This is a terminal action of a scene. If this scene was referenced by another scene, we need to continue merging back in the referencing scene.
-               if (Current.NextTargetRoundOnReturn.Any())
-                  Accumulate(Current.NextTargetRoundOnReturn.Pop());
+               if (Current.NextTargetUnitOnReturn.Any())
+                  Accumulate(Current.NextTargetUnitOnReturn.Pop());
             }
          }
       }
 
-      public (string, List<string>) BuildRoundTextForReaction(
+      public (string, List<string>) BuildUnitTextForReaction(
          string reactionText)
       {
          // The UI calls this to obtain a text representation of the next screen to appear.
@@ -425,11 +425,11 @@ namespace Gamebook
          {
             // Move to new state. Otherwise, redisplay existing state.
             UndoStack.Push(new State(Current));
-            if (!ReactionTargetRounds.TryGetValue(reactionText, out Current.Round))
+            if (!ReactionTargetUnits.TryGetValue(reactionText, out Current.Unit))
                Log.Fail(String.Format("No arrow for reaction '{0}'", reactionText));
          }
          // Show the current action box and its reaction arrows.
-         return BuildRoundText(Current.Round);
+         return BuildUnitText(Current.Unit);
       }
    }
 }

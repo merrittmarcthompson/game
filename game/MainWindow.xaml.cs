@@ -224,7 +224,7 @@ namespace Gamebook
       {
          // It's simple. The engine builds a text version of the screen. Then this main window code converts that into WPF objects for display.
          var storyArea = (FlowDocumentScrollViewer)FindName("StoryArea");
-         var (actionText, reactionTexts) = Game.BuildRoundTextForReaction(selectedReactionText);
+         var (actionText, reactionTexts) = Game.BuildUnitTextForReaction(selectedReactionText);
          var first = true;
          FlowDocument document = new FlowDocument();
          document.FontFamily = new FontFamily("Segoe UI");
@@ -265,11 +265,11 @@ namespace Gamebook
          // If there's a save game, deserialize it. Otherwise make a fresh game.
          if (File.Exists("save.json"))
          {
-            Game = JsonConvert.DeserializeObject<Game>(File.ReadAllText("save.json"), Round.LoadConverter(arguments[1]));
+            Game = JsonConvert.DeserializeObject<Game>(File.ReadAllText("save.json"), Unit.LoadConverter(arguments[1]));
             Game.FixAfterDeserialization();
          }
          else
-            Game = new Game(Round.LoadFirst(arguments[1]));
+            Game = new Game(Unit.LoadFirst(arguments[1]));
 
          SetupScreen(null);
          var hamburgerMenu = (ListBox)FindName("HamburgerMenu");
