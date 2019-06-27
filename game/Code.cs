@@ -59,22 +59,57 @@ namespace Gamebook
          return result;
       }
 
+      private class LookAhead
+      {
+         private List<Token> Tokens;
+         private int TokenIndex = 0;
+         public string Value { get; private set; }
+
+         public LookAhead(
+            List<Token> tokens)
+         {
+            Tokens = tokens;
+         }
+
+         public bool TryGet(
+            TokenType type)
+         {
+            // This should never go off the end. There is already an end of source text marker at the end of the tokens.
+            var token = Tokens[TokenIndex++];
+            if (token.Type == type)
+            {
+               Value = token.Value;
+               return true;
+            }
+            if (TokenIndex == 0)
+               throw new InvalidOperationException("Negative token index in code parser.");
+            --TokenIndex;
+            Value = null;
+            return false;
+         }
+
+         public void MustGet(
+            TokenType expected)
+         {
+            // This should never go off the end. There is already an end of source text marker at the end of the tokens.
+            var actual = Tokens[TokenIndex++];
+            if (actual.Type != expected)
+               throw new InvalidOperationException(string.Format($"line {actual.LineNumber}: expected {expected} but got '{actual.Value}'"));
+            Value = actual.Value;
+         }
+      }
+
+      // All sequence codes come from BuildFromTokens.
       private SequenceCode() { }
 
       // This allows base Code class to construct a sequence.
       public static SequenceCode BuildFromTokens(
-        List<Token> tokens,
-        string sourceText)
+         List<Token> tokens,
+         string sourceText)
       {
-         Token PushedToken = null;
-         Token GottenToken;
-         int TokenIndex = 0;
-
-         // Start here
+         LookAhead Look = new LookAhead(tokens);
          var sequenceCode = GetSequence();
-         GetToken();
-         if (GottenToken.Type != TokenType.EndOfSourceText)
-            Log.Fail(Expected(TokenType.EndOfSourceText.Name, GottenToken));
+         Look.MustGet(TokenType.EndOfSourceText);
          sequenceCode.SourceText = sourceText;
          return sequenceCode;
 
@@ -86,13 +121,11 @@ namespace Gamebook
 
             while (true)
             {
-               GetToken();
-
-               if (GottenToken.Type == TokenType.Characters)
-                  result.Codes.Add(new CharacterCode(GottenToken.Value));
-               else if (GottenToken.Type == TokenType.Special)
+               if (Look.TryGet(TokenType.Characters))
+                  result.Codes.Add(new CharacterCode(Look.Value));
+               else if (Look.TryGet(TokenType.Special))
                   // Ex. [he]
-                  result.Codes.Add(new SpecialCode(GottenToken.Value));
+                  result.Codes.Add(new SpecialCode(Look.Value));
                // I think this lets by too many mistakes. You put in some wrong ID somewhere, and it says, okay, it's a substitution, rather than complaining. Maybe have something like [insert bobsShoeSize] instead of [bobsShoeSize]?
                /*
                else if (GottenToken.Type == TokenType.Id)
@@ -103,107 +136,60 @@ namespace Gamebook
                   result.Objects.Add(substitutionCode);
                }
                */
-               else if (GottenToken.Type == TokenType.Merge)
+               else if (Look.TryGet(TokenType.Merge))
                {
                   // [merge]
                   // [merge sceneId]
                   string sceneId = null;
-
-                  GetToken();
-                  if (GottenToken.Type == TokenType.Id)
-                     sceneId = GottenToken.Value;
-                  else
-                     UngetToken();
+                  if (Look.TryGet(TokenType.Id))
+                     sceneId = Look.Value;
                   result.Codes.Add(new MergeCode(sceneId));
                }
-               else if (GottenToken.Type == TokenType.Scene)
+               else if (Look.TryGet(TokenType.Scene))
                {
                   // [scene soundsLikeAScam]
-                  GetToken();
-                  if (GottenToken.Type != TokenType.Id)
-                     Log.Fail(Expected(TokenType.Scene.Name, GottenToken));
-                  result.Codes.Add(new SceneCode(GottenToken.Value));
+                  Look.MustGet(TokenType.Id);
+                  result.Codes.Add(new SceneCode(Look.Value));
                }
-               else if (GottenToken.Type == TokenType.Score)
+               else if (Look.TryGet(TokenType.Score))
                {
                   // SCORE ID [, ID...]
                   List<string> ids = new List<string>();
                   do
                   {
-                     GetToken();
-                     if (GottenToken.Type != TokenType.Id)
-                        Log.Fail(Expected(TokenType.Score.Name, GottenToken));
-                     ids.Add(GottenToken.Value);
-                     GetToken();
-                  } while (GottenToken.Type == TokenType.Comma);
-                  UngetToken();
+                     Look.MustGet(TokenType.Id);
+                     ids.Add(Look.Value);
+                  } while (Look.TryGet(TokenType.Comma));
                   result.Codes.Add(new ScoreCode(ids));
                }
-               else if (GottenToken.Type == TokenType.Text)
+               else if (Look.TryGet(TokenType.Text))
                {
-                  GetToken();
-                  if (GottenToken.Type != TokenType.Id)
-                     Log.Fail(Expected(TokenType.Id.Name, GottenToken));
-                  string id = GottenToken.Value;
-                  GetToken();
+                  Look.MustGet(TokenType.Id);
+                  string id = Look.Value;
                   string text = "";
-                  if (GottenToken.Type == TokenType.Characters)
-                     text = GottenToken.Value;
-                  else
-                     UngetToken();
-                  GetToken();
-                  if (GottenToken.Type != TokenType.End)
-                     Log.Fail(Expected(TokenType.End.Name, GottenToken));
+                  if (Look.TryGet(TokenType.Characters))
+                     text = Look.Value;
+                  Look.MustGet(TokenType.End);
                   result.Codes.Add(new TextCode(id, text));
                }
-               else if (GottenToken.Type == TokenType.Set)
+               else if (Look.TryGet(TokenType.Set))
                   result.Codes.Add(new SetCode(GetExpressions(false)));
-               else if (GottenToken.Type == TokenType.When)
+               else if (Look.TryGet(TokenType.When))
                   result.Codes.Add(new WhenCode(GetExpressions(true)));
-               else if (GottenToken.Type == TokenType.If)
+               else if (Look.TryGet(TokenType.If))
                {
                   var ifCode = GetIf();
                   result.Codes.Add(ifCode);
 
                   // The whole if/or case statement is terminated by 'end'.
-                  GetToken();
-                  if (GottenToken.Type != TokenType.End)
-                     Log.Fail(Expected(TokenType.End.Name, GottenToken));
+                  Look.MustGet(TokenType.End);
                }
                else
                {
-                  // Hopefully this token is something the caller is expecting to see next (i.e. end of source text).
-                  UngetToken();
+                  // Hopefully the token we've been looking at is something the caller is expecting to see next (i.e. end of source text).
                   return result;
                }
             }
-         }
-
-         void GetToken()
-         {
-            if (PushedToken != null)
-            {
-               GottenToken = PushedToken;
-               PushedToken = null;
-            }
-            else
-            {
-               // This should never go off the end. There is already an end of source text marker at the end of the tokens.
-               GottenToken = tokens[TokenIndex];
-               ++TokenIndex;
-            }
-         }
-
-         void UngetToken()
-         {
-            PushedToken = GottenToken;
-         }
-
-         string Expected(
-           string expected,
-           Token actual)
-         {
-            return string.Format("line {0}: expected {1} but got '{2}'", actual.LineNumber, expected, actual.Value);
          }
 
          List<Expression> GetExpressions(
@@ -218,36 +204,21 @@ namespace Gamebook
             do
             {
                var not = true;
-               GetToken();
-               if (GottenToken.Type != TokenType.Not)
-               {
+               if (!Look.TryGet(TokenType.Not))
                   not = false;
-                  UngetToken();
-               }
-               GetToken();
-               if (GottenToken.Type != TokenType.Id)
-                  Log.Fail(Expected(TokenType.Id.Name, GottenToken));
-               var leftId = GottenToken.Value;
+               Look.MustGet(TokenType.Id);
+               var leftId = Look.Value;
                string rightId = null;
                if (allowNotEqual || !not)
                {
-                  GetToken();
-                  if (GottenToken.Type != TokenType.Equal)
-                     UngetToken();
-                  else
+                  if (Look.TryGet(TokenType.Equal))
                   {
-                     GetToken();
-                     if (GottenToken.Type != TokenType.Id)
-                     {
-                        Log.Fail(Expected(TokenType.Id.Name, GottenToken));
-                     }
-                     rightId = GottenToken.Value;
+                     Look.MustGet(TokenType.Id);
+                     rightId = Look.Value;
                   }
                }
                result.Add(new Expression(not, leftId, rightId));
-               GetToken();
-            } while (GottenToken.Type == TokenType.Comma);
-            UngetToken();
+            } while (Look.TryGet(TokenType.Comma));
             return result;
          }
 
@@ -281,14 +252,11 @@ namespace Gamebook
             var trueCode = GetSequence();
             Code falseCode = null;
 
-            GetToken();
-            if (GottenToken.Type == TokenType.Else)
+            if (Look.TryGet(TokenType.Else))
                falseCode = GetSequence();
-            else if (GottenToken.Type == TokenType.Or)
+            else if (Look.TryGet(TokenType.Or))
                falseCode = GetIf();
-            else
-               // Must be 'end'. Let caller handle it.
-               UngetToken();
+            // Otherwise must be 'end'. Let caller handle it.
             return new IfCode(expressions, trueCode, falseCode);
          }
       }
