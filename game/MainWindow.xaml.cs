@@ -54,7 +54,7 @@ namespace Gamebook
          Game.Set("jane", firstNameBox.Text);
          var lastNameBox = (TextBox)FindName("LastNameBox");
          Game.Set("smith", lastNameBox.Text);
-         SetupScreen(null);
+         SetupScreen();
       }
 
       private void StoryAreaClicked(object sender, MouseButtonEventArgs e)
@@ -65,7 +65,7 @@ namespace Gamebook
       private void UndoItemSelected(object sender, RoutedEventArgs e)
       {
          Game.Undo();
-         SetupScreen(null);
+         SetupScreen();
       }
 
       private void DebugModeItemSelected(object sender, RoutedEventArgs e)
@@ -73,7 +73,7 @@ namespace Gamebook
          Game.DebugMode = !Game.DebugMode;
          var debugModeItem = (ListBoxItem)FindName("DebugModeItem");
          debugModeItem.Content = Game.DebugMode ? "Turn off debug mode" : "Turn on debug mode";
-         SetupScreen(null);
+         SetupScreen();
       }
 
       private void CharacterInfoItemSelected(object sender, RoutedEventArgs e)
@@ -108,7 +108,8 @@ namespace Gamebook
          var hyperlink = (Hyperlink)sender;
          var link = hyperlink.CommandParameter as string;
          FinishTemporaryItems();
-         SetupScreen(link);
+         Game.MoveToReaction(link);
+         SetupScreen();
       }
 
       private List<Inline> BuildInlines(
@@ -219,16 +220,14 @@ namespace Gamebook
          return paragraph;
       }
 
-      private void SetupScreen(
-         string selectedReactionText)
+      private void SetupScreen()
       {
          // It's simple. The engine builds a text version of the screen. Then this main window code converts that into WPF objects for display.
-         var storyArea = (FlowDocumentScrollViewer)FindName("StoryArea");
-         var (actionText, reactionTexts) = Game.BuildUnitTextForReaction(selectedReactionText);
+         var (actionText, reactionTexts) = Game.BuildText();
          var first = true;
          FlowDocument document = new FlowDocument();
-         document.FontFamily = new FontFamily("Segoe UI");
-         document.FontSize = 12;
+         document.FontFamily = new FontFamily("Calibri");
+         document.FontSize = 13;
          document.MouseDown += StoryAreaClicked;
          document.TextAlignment = TextAlignment.Left;
          foreach (var paragraphText in actionText.Split('@'))
@@ -242,6 +241,7 @@ namespace Gamebook
          {
             document.Blocks.Add(BuildBullet(reactionText));
          }
+         var storyArea = (FlowDocumentScrollViewer)FindName("StoryArea");
          storyArea.Document = document;
          var undoItem = (ListBoxItem)FindName("UndoItem");
          undoItem.IsEnabled = Game.CanUndo();
@@ -251,38 +251,36 @@ namespace Gamebook
 
       public MainWindow()
       {
-         //try
-         //{
-         Log.Open("gamebook.log");
-         Log.Add("Started");
-         InitializeComponent();
-
-         // Get the source directory.
-         var arguments = Environment.GetCommandLineArgs();
-         if (arguments.Length < 2)
-            Log.Fail("usage: gamebook.exe source-directory");
-
-         // If there's a save game, deserialize it. Otherwise make a fresh game.
-         if (File.Exists("save.json"))
+         try
          {
-            Game = JsonConvert.DeserializeObject<Game>(File.ReadAllText("save.json"), Unit.LoadConverter(arguments[1]));
-            Game.FixAfterDeserialization();
-         }
-         else
-            Game = new Game(Unit.LoadFirst(arguments[1]));
+            InitializeComponent();
 
-         SetupScreen(null);
-         var hamburgerMenu = (ListBox)FindName("HamburgerMenu");
-         hamburgerMenu.Visibility = Visibility.Hidden;
-         var firstNameBox = (TextBox)FindName("FirstNameBox");
-         firstNameBox.Text = Game.Get("jane");
-         var lastNameBox = (TextBox)FindName("LastNameBox");
-         lastNameBox.Text = Game.Get("smith");
-         //}
-         //catch (Exception e)
-         //{
-         //  MessageBox.Show(String.Format("{0}", e), "Exception caught");
-         //}
+            // Get the source directory.
+            var arguments = Environment.GetCommandLineArgs();
+            if (arguments.Length < 2)
+               Log.Fail("usage: gamebook.exe source-directory");
+
+            // If there's a save game, deserialize it. Otherwise make a fresh game.
+            if (File.Exists("save.json"))
+            {
+               Game = JsonConvert.DeserializeObject<Game>(File.ReadAllText("save.json"), Unit.LoadConverter(arguments[1]));
+               Game.FixAfterDeserialization();
+            }
+            else
+               Game = new Game(Unit.LoadFirst(arguments[1]));
+
+            SetupScreen();
+            var hamburgerMenu = (ListBox)FindName("HamburgerMenu");
+            hamburgerMenu.Visibility = Visibility.Hidden;
+            var firstNameBox = (TextBox)FindName("FirstNameBox");
+            firstNameBox.Text = Game.Get("jane");
+            var lastNameBox = (TextBox)FindName("LastNameBox");
+            lastNameBox.Text = Game.Get("smith");
+         }
+         catch (Exception e)
+         {
+            MessageBox.Show(String.Format("{0}", e), "Exception");
+         }
       }
    }
 }

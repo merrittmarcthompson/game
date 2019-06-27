@@ -326,10 +326,9 @@ namespace Gamebook
          return fixedText;
       }
 
-      private (string, List<string>) BuildUnitText(
-            Unit firstUnit)
+      public (string, List<string>) BuildText()
       {
-         // Starting with the given unit box, a) merge the texts of all units connected below it into one text, and b) collect all the reaction arrows.
+         // Starting with the current unit box, a) merge the texts of all units connected below it into one text, and b) collect all the reaction arrows.
          List<string> accumulatedReactionTexts = new List<string>();
 
          // The action text will contain all the merged action texts.
@@ -339,7 +338,7 @@ namespace Gamebook
          ReactionTargetUnits = new Dictionary<string, Unit>();
 
          // This recursive routine will accumulate all the action and reaction text values in the above variables.
-         Accumulate(firstUnit);
+         Accumulate(Current.Unit);
 
          return (FixPlus(accumulatedActionTexts), accumulatedReactionTexts);
 
@@ -417,19 +416,12 @@ namespace Gamebook
          }
       }
 
-      public (string, List<string>) BuildUnitTextForReaction(
+      public void MoveToReaction(
          string reactionText)
       {
-         // The UI calls this to obtain a text representation of the next screen to appear.
-         if (reactionText != null)
-         {
-            // Move to new state. Otherwise, redisplay existing state.
-            UndoStack.Push(new State(Current));
-            if (!ReactionTargetUnits.TryGetValue(reactionText, out Current.Unit))
-               Log.Fail(String.Format("No arrow for reaction '{0}'", reactionText));
-         }
-         // Show the current action box and its reaction arrows.
-         return BuildUnitText(Current.Unit);
+         UndoStack.Push(new State(Current));
+         if (!ReactionTargetUnits.TryGetValue(reactionText, out Current.Unit))
+            Log.Fail(String.Format($"No arrow for reaction '{reactionText}'"));
       }
    }
 }

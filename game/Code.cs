@@ -203,9 +203,7 @@ namespace Gamebook
             var result = new List<Expression>();
             do
             {
-               var not = true;
-               if (!Look.TryGet(TokenType.Not))
-                  not = false;
+               var not = Look.TryGet(TokenType.Not);
                Look.MustGet(TokenType.Id);
                var leftId = Look.Value;
                string rightId = null;
