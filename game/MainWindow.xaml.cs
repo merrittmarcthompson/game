@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.Windows.Controls.Primitives;
 using Newtonsoft.Json;
 using System.IO;
-using Newtonsoft.Json.Serialization;
 using System;
 
 namespace Gamebook
@@ -247,6 +246,12 @@ namespace Gamebook
          undoItem.IsEnabled = Game.CanUndo();
          var characterInfoBox = (Border)FindName("CharacterInfoBox");
          characterInfoBox.Visibility = Visibility.Hidden;
+         var hamburgerMenu = (ListBox)FindName("HamburgerMenu");
+         hamburgerMenu.Visibility = Visibility.Hidden;
+         var firstNameBox = (TextBox)FindName("FirstNameBox");
+         firstNameBox.Text = Game.Get("jane");
+         var lastNameBox = (TextBox)FindName("LastNameBox");
+         lastNameBox.Text = Game.Get("smith");
       }
 
       public MainWindow()
@@ -270,12 +275,6 @@ namespace Gamebook
                Game = new Game(Unit.LoadFirst(arguments[1]));
 
             SetupScreen();
-            var hamburgerMenu = (ListBox)FindName("HamburgerMenu");
-            hamburgerMenu.Visibility = Visibility.Hidden;
-            var firstNameBox = (TextBox)FindName("FirstNameBox");
-            firstNameBox.Text = Game.Get("jane");
-            var lastNameBox = (TextBox)FindName("LastNameBox");
-            lastNameBox.Text = Game.Get("smith");
          }
          catch (Exception e)
          {

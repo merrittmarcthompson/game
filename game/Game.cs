@@ -14,7 +14,7 @@ namespace Gamebook
       {
          // The settings contain the state of the game: where you are, what people think of you, etc.
          public Dictionary<string, object> Settings = new Dictionary<string, object>();
-         // This is the one action within a story tree that we are on right now.
+         // This is the one unit within a story tree that we are on right now.
          public Unit Unit = null;
          // Stack of return merge locations for referential merges.
          public Stack<Unit> NextTargetUnitOnReturn = new Stack<Unit>();

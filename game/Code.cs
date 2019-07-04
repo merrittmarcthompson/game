@@ -19,8 +19,6 @@ namespace Gamebook
          // Compile the text to a code sequence.
          Log.SetSourceCode(sourceCode);
          var tokens = Token.Tokenize(sourceCode);
-         if (tokens == null)
-            return null;
          return SequenceCode.BuildFromTokens(tokens, sourceCode);
       }
    }
