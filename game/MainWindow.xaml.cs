@@ -43,8 +43,10 @@ namespace Gamebook
          return result;
       }
 
-      private void FinishTemporaryItems()
+      private void CloseCharacterInfoBox()
       {
+         if (CharacterInfoBox.Visibility == Visibility.Hidden)
+            return;
          var hamburgerMenu = (ListBox)FindName("HamburgerMenu");
          hamburgerMenu.Visibility = Visibility.Hidden;
          var characterInfoBox = (Border)FindName("CharacterInfoBox");
@@ -53,12 +55,17 @@ namespace Gamebook
          Game.Set("jane", firstNameBox.Text);
          var lastNameBox = (TextBox)FindName("LastNameBox");
          Game.Set("smith", lastNameBox.Text);
-         SetupScreen();
       }
 
       private void StoryAreaClicked(object sender, MouseButtonEventArgs e)
       {
-         FinishTemporaryItems();
+         CloseCharacterInfoBox();
+      }
+
+      private void SelectAllOnGetFocus(object sender, RoutedEventArgs e)
+      {
+         var textBox = (TextBox)sender;
+         textBox.SelectAll();
       }
 
       private void UndoItemSelected(object sender, RoutedEventArgs e)
@@ -79,6 +86,9 @@ namespace Gamebook
       {
          var characterInfoBox = (Border)FindName("CharacterInfoBox");
          characterInfoBox.Visibility = Visibility.Visible;
+         var firstNameBox = (TextBox)FindName("FirstNameBox");
+         firstNameBox.Focus();
+
       }
 
       private void SaveItemSelected(object sender, RoutedEventArgs e)
@@ -106,7 +116,7 @@ namespace Gamebook
       {
          var hyperlink = (Hyperlink)sender;
          var link = hyperlink.CommandParameter as string;
-         FinishTemporaryItems();
+         CloseCharacterInfoBox();
          Game.MoveToReaction(link);
          SetupScreen();
       }
@@ -222,7 +232,7 @@ namespace Gamebook
       private void SetupScreen()
       {
          // It's simple. The engine builds a text version of the screen. Then this main window code converts that into WPF objects for display.
-         var (actionText, reactionTexts) = Game.BuildText();
+         var (actionText, reactionTexts) = Game.BuildPage();
          var first = true;
          FlowDocument document = new FlowDocument();
          document.FontFamily = new FontFamily("Calibri");

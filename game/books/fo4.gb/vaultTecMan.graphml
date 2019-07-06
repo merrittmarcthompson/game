@@ -131,7 +131,7 @@ set tomVaultTecMan=didntSee]</y:NodeLabel>
               <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="75.1640625" horizontalTextPosition="center" iconTextGap="4" modelName="internal" modelPosition="c" textColor="#000000" verticalTextPosition="bottom" visible="true" width="517.5341796875" x="0.0" xml:space="preserve" y="0.0">@"Relations with China have become even more strained,"
 came a voice beside her. Tom had set up {the TV} on a pile of moving boxes.
 "With the latest on America's defenses in the event of nuclear war, here's Jack Winslow."
-@[Jane] didn't look at the TV. [She] was watching a man across the street.</y:NodeLabel>
+@But [Jane] wasn't looking at the TV. [She] was watching a man across the street.</y:NodeLabel>
             </y:GenericNode>
           </data>
         </node>
@@ -186,7 +186,7 @@ The side of the van read, &lt;Vault Tec: A Brighter Future—Underground!&gt;
               <y:Fill color="#FFFFFF" transparent="false"/>
               <y:BorderStyle color="#000000" type="line" width="1.0"/>
               <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="75.1640625" horizontalTextPosition="center" iconTextGap="4" modelName="internal" modelPosition="c" textColor="#000000" verticalTextPosition="bottom" visible="true" width="511.92919921875" x="0.0" xml:space="preserve" y="0.0">@"Sanctuary Hills has everything a young family like yours needs," the realtor had said.
-The new subdivision certainly did look pretty outside [Jane]'s living room window.
+The new subdivision did look pretty outside [Jane]'s living room window.
 A quiet street, lined with sapling cherries, ready to grow and thrive over the years.
 A safe place for [Jane] and Tom and baby Bobby.</y:NodeLabel>
             </y:GenericNode>
@@ -460,7 +460,7 @@ And when the vault door opens,
 we'll need brave people to take
 on the dangers of a post-nuclear world.
 Tell you what--I can sign you up right now
-with a guard duty fee waiver."
+with a guard-duty fee waiver."
 @"Guard duty?" [Jane] said.
 [She] stopped and thought about it,
 then asked, "Would I get a gun?"

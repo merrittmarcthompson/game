@@ -20,8 +20,8 @@
         </ListBox>
         <Border x:Name="CharacterInfoBox" BorderBrush="DarkGray" Background="White" BorderThickness="1" Margin="36,329,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Height="83" Width="229">
             <Grid HorizontalAlignment="Left" Height="105" VerticalAlignment="Top" Width="222">
-                <TextBox x:Name="FirstNameBox" HorizontalAlignment="Left" Height="22" Margin="105,15,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="102"/>
-                <TextBox x:Name="LastNameBox" HorizontalAlignment="Left" Height="22" Margin="105,43,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="102"/>
+                <TextBox x:Name="FirstNameBox" HorizontalAlignment="Left" Height="22" Margin="105,15,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="102" GotFocus="SelectAllOnGetFocus"/>
+                <TextBox x:Name="LastNameBox" HorizontalAlignment="Left" Height="22" Margin="105,43,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="102" GotFocus="SelectAllOnGetFocus"/>
                 <Label Content="First name" HorizontalAlignment="Left" Margin="14,11,0,0" VerticalAlignment="Top"/>
                 <Label Content="Last name" HorizontalAlignment="Left" Height="31" Margin="14,39,0,0" VerticalAlignment="Top" Width="76"/>
             </Grid>

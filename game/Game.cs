@@ -93,10 +93,11 @@ namespace Gamebook
          outTrace = "";
          foreach (var expression in expressions)
          {
-            var found = Current.Settings.TryGetValue(expression.LeftId, out object leftObject);
+            // First find out basic things about the left argument.
+            var leftDefined = Current.Settings.TryGetValue(expression.LeftId, out object leftObject);
             var leftValue = "";
             string traceLeftValue;
-            if (found)
+            if (leftDefined)
             {
                if (leftObject == null)
                   traceLeftValue = "<true>";
@@ -108,25 +109,22 @@ namespace Gamebook
             }
             else
                traceLeftValue = "<false>";
-            if (found == expression.Not)
-            {
-               if (DebugMode)
-                  outTrace += "@`" + (expression.Not ? "not " : "") + expression.LeftId + "(" + traceLeftValue + ")? <false>~";
-               return false;
-            }
+            // We know how to evaluate when we see the right argument.
+            bool succeeded;
             string traceEqualRight = "";
-            if (expression.RightId != null)
+            if (expression.RightId == null)
+               // This is the 'left' or 'not left' case. The value of the left setting doesn't matter. What matters is whether left is defined or not.
+               succeeded = leftDefined != expression.Not;
+            else
             {
+               // This is the 'left=right' or 'not left=right' case. The right ID isn't looked up like the left one is. It's a constant string to compare to. You can't compare the values of two IDs.
                traceEqualRight = "=" + expression.RightId;
-               if (leftValue == expression.RightId == expression.Not)
-               {
-                  if (DebugMode)
-                     outTrace += "@`" + (expression.Not ? "not " : "") + expression.LeftId + "(" + traceLeftValue + ")" + traceEqualRight + "? <false>~";
-                  return false;
-               }
+               succeeded = (leftValue == expression.RightId) != expression.Not;
             }
             if (DebugMode)
-               outTrace += "@`" + (expression.Not ? "not " : "") + expression.LeftId + "(" + traceLeftValue + ")" + traceEqualRight + "? <true>~";
+               outTrace += "@`" + (expression.Not ? "not " : "") + expression.LeftId + "(" + traceLeftValue + ")" + traceEqualRight + "? " + (succeeded ? "<true>" : "<false>") + "~";
+            if (!succeeded)
+               return false;
          }
          return true;
       }
@@ -326,7 +324,7 @@ namespace Gamebook
          return fixedText;
       }
 
-      public (string, List<string>) BuildText()
+      public (string, List<string>) BuildPage()
       {
          // Starting with the current unit box, a) merge the texts of all units connected below it into one text, and b) collect all the reaction arrows.
          List<string> accumulatedReactionTexts = new List<string>();
@@ -358,7 +356,7 @@ namespace Gamebook
             // Next examine all the arrows for the action.
             var arrowCount = 0;
             foreach (var arrow in unit.GetArrows())
-            { 
+            {
                // If conditions in the arrow are false, then just ignore the arrow completely. This includes both reaction and merge arrows.
                bool succeeded = EvaluateCondition(arrow.Code, out trace);
                accumulatedActionTexts += trace;

@@ -69,7 +69,7 @@ namespace Gamebook
             Tokens = tokens;
          }
 
-         public bool TryGet(
+         public bool Got(
             TokenType type)
          {
             // This should never go off the end. There is already an end of source text marker at the end of the tokens.
@@ -79,14 +79,11 @@ namespace Gamebook
                Value = token.Value;
                return true;
             }
-            if (TokenIndex == 0)
-               throw new InvalidOperationException("Negative token index in code parser.");
             --TokenIndex;
-            Value = null;
             return false;
          }
 
-         public void MustGet(
+         public void Require(
             TokenType expected)
          {
             // This should never go off the end. There is already an end of source text marker at the end of the tokens.
@@ -107,7 +104,7 @@ namespace Gamebook
       {
          LookAhead Look = new LookAhead(tokens);
          var sequenceCode = GetSequence();
-         Look.MustGet(TokenType.EndOfSourceText);
+         Look.Require(TokenType.EndOfSourceText);
          sequenceCode.SourceText = sourceText;
          return sequenceCode;
 
@@ -119,9 +116,9 @@ namespace Gamebook
 
             while (true)
             {
-               if (Look.TryGet(TokenType.Characters))
+               if (Look.Got(TokenType.Characters))
                   result.Codes.Add(new CharacterCode(Look.Value));
-               else if (Look.TryGet(TokenType.Special))
+               else if (Look.Got(TokenType.Special))
                   // Ex. [he]
                   result.Codes.Add(new SpecialCode(Look.Value));
                // I think this lets by too many mistakes. You put in some wrong ID somewhere, and it says, okay, it's a substitution, rather than complaining. Maybe have something like [insert bobsShoeSize] instead of [bobsShoeSize]?
@@ -134,53 +131,53 @@ namespace Gamebook
                   result.Objects.Add(substitutionCode);
                }
                */
-               else if (Look.TryGet(TokenType.Merge))
+               else if (Look.Got(TokenType.Merge))
                {
                   // [merge]
                   // [merge sceneId]
                   string sceneId = null;
-                  if (Look.TryGet(TokenType.Id))
+                  if (Look.Got(TokenType.Id))
                      sceneId = Look.Value;
                   result.Codes.Add(new MergeCode(sceneId));
                }
-               else if (Look.TryGet(TokenType.Scene))
+               else if (Look.Got(TokenType.Scene))
                {
                   // [scene soundsLikeAScam]
-                  Look.MustGet(TokenType.Id);
+                  Look.Require(TokenType.Id);
                   result.Codes.Add(new SceneCode(Look.Value));
                }
-               else if (Look.TryGet(TokenType.Score))
+               else if (Look.Got(TokenType.Score))
                {
                   // SCORE ID [, ID...]
                   List<string> ids = new List<string>();
                   do
                   {
-                     Look.MustGet(TokenType.Id);
+                     Look.Require(TokenType.Id);
                      ids.Add(Look.Value);
-                  } while (Look.TryGet(TokenType.Comma));
+                  } while (Look.Got(TokenType.Comma));
                   result.Codes.Add(new ScoreCode(ids));
                }
-               else if (Look.TryGet(TokenType.Text))
+               else if (Look.Got(TokenType.Text))
                {
-                  Look.MustGet(TokenType.Id);
+                  Look.Require(TokenType.Id);
                   string id = Look.Value;
                   string text = "";
-                  if (Look.TryGet(TokenType.Characters))
+                  if (Look.Got(TokenType.Characters))
                      text = Look.Value;
-                  Look.MustGet(TokenType.End);
+                  Look.Require(TokenType.End);
                   result.Codes.Add(new TextCode(id, text));
                }
-               else if (Look.TryGet(TokenType.Set))
+               else if (Look.Got(TokenType.Set))
                   result.Codes.Add(new SetCode(GetExpressions(false)));
-               else if (Look.TryGet(TokenType.When))
+               else if (Look.Got(TokenType.When))
                   result.Codes.Add(new WhenCode(GetExpressions(true)));
-               else if (Look.TryGet(TokenType.If))
+               else if (Look.Got(TokenType.If))
                {
                   var ifCode = GetIf();
                   result.Codes.Add(ifCode);
 
                   // The whole if/or case statement is terminated by 'end'.
-                  Look.MustGet(TokenType.End);
+                  Look.Require(TokenType.End);
                }
                else
                {
@@ -201,20 +198,20 @@ namespace Gamebook
             var result = new List<Expression>();
             do
             {
-               var not = Look.TryGet(TokenType.Not);
-               Look.MustGet(TokenType.Id);
+               var not = Look.Got(TokenType.Not);
+               Look.Require(TokenType.Id);
                var leftId = Look.Value;
                string rightId = null;
                if (allowNotEqual || !not)
                {
-                  if (Look.TryGet(TokenType.Equal))
+                  if (Look.Got(TokenType.Equal))
                   {
-                     Look.MustGet(TokenType.Id);
+                     Look.Require(TokenType.Id);
                      rightId = Look.Value;
                   }
                }
                result.Add(new Expression(not, leftId, rightId));
-            } while (Look.TryGet(TokenType.Comma));
+            } while (Look.Got(TokenType.Comma));
             return result;
          }
 
@@ -248,9 +245,9 @@ namespace Gamebook
             var trueCode = GetSequence();
             Code falseCode = null;
 
-            if (Look.TryGet(TokenType.Else))
+            if (Look.Got(TokenType.Else))
                falseCode = GetSequence();
-            else if (Look.TryGet(TokenType.Or))
+            else if (Look.Got(TokenType.Or))
                falseCode = GetIf();
             // Otherwise must be 'end'. Let caller handle it.
             return new IfCode(expressions, trueCode, falseCode);
