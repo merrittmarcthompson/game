@@ -79,7 +79,6 @@ namespace Gamebook
          Game.DebugMode = !Game.DebugMode;
          var debugModeItem = (ListBoxItem)FindName("DebugModeItem");
          debugModeItem.Content = Game.DebugMode ? "Turn off debug mode" : "Turn on debug mode";
-         SetupScreen();
       }
 
       private void CharacterInfoItemSelected(object sender, RoutedEventArgs e)

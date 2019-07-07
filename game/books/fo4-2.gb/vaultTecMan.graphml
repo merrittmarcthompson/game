@@ -443,7 +443,7 @@ on the dangers of a post-nuclear world.
 Tell you what--I can sign you up right now
 with a guard-duty fee waiver."
 @"Guard duty?" [Jane] said.
-[She] stopped and thought about it,
+[She] thought about it,
 then asked, "Would I get a gun?"
 @The man smiled.
 "I believe you would," he said.
@@ -1227,7 +1227,7 @@ stand a chance against the Red Chinese!
           </y:Path>
           <y:LineStyle color="#000000" type="line" width="1.0"/>
           <y:Arrows source="none" target="standard"/>
-          <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" horizontalTextPosition="center" iconTextGap="4" modelName="free" modelPosition="anywhere" preferredPlacement="anywhere" ratio="0.5" textColor="#000000" verticalTextPosition="bottom" visible="true" width="70.03515625" x="-463.29372791108625" xml:space="preserve" y="179.9697265625">High school.<y:PreferredPlacementDescriptor angle="0.0" angleOffsetOnRightSide="0" angleReference="absolute" angleRotationOnRightSide="co" distance="-1.0" frozen="true" placement="anywhere" side="anywhere" sideReference="relative_to_edge_flow"/></y:EdgeLabel>
+          <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" horizontalTextPosition="center" iconTextGap="4" modelName="free" modelPosition="anywhere" preferredPlacement="anywhere" ratio="0.5" textColor="#000000" verticalTextPosition="bottom" visible="true" width="70.03515625" x="-463.2937279110862" xml:space="preserve" y="179.9697265625">High school.<y:PreferredPlacementDescriptor angle="0.0" angleOffsetOnRightSide="0" angleReference="absolute" angleRotationOnRightSide="co" distance="-1.0" frozen="true" placement="anywhere" side="anywhere" sideReference="relative_to_edge_flow"/></y:EdgeLabel>
           <y:BendStyle smoothed="false"/>
         </y:PolyLineEdge>
       </data>
@@ -1744,7 +1744,6 @@ stand a chance against the Red Chinese!
       </data>
     </edge>
     <edge id="e18" source="n0" target="n11">
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="80.8095703125" tx="1.75" ty="-15.0">
@@ -1759,7 +1758,6 @@ stand a chance against the Red Chinese!
       </data>
     </edge>
     <edge id="e19" source="n2" target="n11">
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="46.2275390625" tx="-1.75" ty="-15.0">
@@ -1774,7 +1772,6 @@ stand a chance against the Red Chinese!
       </data>
     </edge>
     <edge id="e20" source="n4::n6" target="n11">
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="63.5185546875" tx="5.25" ty="-15.0">
@@ -1789,7 +1786,6 @@ stand a chance against the Red Chinese!
       </data>
     </edge>
     <edge id="e21" source="n7::n1" target="n11">
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="115.3916015625" tx="-5.25" ty="-15.0">
@@ -1800,7 +1796,7 @@ stand a chance against the Red Chinese!
           </y:Path>
           <y:LineStyle color="#000000" type="line" width="1.0"/>
           <y:Arrows source="none" target="standard"/>
-          <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" horizontalTextPosition="center" iconTextGap="4" modelName="free" modelPosition="anywhere" preferredPlacement="anywhere" ratio="0.5" textColor="#000000" verticalTextPosition="bottom" visible="true" width="52.03515625" x="-430.73623221261164" xml:space="preserve" y="922.78466796875">Continue
+          <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" horizontalTextPosition="center" iconTextGap="4" modelName="free" modelPosition="anywhere" preferredPlacement="anywhere" ratio="0.5" textColor="#000000" verticalTextPosition="bottom" visible="true" width="52.03515625" x="-430.7362322126117" xml:space="preserve" y="922.78466796875">Continue
 <y:PreferredPlacementDescriptor angle="0.0" angleOffsetOnRightSide="0" angleReference="absolute" angleRotationOnRightSide="co" distance="-1.0" frozen="true" placement="anywhere" side="anywhere" sideReference="relative_to_edge_flow"/></y:EdgeLabel>
           <y:BendStyle smoothed="false"/>
         </y:PolyLineEdge>
