@@ -45,14 +45,11 @@ namespace Gamebook
       public override string ToString()
       {
          string result = "";
-         string separator = "";
          foreach (var code in Codes)
          {
             string objectString = code.ToString();
             if (objectString.Length > 16)
-               objectString = objectString.Substring(0, 16) + "...";
-            result += separator + objectString;
-            separator = "|";
+               objectString = objectString.Substring(0, 16) + "... ";
          }
          return result;
       }
@@ -139,6 +136,11 @@ namespace Gamebook
                   if (Look.Got(TokenType.Id))
                      sceneId = Look.Value;
                   result.Codes.Add(new MergeCode(sceneId));
+               }
+               else if (Look.Got(TokenType.Return))
+               {
+                  // [return]
+                  result.Codes.Add(new ReturnCode());
                }
                else if (Look.Got(TokenType.Scene))
                {
@@ -459,6 +461,22 @@ namespace Gamebook
       public override string ToString()
       {
          return "merge " + SceneId;
+      }
+   }
+
+   public class ReturnCode: Code
+   {
+      public ReturnCode() { }
+
+      public override void Traverse(
+        Func<Code, bool> examine)
+      {
+         examine(this);
+      }
+
+      public override string ToString()
+      {
+         return "return";
       }
    }
 

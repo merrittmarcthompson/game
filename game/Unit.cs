@@ -43,6 +43,17 @@ namespace Gamebook
       public Unit TargetSceneUnit { get; set; }
    }
 
+   public class ReturnArrow: Arrow
+   {
+      private ReturnArrow() { }
+      // This lets the Load function make arrows. 
+      public ReturnArrow(
+         Unit targetUnit,
+         Code code) : base(targetUnit, code)
+      {
+      }
+   }
+
    public class ReactionArrow: Arrow
    {
       private ReactionArrow() { }
@@ -88,7 +99,7 @@ namespace Gamebook
       private string SourceId;
 
       // Each Unit represents a unit of play. It has two parts:
-      // a. The text that describes the opposing turn (the "action"), ex. "@Black Bart said, "I'm gonna burn this town to the gunit!"
+      // a. The text that describes the opposing turn (the "action"), ex. "@Black Bart said, "I'm gonna burn this town to the ground!"
       // b. The list of texts that describes the options for your turn, ex. "Try to reason with him.", "Shoot him.", etc.
       public Code ActionCode { get; private set; }
    
@@ -182,7 +193,7 @@ namespace Gamebook
 
                Code code = Code.Compile(label);
                EvaluateSettingsReport(code, sourceName, settingsReportWriter);
-               var (isMerge, referencedSceneId) = EvaluateMerge(code);
+               var (isMerge, referencedSceneId, isReturn) = EvaluateArrowType(code);
                Arrow arrow;
                if (isMerge)
                {
@@ -190,6 +201,8 @@ namespace Gamebook
                   if (referencedSceneId != null)
                      mergeFixups.Add(arrow as MergeArrow);
                }
+               else if (isReturn)
+                  arrow = new ReturnArrow(targetUnit, code);
                else
                   arrow = new ReactionArrow(targetUnit, code);
 
@@ -238,23 +251,31 @@ namespace Gamebook
             return result;
          }
 
-         (bool, string) EvaluateMerge(
+         (bool, string, bool) EvaluateArrowType(
             Code topCode)
          {
             bool isMerge = false;
+            bool isReturn = false;
             string referencedSceneId = null;
             topCode.Traverse((code) =>
             {
                switch (code)
                {
                   case MergeCode mergeCode:
+                     if (isReturn)
+                        throw new InvalidOperationException(string.Format($"Can't return and merge in the same arrow."));
                      isMerge = true;
                      referencedSceneId = mergeCode.SceneId;
+                     return true;
+                  case ReturnCode returnCode:
+                     if (isMerge)
+                        throw new InvalidOperationException(string.Format($"Can't merge and return in the same arrow."));
+                     isReturn = true;
                      return true;
                }
                return false;
             });
-            return (isMerge, referencedSceneId);
+            return (isMerge, referencedSceneId, isReturn);
          }
 
          void EvaluateSettingsReport(

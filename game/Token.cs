@@ -31,6 +31,7 @@ namespace Gamebook
       public static TokenType Not = new TokenType("'not'");
       public static TokenType Or = new TokenType("'or'");
       public static TokenType Merge = new TokenType("'merge'");
+      public static TokenType Return = new TokenType("'return'");
       public static TokenType Scene = new TokenType("'scene'");
       public static TokenType Set = new TokenType("'set'");
       public static TokenType Text = new TokenType("'text'");
@@ -321,6 +322,10 @@ namespace Gamebook
                            else if (id == "merge")
                            {
                               result.Add(new Token(TokenType.Merge, id, lineNumber));
+                           }
+                           else if (id == "return")
+                           {
+                              result.Add(new Token(TokenType.Return, id, lineNumber));
                            }
                            else if (id == "scene")
                            {

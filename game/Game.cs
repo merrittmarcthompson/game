@@ -328,16 +328,23 @@ namespace Gamebook
       {
          // Starting with the current unit box, a) merge the texts of all units connected below it into one text, and b) collect all the reaction arrows.
          List<string> accumulatedReactionTexts = new List<string>();
-
          // The action text will contain all the merged action texts.
          var accumulatedActionTexts = "";
-
          // Build these too.
          ReactionTargetUnits = new Dictionary<string, Unit>();
+         // If there were no reaction arrows, we've reached an end point and need to return to 
+         var gotAReactionArrow = false;
 
          // This recursive routine will accumulate all the action and reaction text values in the above variables.
          Accumulate(Current.Unit);
-
+         while (!gotAReactionArrow)
+         {
+            // We got to a dead end without finding any reaction options for the player. So pop back to a pushed location and continue merging from there.
+            if (!Current.NextTargetUnitOnReturn.Any())
+               throw new InvalidOperationException(string.Format($"Got to a dead end with no place to return to."));
+            Accumulate(Current.NextTargetUnitOnReturn.Pop());
+         }
+         
          return (FixPlus(accumulatedActionTexts), accumulatedReactionTexts);
 
          void Accumulate(
@@ -374,21 +381,27 @@ namespace Gamebook
                         accumulatedActionTexts += "@`merge" + (mergeArrow.DebugSceneId != null ? " " + mergeArrow.DebugSceneId : "") + "~";
 
                      // There are two kinds of merge arrows.
-                     Unit targetAction;
+                     Unit targetUnit;
                      if (mergeArrow.TargetSceneUnit != null)
                      {
-                        targetAction = mergeArrow.TargetSceneUnit;
+                        targetUnit = mergeArrow.TargetSceneUnit;
                         // When we finish the jump to the other scene, we will continue merging with the action this arrow points to.
                         Current.NextTargetUnitOnReturn.Push(mergeArrow.TargetUnit);
                      }
                      else
                         // It's a local merge arrow. Merge the action it points to.
                         // It should be impossible for it to have no target. Let it crash if that's the case.
-                        targetAction = mergeArrow.TargetUnit;
+                        targetUnit = mergeArrow.TargetUnit;
                      // Call this routine again recursively. It will append the target's text and examine the target's arrows.
-                     Accumulate(targetAction);
+                     Accumulate(targetUnit);
+                     break;
+                  case ReturnArrow returnArrow:
+                     if (DebugMode)
+                        accumulatedActionTexts += "@`return " + returnArrow.TargetUnit.ActionCode + "~";
+                     Current.NextTargetUnitOnReturn.Push(returnArrow.TargetUnit);
                      break;
                   case ReactionArrow reactionArrow:
+                     gotAReactionArrow = true;
                      var reactionText = EvaluateText(reactionArrow.Code);
                      // There's a little trickiness with links here...
                      if (reactionText.Length > 0 && reactionText[0] == '{')
@@ -404,12 +417,6 @@ namespace Gamebook
                      ReactionTargetUnits[reactionText] = reactionArrow.TargetUnit;
                      break;
                }
-            }
-            if (arrowCount == 0)
-            {
-               // This is a terminal action of a scene. If this scene was referenced by another scene, we need to continue merging back in the referencing scene.
-               if (Current.NextTargetUnitOnReturn.Any())
-                  Accumulate(Current.NextTargetUnitOnReturn.Pop());
             }
          }
       }
