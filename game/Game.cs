@@ -342,7 +342,10 @@ namespace Gamebook
             // We got to a dead end without finding any reaction options for the player. So pop back to a pushed location and continue merging from there.
             if (!Current.NextTargetUnitOnReturn.Any())
                throw new InvalidOperationException(string.Format($"Got to a dead end with no place to return to."));
-            Accumulate(Current.NextTargetUnitOnReturn.Pop());
+            var unit = Current.NextTargetUnitOnReturn.Pop();
+            if (DebugMode)
+               accumulatedActionTexts += "@`pop " + unit.Id + "~";
+            Accumulate(unit);
          }
          
          return (FixPlus(accumulatedActionTexts), accumulatedReactionTexts);
@@ -397,7 +400,7 @@ namespace Gamebook
                      break;
                   case ReturnArrow returnArrow:
                      if (DebugMode)
-                        accumulatedActionTexts += "@`return " + returnArrow.TargetUnit.ActionCode + "~";
+                        accumulatedActionTexts += "@`push " + returnArrow.TargetUnit.Id + "~";
                      Current.NextTargetUnitOnReturn.Push(returnArrow.TargetUnit);
                      break;
                   case ReactionArrow reactionArrow:

@@ -97,6 +97,14 @@ namespace Gamebook
       private string SourceName;
       [JsonProperty]
       private string SourceId;
+      public string Id
+      {
+         get
+         {
+            return SourceName + ":" + SourceId;
+         }
+         private set { }
+      }
 
       // Each Unit represents a unit of play. It has two parts:
       // a. The text that describes the opposing turn (the "action"), ex. "@Black Bart said, "I'm gonna burn this town to the ground!"
