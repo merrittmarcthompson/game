@@ -114,6 +114,7 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <None Include="books\fo4-2.gb\house.graphml" />
     <None Include="books\fo4-2.gb\pamphlet.graphml" />
     <None Include="books\fo4-2.gb\start.graphml" />
     <None Include="books\fo4-2.gb\tom.graphml" />
