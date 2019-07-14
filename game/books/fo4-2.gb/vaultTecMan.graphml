@@ -831,16 +831,6 @@ he said, holding his pen up over the clipboard.<y:LabelModel><y:SmartNodeLabelMo
         </y:GenericNode>
       </data>
     </node>
-    <node id="n10">
-      <data key="d6">
-        <y:GenericNode configuration="com.yworks.flowchart.process">
-          <y:Geometry height="30.0" width="14.0" x="5793.478968253969" y="0.0"/>
-          <y:Fill color="#FFFFFF" transparent="false"/>
-          <y:BorderStyle color="#000000" type="line" width="1.0"/>
-          <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" hasText="false" height="30.0" horizontalTextPosition="center" iconTextGap="4" modelName="internal" modelPosition="c" textColor="#000000" verticalTextPosition="bottom" visible="true" width="14.0" x="0.0" y="0.0"/>
-        </y:GenericNode>
-      </data>
-    </node>
     <edge id="n7::e0" source="n7::n0" target="n7::n1">
       <data key="d10">
         <y:PolyLineEdge>

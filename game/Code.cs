@@ -8,8 +8,16 @@ namespace Gamebook
    public abstract class Code
    {
       // Traverse is the routine that allows other modules to execute the code.
+      public void Traverse(
+        Func<Code, string, bool> examine)
+      {
+         (this as SequenceCode).StartTraverse(examine);
+      }
+
       public abstract void Traverse(
-        Func<Code, bool> examine);
+        Func<Code, string, bool> examine,
+        string originalSourceText);
+
       // This makes Code objects appear in the debugger.
       public abstract override string ToString();
 
@@ -29,17 +37,18 @@ namespace Gamebook
       private List<Code> Codes { get; set; } = new List<Code>();
       private string SourceText = null;
 
+      public void StartTraverse(
+        Func<Code, string, bool> examine)
+      {
+         Traverse(examine, SourceText);
+      }
+
       public override void Traverse(
-        Func<Code, bool> examine)
+        Func<Code, string, bool> examine,
+        string originalSourceText)
       {
          foreach (var code in Codes)
-         {
-            string previousSourceText = null;
-            if (SourceText != null)
-               previousSourceText = Log.SetSourceCode(SourceText);
-            code.Traverse(examine);
-            Log.SetSourceCode(previousSourceText);
-         }
+            code.Traverse(examine, originalSourceText);
       }
 
       public override string ToString()
@@ -279,12 +288,13 @@ namespace Gamebook
       }
 
       public override void Traverse(
-        Func<Code, bool> examine)
+        Func<Code, string, bool> examine,
+        string originalSourceText)
       {
-         if (examine(this))
-            TrueCode.Traverse(examine);
+         if (examine(this, originalSourceText))
+            TrueCode.Traverse(examine, originalSourceText);
          else if (FalseCode != null)
-            FalseCode.Traverse(examine);
+            FalseCode.Traverse(examine, originalSourceText);
       }
 
       public override string ToString()
@@ -309,9 +319,10 @@ namespace Gamebook
       }
 
       public override void Traverse(
-        Func<Code, bool> examine)
+        Func<Code, string, bool> examine,
+        string originalSourceText)
       {
-         examine(this);
+         examine(this, originalSourceText);
       }
 
       public override string ToString()
@@ -336,9 +347,10 @@ namespace Gamebook
       }
 
       public override void Traverse(
-         Func<Code, bool> examine)
+         Func<Code, string, bool> examine,
+         string originalSourceText)
       {
-         examine(this);
+         examine(this, originalSourceText);
       }
 
       public override string ToString()
@@ -359,9 +371,10 @@ namespace Gamebook
       }
 
       public override void Traverse(
-        Func<Code, bool> examine)
+         Func<Code, string, bool> examine,
+         string originalSourceText)
       {
-         examine(this);
+         examine(this, originalSourceText);
       }
 
       public override string ToString()
@@ -382,9 +395,10 @@ namespace Gamebook
       }
 
       public override void Traverse(
-        Func<Code, bool> examine)
+         Func<Code, string, bool> examine,
+         string originalSourceText)
       {
-         examine(this);
+         examine(this, originalSourceText);
       }
 
       public override string ToString()
@@ -408,9 +422,10 @@ namespace Gamebook
       }
 
       public override void Traverse(
-        Func<Code, bool> examine)
+         Func<Code, string, bool> examine,
+         string originalSourceText)
       {
-         examine(this);
+         examine(this, originalSourceText);
       }
 
       public override string ToString()
@@ -431,9 +446,10 @@ namespace Gamebook
       }
 
       public override void Traverse(
-        Func<Code, bool> examine)
+         Func<Code, string, bool> examine,
+         string originalSourceText)
       {
-         examine(this);
+         examine(this, originalSourceText);
       }
       public override string ToString()
       {
@@ -453,9 +469,10 @@ namespace Gamebook
       }
 
       public override void Traverse(
-        Func<Code, bool> examine)
+         Func<Code, string, bool> examine,
+         string originalSourceText)
       {
-         examine(this);
+         examine(this, originalSourceText);
       }
 
       public override string ToString()
@@ -469,9 +486,10 @@ namespace Gamebook
       public ReturnCode() { }
 
       public override void Traverse(
-        Func<Code, bool> examine)
+         Func<Code, string, bool> examine,
+         string originalSourceText)
       {
-         examine(this);
+         examine(this, originalSourceText);
       }
 
       public override string ToString()
@@ -492,9 +510,10 @@ namespace Gamebook
       }
 
       public override void Traverse(
-        Func<Code, bool> examine)
+         Func<Code, string, bool> examine,
+         string originalSourceText)
       {
-         examine(this);
+         examine(this, originalSourceText);
       }
 
       public override string ToString()
@@ -515,9 +534,10 @@ namespace Gamebook
       }
 
       public override void Traverse(
-        Func<Code, bool> examine)
+         Func<Code, string, bool> examine,
+         string originalSourceText)
       {
-         examine(this);
+         examine(this, originalSourceText);
       }
 
       public override string ToString()

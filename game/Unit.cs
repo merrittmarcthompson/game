@@ -246,7 +246,7 @@ namespace Gamebook
             Code topCode)
          {
             string result = null;
-            topCode.Traverse((code) =>
+            topCode.Traverse((code, originalSourceText) =>
             {
                switch (code)
                {
@@ -265,19 +265,19 @@ namespace Gamebook
             bool isMerge = false;
             bool isReturn = false;
             string referencedSceneId = null;
-            topCode.Traverse((code) =>
+            topCode.Traverse((code, originalSourceText) =>
             {
                switch (code)
                {
                   case MergeCode mergeCode:
                      if (isReturn)
-                        throw new InvalidOperationException(string.Format($"Can't return and merge in the same arrow."));
+                        throw new InvalidOperationException(string.Format($"Can't return and merge in the same arrow in\n{originalSourceText}."));
                      isMerge = true;
                      referencedSceneId = mergeCode.SceneId;
                      return true;
                   case ReturnCode returnCode:
                      if (isMerge)
-                        throw new InvalidOperationException(string.Format($"Can't merge and return in the same arrow."));
+                        throw new InvalidOperationException(string.Format($"Can't merge and return in the same arrow in\n{originalSourceText}."));
                      isReturn = true;
                      return true;
                }
@@ -292,7 +292,7 @@ namespace Gamebook
             StreamWriter writer)
          {
             var sourceNameWithoutExtension = Path.GetFileNameWithoutExtension(sourceName);
-            topCode.Traverse((code) =>
+            topCode.Traverse((code, originalSourceText) =>
             {
                switch (code)
                {

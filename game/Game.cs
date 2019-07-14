@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace Gamebook
@@ -13,7 +14,7 @@ namespace Gamebook
       private class State
       {
          // The settings contain the state of the game: where you are, what people think of you, etc.
-         public Dictionary<string, object> Settings = new Dictionary<string, object>();
+         public Dictionary<string, Setting> Settings = new Dictionary<string, Setting>();
          // This is the one unit within a story tree that we are on right now.
          public Unit Unit = null;
          // Stack of return merge locations for referential merges.
@@ -23,19 +24,13 @@ namespace Gamebook
 
          public State(State other)
          {
-            Settings = new Dictionary<string, object>(other.Settings);
+            Settings = new Dictionary<string, Setting>(other.Settings);
             Unit = other.Unit;
             NextTargetUnitOnReturn = new Stack<Unit>(other.NextTargetUnitOnReturn);
          }
       }
 
       // VARIABLES
-
-      // Add annotations about how merges were done, etc.
-      public bool DebugMode = false;
-
-      // This relates the user choice of reactions to the next units that are associated with them. It gets regenerated on every screen build, so it doesn't need to be part of the state.
-      private Dictionary<string, Unit> ReactionTargetUnits = new Dictionary<string, Unit>();
 
       // The current state of the game: what unit we are on, what are the current settings, etc.
       [JsonProperty] // Have to add this for private members.
@@ -44,6 +39,16 @@ namespace Gamebook
       // Pop back to old states to implement undo.
       [JsonProperty] // Have to add this for private members.
       private Stack<State> UndoStack = new Stack<State>();
+
+      // Add annotations about how merges were done, etc.
+      public bool DebugMode = false;
+
+      // This relates the user choice of reactions to the next units that are associated with them. Private: it gets regenerated on every screen build, so it doesn't need to be part of the state.
+      private Dictionary<string, ReactionArrow> ReactionArrowsByLink = new Dictionary<string, ReactionArrow>();
+
+      public const char NegativeDebugTextStart = '\u0001';
+      public const char PositiveDebugTextStart = '\u0002';
+      public const char DebugTextStop = '\u0003';
 
       // FUNCTIONS
 
@@ -77,52 +82,64 @@ namespace Gamebook
       }
 
       private string ValueString(
-         object value)
+         Setting setting,
+         string id)
       {
-         if (value == null)
-            Log.Fail("Value is null");
-         if (value is string)
-            return value as string;
-         return EvaluateText(value as SequenceCode);
+         if (setting.IsBoolean())
+            throw new InvalidOperationException(String.Format($"Can't evaluate {id} as a string."));
+         return setting.GenericValue();
       }
 
       private bool EvaluateConditions(
          IEnumerable<Expression> expressions,
-         out string outTrace)
+         out string outTrace,
+         string originalSourceText)
       {
          outTrace = "";
          foreach (var expression in expressions)
          {
-            // First find out basic things about the left argument.
-            var leftDefined = Current.Settings.TryGetValue(expression.LeftId, out object leftObject);
-            var leftValue = "";
-            string traceLeftValue;
-            if (leftDefined)
-            {
-               if (leftObject == null)
-                  traceLeftValue = "<true>";
-               else
-               {
-                  leftValue = ValueString(leftObject);
-                  traceLeftValue = leftValue;
-               }
-            }
-            else
-               traceLeftValue = "<false>";
-            // We know how to evaluate when we see the right argument.
-            bool succeeded;
-            string traceEqualRight = "";
+
+            if (!Current.Settings.TryGetValue(expression.LeftId, out Setting leftSetting))
+               throw new InvalidOperationException(String.Format($"Referenced undefined setting {expression.LeftId} in\n{originalSourceText}."));
+
+            bool succeeded = false;
             if (expression.RightId == null)
-               // This is the 'left' or 'not left' case. The value of the left setting doesn't matter. What matters is whether left is defined or not.
-               succeeded = leftDefined != expression.Not;
+            {
+               // This is the 'left' or 'not left' case.
+               if (!leftSetting.IsBoolean())
+                  throw new InvalidOperationException(String.Format($"Setting {expression.LeftId} is a string, not a truth value in\n{originalSourceText}."));
+               succeeded = leftSetting.GenericValue() != null != expression.Not;
+               if (DebugMode)
+                  outTrace +=
+                     "@" +
+                     (succeeded? Game.PositiveDebugTextStart: Game.NegativeDebugTextStart) +
+                     "? " + 
+                     (expression.Not ? "not " : "") + 
+                     expression.LeftId +
+                     " <" +
+                     (leftSetting.GenericValue() == null? "false": "true") +
+                     ">" +
+                     Game.DebugTextStop;
+            }
             else
             {
-               // This is the 'left=right' or 'not left=right' case. The right ID isn't looked up like the left one is. It's a constant string to compare to. You can't compare the values of two IDs.
-               traceEqualRight = "=" + expression.RightId;
-               succeeded = (leftValue == expression.RightId) != expression.Not;
+               // This is the 'left=right' or 'not left=right' case. The right ID isn't looked up like the left one is. It's a constant string to compare to. You can't compare the values of two IDs. You can't compare two booleans.
+               if (leftSetting.IsBoolean())
+                  throw new InvalidOperationException(String.Format($"Setting {expression.LeftId} must be a string, not a truth value in\n{originalSourceText}."));
+               succeeded = (leftSetting.GenericValue() == expression.RightId) != expression.Not;
+               if (DebugMode)
+                  outTrace +=
+                     "@" +
+                     (succeeded ? Game.PositiveDebugTextStart : Game.NegativeDebugTextStart) +
+                     "? " +
+                     (expression.Not ? "not " : "") +
+                     expression.LeftId +
+                     " <" +
+                     leftSetting.GenericValue() +
+                     "> = " +
+                     expression.RightId +
+                     Game.DebugTextStop;
             }
-            if (DebugMode)
-               outTrace += "@`" + (expression.Not ? "not " : "") + expression.LeftId + "(" + traceLeftValue + ")" + traceEqualRight + "? " + (succeeded ? "<true>" : "<false>") + "~";
             if (!succeeded)
                return false;
          }
@@ -136,11 +153,11 @@ namespace Gamebook
          string trace = "";
          // When there are no 'when' directives, it always succeeds.
          var allSucceeded = true;
-         topCode.Traverse((code) =>
+         topCode.Traverse((code, originalSourceText) =>
          {
             if (!(code is WhenCode whenCode))
                return true;
-            if (!EvaluateConditions(whenCode.GetExpressions(), out trace))
+            if (!EvaluateConditions(whenCode.GetExpressions(), out trace, originalSourceText))
                allSucceeded = false;
             return true;
          });
@@ -152,32 +169,32 @@ namespace Gamebook
          string id,
          string value)
       {
-         Current.Settings[id] = value;
+         Current.Settings[id] = new StringSetting(value);
+      }
+
+      private string Dereference(
+         string id)
+      {
+         if (!Current.Settings.TryGetValue(id, out Setting setting))
+            throw new InvalidOperationException(String.Format($"Reference to undefined setting {id}."));
+         if (setting.IsBoolean())
+            throw new InvalidOperationException(String.Format($"Setting {id} must be a string, not a truth value."));
+         return setting.GenericValue();
       }
 
       public string Get(
          string id)
       {
-         if (Current.Settings.TryGetValue(id, out object value))
-            return ValueString(value);
-         return "";
+         return Dereference(id);
       }
 
       private string GetSpecialText(
          string specialId)
       {
          if (specialId == "John" || specialId == "Jane")
-         {
-            if (Current.Settings.TryGetValue("jane", out object value))
-               return ValueString(value);
-            Log.Fail("No value for 'Jane' or 'John'");
-         }
+            return Dereference("jane");
          else if (specialId == "Smith")
-         {
-            if (Current.Settings.TryGetValue("smith", out object value))
-               return ValueString(value);
-            Log.Fail("No value for 'Smith'");
-         }
+            return Dereference("smith");
          else
          {
             bool heroIsMale = Current.Settings.ContainsKey("male");
@@ -246,18 +263,18 @@ namespace Gamebook
          Code value)
       {
          string accumulator = "";
-         value.Traverse((code) =>
+         value.Traverse((code, originalSourceText) =>
          {
             switch (code)
             {
                case CharacterCode characterCode:
                   accumulator += characterCode.Characters;
                   break;
-               case SubstitutionCode substitutionCode:
+               /*case SubstitutionCode substitutionCode:
                   accumulator += ValueString(substitutionCode.Id);
-                  break;
+                  break;*/
                case IfCode ifCode:
-                  return EvaluateConditions(ifCode.GetExpressions(), out var trace);
+                  return EvaluateConditions(ifCode.GetExpressions(), out var trace, originalSourceText);
                case SpecialCode specialCode:
                   accumulator += GetSpecialText(specialCode.Id);
                   break;
@@ -273,26 +290,26 @@ namespace Gamebook
          out string outTrace)
       {
          string trace = "";
-         topCode.Traverse((code) =>
+         topCode.Traverse((code, originalSourceText) =>
          {
             switch (code)
             {
                case SetCode setCode:
                   foreach (var expression in setCode.GetExpressions())
                   {
-                     if (expression.Not)
-                        Current.Settings.Remove(expression.LeftId);
+                     if (expression.RightId == null)
+                        // This is [set tvOn] or [set not tvOn].
+                        Current.Settings[expression.LeftId] = new BooleanSetting(!expression.Not);
                      else
-                        // If it is [set tall], the right ID will be null.
-                        Current.Settings[expression.LeftId] = expression.RightId;
+                        Current.Settings[expression.LeftId] = new StringSetting(expression.RightId);
                      if (DebugMode)
-                        trace += "@`set " + (expression.Not ? "not " : "") + expression.LeftId + (expression.RightId != null ? "=" + expression.RightId : "") + "~";
+                        trace += "@" + Game.PositiveDebugTextStart + "set " + (expression.Not ? "not " : "") + expression.LeftId + (expression.RightId != null ? "=" + expression.RightId : "") + Game.DebugTextStop;
                   }
                   break;
                case TextCode textCode:
-                  Current.Settings[textCode.Id] = textCode.Text;
+                  Current.Settings[textCode.Id] = new StringSetting(textCode.Text);
                   if (DebugMode)
-                     trace += "@`text " + textCode.Id + "=" + textCode.Text + "~";
+                     trace += "@" + Game.PositiveDebugTextStart + "text " + textCode.Id + "=" + textCode.Text + Game.DebugTextStop;
                   break;
             }
             return true;
@@ -327,13 +344,15 @@ namespace Gamebook
       public (string, List<string>) BuildPage()
       {
          // Starting with the current unit box, a) merge the texts of all units connected below it into one text, and b) collect all the reaction arrows.
-         List<string> accumulatedReactionTexts = new List<string>();
+         Dictionary<double, string> accumulatedReactionTexts = new Dictionary<double, string>();
          // The action text will contain all the merged action texts.
          var accumulatedActionTexts = "";
          // Build these too.
-         ReactionTargetUnits = new Dictionary<string, Unit>();
+         ReactionArrowsByLink = new Dictionary<string, ReactionArrow>();
          // If there were no reaction arrows, we've reached an end point and need to return to 
          var gotAReactionArrow = false;
+         // Reactions are sorted by score, which is a floating point number. But some reactions may have the same score. So add a small floating-point sequence number to each one, to disambiguate them.
+         double reactionScoreDisambiguator = 0;
 
          // This recursive routine will accumulate all the action and reaction text values in the above variables.
          Accumulate(Current.Unit);
@@ -344,11 +363,11 @@ namespace Gamebook
                throw new InvalidOperationException(string.Format($"Got to a dead end with no place to return to."));
             var unit = Current.NextTargetUnitOnReturn.Pop();
             if (DebugMode)
-               accumulatedActionTexts += "@`pop " + unit.Id + "~";
+               accumulatedActionTexts += "@" + Game.PositiveDebugTextStart + "pop " + unit.Id + Game.DebugTextStop;
             Accumulate(unit);
          }
          
-         return (FixPlus(accumulatedActionTexts), accumulatedReactionTexts);
+         return (FixPlus(accumulatedActionTexts), accumulatedReactionTexts.Values.ToList());
 
          void Accumulate(
             Unit unit)
@@ -381,7 +400,7 @@ namespace Gamebook
                      accumulatedActionTexts += trace;
 
                      if (DebugMode)
-                        accumulatedActionTexts += "@`merge" + (mergeArrow.DebugSceneId != null ? " " + mergeArrow.DebugSceneId : "") + "~";
+                        accumulatedActionTexts += "@" + Game.PositiveDebugTextStart + "merge" + (mergeArrow.DebugSceneId != null ? " " + mergeArrow.DebugSceneId : "") + Game.DebugTextStop;
 
                      // There are two kinds of merge arrows.
                      Unit targetUnit;
@@ -400,7 +419,7 @@ namespace Gamebook
                      break;
                   case ReturnArrow returnArrow:
                      if (DebugMode)
-                        accumulatedActionTexts += "@`push " + returnArrow.TargetUnit.Id + "~";
+                        accumulatedActionTexts += "@" + Game.PositiveDebugTextStart + "push " + returnArrow.TargetUnit.Id + Game.DebugTextStop;
                      Current.NextTargetUnitOnReturn.Push(returnArrow.TargetUnit);
                      break;
                   case ReactionArrow reactionArrow:
@@ -416,8 +435,45 @@ namespace Gamebook
                            reactionText = reactionText.Substring(0, end);
                      }
                      else
-                        accumulatedReactionTexts.Add("{" + reactionText + "}");
-                     ReactionTargetUnits[reactionText] = reactionArrow.TargetUnit;
+                     {
+                        double highestScore = 0;
+                        reactionArrow.Code.Traverse((code, originalSourceText) =>
+                        {
+                           if (!(code is ScoreCode scoreCode))
+                              return true;
+                           foreach (var id in scoreCode.Ids)
+                           {
+                              // We don't have a way to declare these ahead of time right now. Put this in later.
+                              /*
+                                 if (!Current.Settings.TryGetValue(id, out Setting setting))
+                                    throw new InvalidOperationException(String.Format($"Reference to undefined setting '{id}' in\n{originalSourceText}"));
+                                 if (!(setting is ScoreSetting scoreSetting))
+                                    throw new InvalidOperationException(String.Format($"'{id}' is not a score in\n{originalSourceText}."));
+                               */
+                              
+                               // Instead, just create a score on the fly.
+                              ScoreSetting scoreSetting;
+                              if (Current.Settings.TryGetValue(id, out Setting setting))
+                                 scoreSetting = setting as ScoreSetting;
+                              else
+                              {
+                                 scoreSetting = new ScoreSetting();
+                                 Current.Settings.Add(id, scoreSetting);
+                              }
+                              // END
+
+                              var value = scoreSetting.Value();
+                              if (value > highestScore)
+                                 highestScore = value;
+                           }
+                           return true;
+                        });
+                        if (DebugMode)
+                           reactionText = Game.PositiveDebugTextStart + ((int)(highestScore * 100)).ToString() + "% " + Game.DebugTextStop + reactionText;
+                        accumulatedReactionTexts[highestScore + reactionScoreDisambiguator] = "{" + reactionText + "}";
+                        reactionScoreDisambiguator += 0.00001;
+                     }
+                     ReactionArrowsByLink[reactionText] = reactionArrow;
                      break;
                }
             }
@@ -428,8 +484,48 @@ namespace Gamebook
          string reactionText)
       {
          UndoStack.Push(new State(Current));
-         if (!ReactionTargetUnits.TryGetValue(reactionText, out Current.Unit))
+         // Get the chosen arrow.
+         if (!ReactionArrowsByLink.TryGetValue(reactionText, out var chosenReactionArrow))
             Log.Fail(String.Format($"No arrow for reaction '{reactionText}'"));
+
+         // Move to the unit it points to.
+         Current.Unit = chosenReactionArrow.TargetUnit;
+
+         // Add to the chosen counts for the arrow.
+         chosenReactionArrow.Code.Traverse((code, originalSourceText) =>
+         {
+            if (!(code is ScoreCode scoreCode))
+               return true;
+            foreach (var id in scoreCode.Ids)
+               // Ex. if the chosen arrow has the score 'brave', and one to the 'brave' score's chosen count.
+               (Current.Settings[id] as ScoreSetting).RaiseChosenCount();
+            return true;
+         });
+
+         foreach (var offeredReactionArrow in ReactionArrowsByLink.Values)
+         {
+            offeredReactionArrow.Code.Traverse((code, originalSourceText) =>
+            {
+               if (!(code is ScoreCode scoreCode))
+                  return true;
+               foreach (var id in scoreCode.Ids)
+                  // Ex. if an opportunity to choose the score 'brave', and one to the 'brave' score's opportunity count.
+                  (Current.Settings[id] as ScoreSetting).RaiseOpportunityCount();
+               return true;
+            });
+         }
+         var scoresReportWriter = new StreamWriter("scores.txt", false);
+         foreach (var setting in Current.Settings)
+         {
+            // Ex. brave    43% (3/7) 
+            if (setting.Value is ScoreSetting scoreSetting)
+            {
+               int percent = (int)(scoreSetting.Value() * 100);
+               string line = String.Format($"{setting.Key,-10} {percent}% ({scoreSetting.GetChosenCount()}/{scoreSetting.GetOpportunityCount()})");
+               scoresReportWriter.WriteLine(line);
+            }
+         }
+         scoresReportWriter.Close();
       }
    }
 }

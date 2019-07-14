@@ -161,12 +161,15 @@ namespace Gamebook
                      italic.Inlines.AddRange(BuildInlinesTo('>'));
                      inlines.Add(italic);
                      break;
-                  case '`':
+                  case Game.PositiveDebugTextStart:
+                  case Game.NegativeDebugTextStart:
                      // Added debug stuff.
                      AddAccumulation(inlines, ref accumulator);
                      var span = new Span();
                      span.Foreground = new SolidColorBrush(Color.FromRgb(0x00, 0xb0, 0x00));
-                     span.Inlines.AddRange(BuildInlinesTo('~'));
+                     if (text[index - 1] == Game.NegativeDebugTextStart)
+                        span.TextDecorations = TextDecorations.Strikethrough;
+                     span.Inlines.AddRange(BuildInlinesTo(Game.DebugTextStop));
                      inlines.Add(span);
                      break;
                   case '\0':
@@ -285,9 +288,10 @@ namespace Gamebook
 
             SetupScreen();
          }
-         catch (Exception e)
+         catch (Exception exception)
          {
-            MessageBox.Show(String.Format("{0}", e), "Exception");
+            MessageBox.Show(String.Format("{0}", exception.Message), "Exception");
+            Environment.Exit(1);
          }
       }
    }
