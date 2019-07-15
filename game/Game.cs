@@ -81,15 +81,6 @@ namespace Gamebook
          return UndoStack.Count != 0;
       }
 
-      private string ValueString(
-         Setting setting,
-         string id)
-      {
-         if (setting.IsBoolean())
-            throw new InvalidOperationException(String.Format($"Can't evaluate {id} as a string."));
-         return setting.GenericValue();
-      }
-
       private bool EvaluateConditions(
          IEnumerable<Expression> expressions,
          out string outTrace,
@@ -106,9 +97,9 @@ namespace Gamebook
             if (expression.RightId == null)
             {
                // This is the 'left' or 'not left' case.
-               if (!leftSetting.IsBoolean())
+               if (!(leftSetting is AbstractBooleanSetting leftBooleanSetting))
                   throw new InvalidOperationException(String.Format($"Setting {expression.LeftId} is a string, not a truth value in\n{originalSourceText}."));
-               succeeded = leftSetting.GenericValue() != null != expression.Not;
+               succeeded = leftBooleanSetting.Value != expression.Not;
                if (DebugMode)
                   outTrace +=
                      "@" +
@@ -117,16 +108,16 @@ namespace Gamebook
                      (expression.Not ? "not " : "") + 
                      expression.LeftId +
                      " <" +
-                     (leftSetting.GenericValue() == null? "false": "true") +
+                     (leftBooleanSetting.Value? "true": "false") +
                      ">" +
                      Game.DebugTextStop;
             }
             else
             {
                // This is the 'left=right' or 'not left=right' case. The right ID isn't looked up like the left one is. It's a constant string to compare to. You can't compare the values of two IDs. You can't compare two booleans.
-               if (leftSetting.IsBoolean())
+               if (!(leftSetting is StringSetting leftStringSetting))
                   throw new InvalidOperationException(String.Format($"Setting {expression.LeftId} must be a string, not a truth value in\n{originalSourceText}."));
-               succeeded = (leftSetting.GenericValue() == expression.RightId) != expression.Not;
+               succeeded = (leftStringSetting.Value == expression.RightId) != expression.Not;
                if (DebugMode)
                   outTrace +=
                      "@" +
@@ -135,7 +126,7 @@ namespace Gamebook
                      (expression.Not ? "not " : "") +
                      expression.LeftId +
                      " <" +
-                     leftSetting.GenericValue() +
+                     leftStringSetting.Value +
                      "> = " +
                      expression.RightId +
                      Game.DebugTextStop;
@@ -172,29 +163,29 @@ namespace Gamebook
          Current.Settings[id] = new StringSetting(value);
       }
 
-      private string Dereference(
+      private string DereferenceString(
          string id)
       {
          if (!Current.Settings.TryGetValue(id, out Setting setting))
             throw new InvalidOperationException(String.Format($"Reference to undefined setting {id}."));
-         if (setting.IsBoolean())
-            throw new InvalidOperationException(String.Format($"Setting {id} must be a string, not a truth value."));
-         return setting.GenericValue();
+         if (!(setting is StringSetting stringSetting))
+            throw new InvalidOperationException(String.Format($"Setting {id} must be a string."));
+         return stringSetting.Value;
       }
 
       public string Get(
          string id)
       {
-         return Dereference(id);
+         return DereferenceString(id);
       }
 
       private string GetSpecialText(
          string specialId)
       {
          if (specialId == "John" || specialId == "Jane")
-            return Dereference("jane");
+            return DereferenceString("jane");
          else if (specialId == "Smith")
-            return Dereference("smith");
+            return DereferenceString("smith");
          else
          {
             bool heroIsMale = Current.Settings.ContainsKey("male");
@@ -367,7 +358,7 @@ namespace Gamebook
             Accumulate(unit);
          }
          
-         return (FixPlus(accumulatedActionTexts), accumulatedReactionTexts.Values.ToList());
+         return (FixPlus(accumulatedActionTexts), accumulatedReactionTexts.OrderByDescending(pair => pair.Key).Select(pair => pair.Value).ToList());
 
          void Accumulate(
             Unit unit)
@@ -462,7 +453,7 @@ namespace Gamebook
                               }
                               // END
 
-                              var value = scoreSetting.Value();
+                              var value = scoreSetting.ScoreValue;
                               if (value > highestScore)
                                  highestScore = value;
                            }
@@ -502,6 +493,7 @@ namespace Gamebook
             return true;
          });
 
+         // Add to the opportunity counts for all the arrows.
          foreach (var offeredReactionArrow in ReactionArrowsByLink.Values)
          {
             offeredReactionArrow.Code.Traverse((code, originalSourceText) =>
@@ -514,16 +506,25 @@ namespace Gamebook
                return true;
             });
          }
-         var scoresReportWriter = new StreamWriter("scores.txt", false);
+
+         // Make a little report for debugging purposes.
+         var sortDictionary = new Dictionary<double, string>();
+         double uniquifier = 0.0;
          foreach (var setting in Current.Settings)
          {
             // Ex. brave    43% (3/7) 
             if (setting.Value is ScoreSetting scoreSetting)
             {
-               int percent = (int)(scoreSetting.Value() * 100);
-               string line = String.Format($"{setting.Key,-10} {percent}% ({scoreSetting.GetChosenCount()}/{scoreSetting.GetOpportunityCount()})");
-               scoresReportWriter.WriteLine(line);
+               int percent = (int)(scoreSetting.ScoreValue * 100);
+               string line = String.Format($"{setting.Key,-12} {percent.ToString() + "%", 4} ({scoreSetting.GetChosenCount()}/{scoreSetting.GetOpportunityCount()})");
+               sortDictionary.Add(scoreSetting.ScoreValue + uniquifier, line);
+               uniquifier += 0.00001;
             }
+         }
+         var scoresReportWriter = new StreamWriter("scores.txt", false);
+         foreach (var line in sortDictionary.OrderByDescending(pair => pair.Key).Select(pair => pair.Value))
+         {
+            scoresReportWriter.WriteLine(line);
          }
          scoresReportWriter.Close();
       }
