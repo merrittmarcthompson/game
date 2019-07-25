@@ -22,12 +22,13 @@ namespace Gamebook
       public abstract override string ToString();
 
       public static Code Compile(
-        string sourceCode)
+        string sourceCode,
+        string sourceNameForErrorMessages)
       {
          // Compile the text to a code sequence.
          Log.SetSourceCode(sourceCode);
-         var tokens = Token.Tokenize(sourceCode);
-         return SequenceCode.BuildFromTokens(tokens, sourceCode);
+         var tokens = Token.Tokenize(sourceCode, sourceNameForErrorMessages);
+         return SequenceCode.BuildFromTokens(tokens, sourceCode, sourceNameForErrorMessages);
       }
    }
 
@@ -68,6 +69,7 @@ namespace Gamebook
          private List<Token> Tokens;
          private int TokenIndex = 0;
          public string Value { get; private set; }
+         public TokenType Type { get; private set; }
 
          public LookAhead(
             List<Token> tokens)
@@ -83,6 +85,7 @@ namespace Gamebook
             if (token.Type == type)
             {
                Value = token.Value;
+               Type = type;
                return true;
             }
             --TokenIndex;
@@ -90,13 +93,16 @@ namespace Gamebook
          }
 
          public void Require(
-            TokenType expected)
+            TokenType expected,
+            string sourceTextForErrorMessages,
+            string sourceNameForErrorMessages)
          {
             // This should never go off the end. There is already an end of source text marker at the end of the tokens.
             var actual = Tokens[TokenIndex++];
             if (actual.Type != expected)
-               throw new InvalidOperationException(string.Format($"line {actual.LineNumber}: expected {expected} but got '{actual.Value}'"));
+               throw new InvalidOperationException(string.Format($"file {sourceNameForErrorMessages} line {actual.LineNumber}: expected {expected} but got '{actual.Value}' in\n{sourceTextForErrorMessages}"));
             Value = actual.Value;
+            Type = expected;
          }
       }
 
@@ -106,12 +112,13 @@ namespace Gamebook
       // This allows base Code class to construct a sequence.
       public static SequenceCode BuildFromTokens(
          List<Token> tokens,
-         string sourceText)
+         string sourceTextForErrorMessages,
+         string sourceNameForErrorMessages)
       {
          LookAhead Look = new LookAhead(tokens);
          var sequenceCode = GetSequence();
-         Look.Require(TokenType.EndOfSourceText);
-         sequenceCode.SourceText = sourceText;
+         Look.Require(TokenType.EndOfSourceText, sourceTextForErrorMessages, sourceNameForErrorMessages);
+         sequenceCode.SourceText = sourceTextForErrorMessages;
          return sequenceCode;
 
          // Some local helper functions.
@@ -127,16 +134,6 @@ namespace Gamebook
                else if (Look.Got(TokenType.Special))
                   // Ex. [he]
                   result.Codes.Add(new SpecialCode(Look.Value));
-               // I think this lets by too many mistakes. You put in some wrong ID somewhere, and it says, okay, it's a substitution, rather than complaining. Maybe have something like [insert bobsShoeSize] instead of [bobsShoeSize]?
-               /*
-               else if (GottenToken.Type == TokenType.Id)
-               {
-                  // This is a text substitution.
-                  var substitutionCode = new SubstitutionCode();
-                  substitutionCode.Id = GottenToken.Value;
-                  result.Objects.Add(substitutionCode);
-               }
-               */
                else if (Look.Got(TokenType.Merge))
                {
                   // [merge]
@@ -154,41 +151,48 @@ namespace Gamebook
                else if (Look.Got(TokenType.Scene))
                {
                   // [scene soundsLikeAScam]
-                  Look.Require(TokenType.Id);
+                  Look.Require(TokenType.Id, sourceTextForErrorMessages, sourceNameForErrorMessages);
                   result.Codes.Add(new SceneCode(Look.Value));
                }
-               else if (Look.Got(TokenType.Score))
+               else if (Look.Got(TokenType.Score) || Look.Got(TokenType.Sort))
                {
                   // SCORE ID [, ID...]
+                  // SORT ID [, ID...]
+                  var sortOnly = Look.Type == TokenType.Sort;
                   List<string> ids = new List<string>();
                   do
                   {
-                     Look.Require(TokenType.Id);
+                     Look.Require(TokenType.Id, sourceTextForErrorMessages, sourceNameForErrorMessages);
                      ids.Add(Look.Value);
                   } while (Look.Got(TokenType.Comma));
-                  result.Codes.Add(new ScoreCode(ids));
+                  result.Codes.Add(new ScoreCode(ids, sortOnly));
                }
                else if (Look.Got(TokenType.Text))
                {
-                  Look.Require(TokenType.Id);
+                  Look.Require(TokenType.Id, sourceTextForErrorMessages, sourceNameForErrorMessages);
                   string id = Look.Value;
                   string text = "";
                   if (Look.Got(TokenType.Characters))
                      text = Look.Value;
-                  Look.Require(TokenType.End);
+                  Look.Require(TokenType.End, sourceTextForErrorMessages, sourceNameForErrorMessages);
                   result.Codes.Add(new TextCode(id, text));
                }
                else if (Look.Got(TokenType.Set))
                   result.Codes.Add(new SetCode(GetExpressions(false)));
                else if (Look.Got(TokenType.When))
-                  result.Codes.Add(new WhenCode(GetExpressions(true)));
+               {
+                  if (Look.Got(TokenType.Else))
+                     result.Codes.Add(new WhenElseCode());
+                  else
+                     result.Codes.Add(new WhenCode(GetExpressions(true)));
+               }
                else if (Look.Got(TokenType.If))
                {
                   var ifCode = GetIf();
                   result.Codes.Add(ifCode);
 
                   // The whole if/or case statement is terminated by 'end'.
-                  Look.Require(TokenType.End);
+                  Look.Require(TokenType.End, sourceTextForErrorMessages, sourceNameForErrorMessages);
                }
                else
                {
@@ -210,14 +214,14 @@ namespace Gamebook
             do
             {
                var not = Look.Got(TokenType.Not);
-               Look.Require(TokenType.Id);
+               Look.Require(TokenType.Id, sourceTextForErrorMessages, sourceNameForErrorMessages);
                var leftId = Look.Value;
                string rightId = null;
                if (allowNotEqual || !not)
                {
                   if (Look.Got(TokenType.Equal))
                   {
-                     Look.Require(TokenType.Id);
+                     Look.Require(TokenType.Id, sourceTextForErrorMessages, sourceNameForErrorMessages);
                      rightId = Look.Value;
                   }
                }
@@ -331,6 +335,23 @@ namespace Gamebook
       }
    }
 
+   public class WhenElseCode: Code
+   {
+      public WhenElseCode() { }
+
+      public override void Traverse(
+        Func<Code, string, bool> examine,
+        string originalSourceText)
+      {
+         examine(this, originalSourceText);
+      }
+
+      public override string ToString()
+      {
+         return "when else";
+      }
+   }
+
    public class SetCode: Code
    {
       private List<Expression> Expressions;
@@ -362,12 +383,15 @@ namespace Gamebook
    public class ScoreCode: Code
    {
       public List<string> Ids { get; private set; }
+      public bool SortOnly { get; private set; }
 
       private ScoreCode() { }
       public ScoreCode(
-         List<string> ids)
+         List<string> ids,
+         bool sortOnly)
       {
          Ids = ids;
+         SortOnly = sortOnly;
       }
 
       public override void Traverse(
@@ -380,30 +404,6 @@ namespace Gamebook
       public override string ToString()
       {
          return "score " + Ids.ToString();
-      }
-   }
-
-   public class SubstitutionCode: Code
-   {
-      public string Id { get; private set; }
-
-      private SubstitutionCode() { }
-      public SubstitutionCode(
-         string id)
-      {
-         Id = id;
-      }
-
-      public override void Traverse(
-         Func<Code, string, bool> examine,
-         string originalSourceText)
-      {
-         examine(this, originalSourceText);
-      }
-
-      public override string ToString()
-      {
-         return "[" + Id + "]";
       }
    }
 

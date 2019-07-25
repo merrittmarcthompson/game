@@ -1,4 +1,6 @@
-﻿namespace Gamebook
+﻿using System;
+
+namespace Gamebook
 {
    public abstract class Setting
    {
@@ -35,17 +37,26 @@
 
    public class ScoreSetting: AbstractBooleanSetting
    {
+      // The game sets this.
+      public static double Average { get; set; }
+
       public override bool Value
       {
-         get => ScoreValue >= 0.5;
+         // You are brave (for example) if your brave score is greater than average..
+         get => ScoreValue > Average;
          protected set { }
       }
 
       public double ScoreValue
       {
-         get => OpportunityCount == 0 ? 0.0 : (double)ChosenCount / OpportunityCount;
+         // It's '< 2' for two reasons: a) If the opportunity count is 0, it will be a divide by zero error. b) An opportunity count of 1 is very little data to judge by, but a score of 1 out of 1 = 100%, which is the best score possible! Throw away the score in that case.
+         get => OpportunityCount < 2 ? 0 : (double)ChosenCount / OpportunityCount;
          protected set { }
       }
+
+      public string PercentString() => String.Format($"{ScoreValue * 100:0}%");
+
+      public string RatioString() => String.Format($"{ChosenCount}/{OpportunityCount}");
 
       private int ChosenCount = 0;
       private int OpportunityCount = 0;

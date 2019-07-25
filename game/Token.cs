@@ -18,28 +18,29 @@ namespace Gamebook
          return Name;
       }
 
-      public static TokenType EndOfSourceText = new TokenType("end of source text");
+      public static readonly TokenType EndOfSourceText = new TokenType("end of source text");
 
-      public static TokenType Id = new TokenType("an identifier");
-      public static TokenType Special = new TokenType("a special identifier");
-      public static TokenType Characters = new TokenType("characters");
+      public static readonly TokenType Id = new TokenType("an identifier");
+      public static readonly TokenType Special = new TokenType("a special identifier");
+      public static readonly TokenType Characters = new TokenType("characters");
 
-      public static TokenType End = new TokenType("'end'");
-      public static TokenType Else = new TokenType("'else'");
-      public static TokenType If = new TokenType("'if'");
-      public static TokenType Score = new TokenType("'score'");
-      public static TokenType Not = new TokenType("'not'");
-      public static TokenType Or = new TokenType("'or'");
-      public static TokenType Merge = new TokenType("'merge'");
-      public static TokenType Return = new TokenType("'return'");
-      public static TokenType Scene = new TokenType("'scene'");
-      public static TokenType Set = new TokenType("'set'");
-      public static TokenType Text = new TokenType("'text'");
-      public static TokenType When = new TokenType("'when'");
+      public static readonly TokenType End = new TokenType("'end'");
+      public static readonly TokenType Else = new TokenType("'else'");
+      public static readonly TokenType If = new TokenType("'if'");
+      public static readonly TokenType Not = new TokenType("'not'");
+      public static readonly TokenType Merge = new TokenType("'merge'");
+      public static readonly TokenType Or = new TokenType("'or'");
+      public static readonly TokenType Return = new TokenType("'return'");
+      public static readonly TokenType Scene = new TokenType("'scene'");
+      public static readonly TokenType Set = new TokenType("'set'");
+      public static readonly TokenType Score = new TokenType("'score'");
+      public static readonly TokenType Sort = new TokenType("'sort'");
+      public static readonly TokenType Text = new TokenType("'text'");
+      public static readonly TokenType When = new TokenType("'when'");
 
-      public static TokenType Comma = new TokenType("a comma");
-      public static TokenType Equal = new TokenType("an equal sign");
-      public static TokenType Period = new TokenType("a period");
+      public static readonly TokenType Comma = new TokenType("a comma");
+      public static readonly TokenType Equal = new TokenType("an equal sign");
+      public static readonly TokenType Period = new TokenType("a period");
    }
 
    public class Token
@@ -63,14 +64,13 @@ namespace Gamebook
       {
          string result = Type.Name;
          if (Type == TokenType.Id || Type == TokenType.Characters)
-         {
             result += " '" + Value + "'";
-         }
          return result;
       }
 
       public static List<Token> Tokenize(
-         string sourceText)
+         string sourceText,
+         string sourceNameForErrorMessages)
       {
          char pushedLetter = '\0';
          char gottenLetter;
@@ -116,9 +116,7 @@ namespace Gamebook
                if (!GetLetter())
                   return false;
                if (gottenLetter == '[')
-               {
                   ++level;
-               }
                else if (gottenLetter == ']')
                {
                   --level;
@@ -186,10 +184,8 @@ namespace Gamebook
 
                   // Check for a [[ comment starter.
                   if (gottenLetter != '[')
-                  {
                      // No comment--pretend this never happened.
                      UngetLetter();
-                  }
                   else
                   {
                      //  [[ This is an example comment. ]]
@@ -254,9 +250,7 @@ namespace Gamebook
                               return result;
                            }
                            if (gottenLetter != '[')
-                           {
-                              Log.Fail(String.Format("{0}: expected '[[' but got '[{1}'", lineNumber, gottenLetter));
-                           }
+                              throw new InvalidOperationException(string.Format($"file {sourceNameForErrorMessages} line {lineNumber}: expected '[[' but got '[{gottenLetter}' in\n{sourceText}"));
 
                            if (!GetComment())
                            {
@@ -269,9 +263,7 @@ namespace Gamebook
 
                         default:
                            if (!Char.IsLetterOrDigit(gottenLetter) || gottenLetter == '_')
-                           {
-                              Log.Fail(String.Format("line {0}: unexpected character '{1}'", lineNumber, gottenLetter));
-                           }
+                              throw new InvalidOperationException(string.Format($"file {sourceNameForErrorMessages} line {lineNumber}: unexpected character '{gottenLetter}' in\n{sourceText}"));
 
                            string id = "";
                            do
@@ -284,61 +276,35 @@ namespace Gamebook
 
                            UngetLetter();
                            if (id == "if")
-                           {
                               result.Add(new Token(TokenType.If, id, lineNumber));
-                           }
                            else if (id == "else")
-                           {
                               result.Add(new Token(TokenType.Else, id, lineNumber));
-                           }
                            else if (id == "or")
-                           {
                               result.Add(new Token(TokenType.Or, id, lineNumber));
-                           }
                            else if (id == "not")
-                           {
                               result.Add(new Token(TokenType.Not, id, lineNumber));
-                           }
                            else if (id == "end")
-                           {
                               result.Add(new Token(TokenType.End, id, lineNumber));
-                           }
                            else if (id == "when")
-                           {
                               result.Add(new Token(TokenType.When, id, lineNumber));
-                           }
                            else if (id == "set")
-                           {
                               result.Add(new Token(TokenType.Set, id, lineNumber));
-                           }
                            else if (id == "score")
-                           {
                               result.Add(new Token(TokenType.Score, id, lineNumber));
-                           }
+                           else if (id == "sort")
+                              result.Add(new Token(TokenType.Sort, id, lineNumber));
                            else if (id == "text")
-                           {
                               result.Add(new Token(TokenType.Text, id, lineNumber));
-                           }
                            else if (id == "merge")
-                           {
                               result.Add(new Token(TokenType.Merge, id, lineNumber));
-                           }
                            else if (id == "return")
-                           {
                               result.Add(new Token(TokenType.Return, id, lineNumber));
-                           }
                            else if (id == "scene")
-                           {
                               result.Add(new Token(TokenType.Scene, id, lineNumber));
-                           }
                            else if (specialIds.Contains(id))
-                           {
                               result.Add(new Token(TokenType.Special, id, lineNumber));
-                           }
                            else
-                           {
                               result.Add(new Token(TokenType.Id, id, lineNumber));
-                           }
                            break;
                      }
                   }

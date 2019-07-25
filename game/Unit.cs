@@ -120,6 +120,22 @@ namespace Gamebook
       // The only way to make a Unit is through the Load function, which creates all of them.
       private Unit() { }
 
+      // Well, actually we also need to create them on the fly for return arrows.
+      public static Unit BuildReturnUnitFor(
+         List<ReturnArrow> returnArrows)
+      {
+         var result = new Unit();
+         result.SourceId = "returnUnit";
+         result.SourceName = "returnUnit";
+         result.ActionCode = Code.Compile("", "returnUnit");
+         foreach (var returnArrow in returnArrows)
+         {
+            var mergeArrow = new MergeArrow(returnArrow.TargetUnit, returnArrow.Code, "returnArrow", "returnArrow");
+            result.Arrows.Add(mergeArrow);
+         }
+         return result;
+      }
+
       public static JsonConverter LoadConverter(
          string sourceDirectory)
       {
@@ -172,7 +188,7 @@ namespace Gamebook
                unit.SourceName = sourceName;
                unit.SourceId = nodeId;
                unitsBySourceAndId[sourceName + ":" + nodeId] = unit;
-               unit.ActionCode = Code.Compile(label);
+               unit.ActionCode = Code.Compile(label, sourceName);
                EvaluateSettingsReport(unit.ActionCode, sourceName, settingsReportWriter);
                unitsByNodeId.Add(nodeId, unit);
 
@@ -199,7 +215,7 @@ namespace Gamebook
                if (!unitsByNodeId.TryGetValue(targetNodeId, out var targetUnit))
                   Log.Fail($"Internal error: no node declaration for referenced target node '{targetNodeId}'");
 
-               Code code = Code.Compile(label);
+               Code code = Code.Compile(label, sourceName);
                EvaluateSettingsReport(code, sourceName, settingsReportWriter);
                var (isMerge, referencedSceneId, isReturn) = EvaluateArrowType(code);
                Arrow arrow;

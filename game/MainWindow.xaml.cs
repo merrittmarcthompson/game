@@ -70,8 +70,7 @@ namespace Gamebook
 
       private void UndoItemSelected(object sender, RoutedEventArgs e)
       {
-         Game.Undo();
-         SetupScreen();
+         SetupScreen(Game.MoveBack());
       }
 
       private void DebugModeItemSelected(object sender, RoutedEventArgs e)
@@ -116,8 +115,7 @@ namespace Gamebook
          var hyperlink = (Hyperlink)sender;
          var link = hyperlink.CommandParameter as string;
          CloseCharacterInfoBox();
-         Game.MoveToReaction(link);
-         SetupScreen();
+         SetupScreen(Game.MoveToReaction(link));
       }
 
       private List<Inline> BuildInlines(
@@ -231,31 +229,31 @@ namespace Gamebook
          return paragraph;
       }
 
-      private void SetupScreen()
+      private void SetupScreen(
+         (string actionText, List<string> reactionTexts) page)
       {
          // It's simple. The engine builds a text version of the screen. Then this main window code converts that into WPF objects for display.
-         var (actionText, reactionTexts) = Game.BuildPage();
          var first = true;
          FlowDocument document = new FlowDocument();
          document.FontFamily = new FontFamily("Calibri");
          document.FontSize = 13;
          document.MouseDown += StoryAreaClicked;
          document.TextAlignment = TextAlignment.Left;
-         foreach (var paragraphText in actionText.Split('@'))
+         foreach (var paragraphText in page.actionText.Split('@'))
          {
             if (first && paragraphText.Length < 1)
                continue;
             first = false;
             document.Blocks.Add(BuildParagraph(paragraphText));
          }
-         foreach (var reactionText in reactionTexts)
+         foreach (var reactionText in page.reactionTexts)
          {
             document.Blocks.Add(BuildBullet(reactionText));
          }
          var storyArea = (FlowDocumentScrollViewer)FindName("StoryArea");
          storyArea.Document = document;
          var undoItem = (ListBoxItem)FindName("UndoItem");
-         undoItem.IsEnabled = Game.CanUndo();
+         undoItem.IsEnabled = Game.CanMoveBack();
          var characterInfoBox = (Border)FindName("CharacterInfoBox");
          characterInfoBox.Visibility = Visibility.Hidden;
          var hamburgerMenu = (ListBox)FindName("HamburgerMenu");
@@ -268,31 +266,23 @@ namespace Gamebook
 
       public MainWindow()
       {
-         try
+         InitializeComponent();
+
+         // Get the source directory.
+         var arguments = Environment.GetCommandLineArgs();
+         if (arguments.Length < 2)
+            Log.Fail("usage: gamebook.exe source-directory");
+
+         // If there's a save game, deserialize it. Otherwise make a fresh game.
+         if (File.Exists("save.json"))
          {
-            InitializeComponent();
-
-            // Get the source directory.
-            var arguments = Environment.GetCommandLineArgs();
-            if (arguments.Length < 2)
-               Log.Fail("usage: gamebook.exe source-directory");
-
-            // If there's a save game, deserialize it. Otherwise make a fresh game.
-            if (File.Exists("save.json"))
-            {
-               Game = JsonConvert.DeserializeObject<Game>(File.ReadAllText("save.json"), Unit.LoadConverter(arguments[1]));
-               Game.FixAfterDeserialization();
-            }
-            else
-               Game = new Game(Unit.LoadFirst(arguments[1]));
-
-            SetupScreen();
+            Game = JsonConvert.DeserializeObject<Game>(File.ReadAllText("save.json"), Unit.LoadConverter(arguments[1]));
+            Game.FixAfterDeserialization();
          }
-         catch (Exception exception)
-         {
-            MessageBox.Show(String.Format("{0}", exception.Message), "Exception");
-            Environment.Exit(1);
-         }
+         else
+            Game = new Game(Unit.LoadFirst(arguments[1]));
+
+         SetupScreen(Game.FirstPage());
       }
    }
 }

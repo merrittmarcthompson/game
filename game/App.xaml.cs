@@ -1,17 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
 
 namespace Gamebook
 {
-  /// <summary>
-  /// Interaction logic for App.xaml
-  /// </summary>
-  public partial class App : Application
-  {
-  }
+   public partial class App: Application
+   {
+      private void Application_DispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs @event)
+      {
+         MessageBox.Show(String.Format("{0}", @event.Exception.InnerException.Message), "Exception");
+         Environment.Exit(1);
+      }
+   }
 }

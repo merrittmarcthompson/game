@@ -69,14 +69,15 @@ namespace Gamebook
          }
       }
 
-      public void Undo()
+      public (string, List<string>) MoveBack()
       {
          if (UndoStack.Count == 0)
-            return;
+            throw new InvalidOperationException(String.Format($"Called MoveBack with empty stack."));
          Current = UndoStack.Pop();
+         return BuildCurrentPage("");
       }
 
-      public bool CanUndo()
+      public bool CanMoveBack()
       {
          return UndoStack.Count != 0;
       }
@@ -89,7 +90,6 @@ namespace Gamebook
          outTrace = "";
          foreach (var expression in expressions)
          {
-
             if (!Current.Settings.TryGetValue(expression.LeftId, out Setting leftSetting))
                throw new InvalidOperationException(String.Format($"Referenced undefined setting {expression.LeftId} in\n{originalSourceText}."));
 
@@ -98,17 +98,17 @@ namespace Gamebook
             {
                // This is the 'left' or 'not left' case.
                if (!(leftSetting is AbstractBooleanSetting leftBooleanSetting))
-                  throw new InvalidOperationException(String.Format($"Setting {expression.LeftId} is a string, not a truth value in\n{originalSourceText}."));
+                  throw new InvalidOperationException(String.Format($"Setting {expression.LeftId} must be a truth value in\n{originalSourceText}."));
                succeeded = leftBooleanSetting.Value != expression.Not;
                if (DebugMode)
                   outTrace +=
                      "@" +
-                     (succeeded? Game.PositiveDebugTextStart: Game.NegativeDebugTextStart) +
-                     "? " + 
-                     (expression.Not ? "not " : "") + 
+                     (succeeded ? Game.PositiveDebugTextStart : Game.NegativeDebugTextStart) +
+                     "? " +
+                     (expression.Not ? "not " : "") +
                      expression.LeftId +
                      " <" +
-                     (leftBooleanSetting.Value? "true": "false") +
+                     (leftBooleanSetting.Value ? "true" : "false") +
                      ">" +
                      Game.DebugTextStop;
             }
@@ -116,7 +116,7 @@ namespace Gamebook
             {
                // This is the 'left=right' or 'not left=right' case. The right ID isn't looked up like the left one is. It's a constant string to compare to. You can't compare the values of two IDs. You can't compare two booleans.
                if (!(leftSetting is StringSetting leftStringSetting))
-                  throw new InvalidOperationException(String.Format($"Setting {expression.LeftId} must be a string, not a truth value in\n{originalSourceText}."));
+                  throw new InvalidOperationException(String.Format($"Setting {expression.LeftId} must be a string in\n{originalSourceText}."));
                succeeded = (leftStringSetting.Value == expression.RightId) != expression.Not;
                if (DebugMode)
                   outTrace +=
@@ -137,23 +137,26 @@ namespace Gamebook
          return true;
       }
 
-      private bool EvaluateCondition(
+      private (bool, bool) EvaluateWhen(
          Code topCode,
          out string outTrace)
       {
          string trace = "";
          // When there are no 'when' directives, it always succeeds.
          var allSucceeded = true;
+         var hadWhen = false;
          topCode.Traverse((code, originalSourceText) =>
          {
-            if (!(code is WhenCode whenCode))
-               return true;
-            if (!EvaluateConditions(whenCode.GetExpressions(), out trace, originalSourceText))
-               allSucceeded = false;
+            if (code is WhenCode whenCode)
+            {
+               hadWhen = true;
+               if (!EvaluateConditions(whenCode.GetExpressions(), out trace, originalSourceText))
+                  allSucceeded = false;
+            }
             return true;
          });
          outTrace = trace;
-         return allSucceeded;
+         return (allSucceeded, hadWhen);
       }
 
       public void Set(
@@ -261,9 +264,6 @@ namespace Gamebook
                case CharacterCode characterCode:
                   accumulator += characterCode.Characters;
                   break;
-               /*case SubstitutionCode substitutionCode:
-                  accumulator += ValueString(substitutionCode.Id);
-                  break;*/
                case IfCode ifCode:
                   return EvaluateConditions(ifCode.GetExpressions(), out var trace, originalSourceText);
                case SpecialCode specialCode:
@@ -276,7 +276,20 @@ namespace Gamebook
          return NormalizeText(accumulator);
       }
 
-      private void EvaluateSettings(
+      private bool EvaluateWhenElse(
+         Code topCode)
+      {
+         bool result = false;
+         topCode.Traverse((code, originalSourceText) =>
+         {
+            if (code is WhenElseCode whenElseCode)
+               result = true;
+            return true;
+         });
+         return result;
+      }
+
+      private void EvaluateSettingsAndScores(
          Code topCode,
          out string outTrace)
       {
@@ -301,6 +314,18 @@ namespace Gamebook
                   Current.Settings[textCode.Id] = new StringSetting(textCode.Text);
                   if (DebugMode)
                      trace += "@" + Game.PositiveDebugTextStart + "text " + textCode.Id + "=" + textCode.Text + Game.DebugTextStop;
+                  break;
+               case ScoreCode scoreCode:
+                  if (!scoreCode.SortOnly)
+                     foreach (var id in scoreCode.Ids)
+                     {
+                        var scoreSetting = Current.Settings[id] as ScoreSetting;
+                        scoreSetting.RaiseChosenCount();
+                        // Better raise this too, otherwise you could have more choices than opportunities to choose, i.e greater than 100% score.
+                        scoreSetting.RaiseOpportunityCount();
+                        if (DebugMode)
+                           trace += String.Format($"@{Game.PositiveDebugTextStart}<{id} → {scoreSetting.RatioString()} {scoreSetting.PercentString()} {(scoreSetting.Value ? "true" : "false")}>{Game.DebugTextStop}");
+                     }
                   break;
             }
             return true;
@@ -332,18 +357,24 @@ namespace Gamebook
          return fixedText;
       }
 
-      public (string, List<string>) BuildPage()
+      private (string, List<string>) BuildCurrentPage(
+         string startingTrace)
       {
          // Starting with the current unit box, a) merge the texts of all units connected below it into one text, and b) collect all the reaction arrows.
          Dictionary<double, string> accumulatedReactionTexts = new Dictionary<double, string>();
          // The action text will contain all the merged action texts.
-         var accumulatedActionTexts = "";
+         var accumulatedActionTexts = startingTrace;
          // Build these too.
          ReactionArrowsByLink = new Dictionary<string, ReactionArrow>();
          // If there were no reaction arrows, we've reached an end point and need to return to 
          var gotAReactionArrow = false;
          // Reactions are sorted by score, which is a floating point number. But some reactions may have the same score. So add a small floating-point sequence number to each one, to disambiguate them.
          double reactionScoreDisambiguator = 0;
+
+         // Scores use this to compute whether you are above average in a score. Set it now, before creating the page, so it can be used in conditions evaluated throughout page creation.
+         ScoreSetting.Average = Current.Settings.Values.Where(setting => setting is ScoreSetting).Select(setting => (setting as ScoreSetting).ScoreValue).DefaultIfEmpty().Average();
+         if (DebugMode)
+            accumulatedActionTexts += String.Format($"@{Game.PositiveDebugTextStart}average = {ScoreSetting.Average:0.00}%{Game.DebugTextStop}");
 
          // This recursive routine will accumulate all the action and reaction text values in the above variables.
          Accumulate(Current.Unit);
@@ -357,121 +388,148 @@ namespace Gamebook
                accumulatedActionTexts += "@" + Game.PositiveDebugTextStart + "pop " + unit.Id + Game.DebugTextStop;
             Accumulate(unit);
          }
-         
+
          return (FixPlus(accumulatedActionTexts), accumulatedReactionTexts.OrderByDescending(pair => pair.Key).Select(pair => pair.Value).ToList());
 
          void Accumulate(
             Unit unit)
          {
-            string trace;
             // First append this action box's own text and execute any settings.
             if (accumulatedActionTexts.Length == 0)
                accumulatedActionTexts = EvaluateText(unit.ActionCode);
             else
                accumulatedActionTexts += " " + EvaluateText(unit.ActionCode);
 
-            EvaluateSettings(unit.ActionCode, out trace);
-            accumulatedActionTexts += trace;
+            EvaluateSettingsAndScores(unit.ActionCode, out string trace1);
+            accumulatedActionTexts += trace1;
 
             // Next examine all the arrows for the action.
-            var arrowCount = 0;
+            var allWhensFailed = true;
+            var whenElseArrows = new List<Arrow>();
+            var returnArrows = new List<ReturnArrow>();
             foreach (var arrow in unit.GetArrows())
             {
-               // If conditions in the arrow are false, then just ignore the arrow completely. This includes both reaction and merge arrows.
-               bool succeeded = EvaluateCondition(arrow.Code, out trace);
-               accumulatedActionTexts += trace;
-               if (!succeeded)
-                  continue;
-               ++arrowCount;
-               switch (arrow)
+               if (arrow is ReturnArrow returnArrow)
+                  // We'll deal with these return arrows at the end of the loop.
+                  returnArrows.Add(returnArrow);
+               else if (EvaluateWhenElse(arrow.Code))
+                  // Save 'when else' arrows for possible later execution.
+                  whenElseArrows.Add(arrow);
+               else
                {
-                  case MergeArrow mergeArrow:
-                     // There may be 'set' parameters for a referential merge.
-                     EvaluateSettings(arrow.Code, out trace);
-                     accumulatedActionTexts += trace;
-
-                     if (DebugMode)
-                        accumulatedActionTexts += "@" + Game.PositiveDebugTextStart + "merge" + (mergeArrow.DebugSceneId != null ? " " + mergeArrow.DebugSceneId : "") + Game.DebugTextStop;
-
-                     // There are two kinds of merge arrows.
-                     Unit targetUnit;
-                     if (mergeArrow.TargetSceneUnit != null)
-                     {
-                        targetUnit = mergeArrow.TargetSceneUnit;
-                        // When we finish the jump to the other scene, we will continue merging with the action this arrow points to.
-                        Current.NextTargetUnitOnReturn.Push(mergeArrow.TargetUnit);
-                     }
-                     else
-                        // It's a local merge arrow. Merge the action it points to.
-                        // It should be impossible for it to have no target. Let it crash if that's the case.
-                        targetUnit = mergeArrow.TargetUnit;
-                     // Call this routine again recursively. It will append the target's text and examine the target's arrows.
-                     Accumulate(targetUnit);
-                     break;
-                  case ReturnArrow returnArrow:
-                     if (DebugMode)
-                        accumulatedActionTexts += "@" + Game.PositiveDebugTextStart + "push " + returnArrow.TargetUnit.Id + Game.DebugTextStop;
-                     Current.NextTargetUnitOnReturn.Push(returnArrow.TargetUnit);
-                     break;
-                  case ReactionArrow reactionArrow:
-                     gotAReactionArrow = true;
-                     var reactionText = EvaluateText(reactionArrow.Code);
-                     // There's a little trickiness with links here...
-                     if (reactionText.Length > 0 && reactionText[0] == '{')
-                     {
-                        // If it's in braces, it refers to a hyperlink already in the text. Don't make a new hyperlink for it. Just take off the braces. When the user clicks on the link, it won't have braces.
-                        reactionText = reactionText.Substring(1);
-                        var end = reactionText.IndexOf("}");
-                        if (end != -1)
-                           reactionText = reactionText.Substring(0, end);
-                     }
-                     else
-                     {
-                        double highestScore = 0;
-                        reactionArrow.Code.Traverse((code, originalSourceText) =>
-                        {
-                           if (!(code is ScoreCode scoreCode))
-                              return true;
-                           foreach (var id in scoreCode.Ids)
-                           {
-                              // We don't have a way to declare these ahead of time right now. Put this in later.
-                              /*
-                                 if (!Current.Settings.TryGetValue(id, out Setting setting))
-                                    throw new InvalidOperationException(String.Format($"Reference to undefined setting '{id}' in\n{originalSourceText}"));
-                                 if (!(setting is ScoreSetting scoreSetting))
-                                    throw new InvalidOperationException(String.Format($"'{id}' is not a score in\n{originalSourceText}."));
-                               */
-                              
-                               // Instead, just create a score on the fly.
-                              ScoreSetting scoreSetting;
-                              if (Current.Settings.TryGetValue(id, out Setting setting))
-                                 scoreSetting = setting as ScoreSetting;
-                              else
-                              {
-                                 scoreSetting = new ScoreSetting();
-                                 Current.Settings.Add(id, scoreSetting);
-                              }
-                              // END
-
-                              var value = scoreSetting.ScoreValue;
-                              if (value > highestScore)
-                                 highestScore = value;
-                           }
-                           return true;
-                        });
-                        if (DebugMode)
-                           reactionText = Game.PositiveDebugTextStart + ((int)(highestScore * 100)).ToString() + "% " + Game.DebugTextStop + reactionText;
-                        accumulatedReactionTexts[highestScore + reactionScoreDisambiguator] = "{" + reactionText + "}";
-                        reactionScoreDisambiguator += 0.00001;
-                     }
-                     ReactionArrowsByLink[reactionText] = reactionArrow;
-                     break;
+                  // If conditions in the arrow are false, then just ignore the arrow completely. This includes all types of arrows.
+                  (var succeeded, var hadWhen) = EvaluateWhen(arrow.Code, out string trace2);
+                  accumulatedActionTexts += trace2;
+                  if (!succeeded)
+                     continue;
+                  if (hadWhen)
+                     allWhensFailed = false;
+                  AccumulateArrow(arrow);
                }
+            }
+            if (allWhensFailed)
+               // If none of the 'when EXPRESSIONS' arrows succeeded, execute the 'when else' arrows now.
+               foreach (var arrow in whenElseArrows)
+                  AccumulateArrow(arrow);
+            if (returnArrows.Any())
+            {
+               var returnUnit = Unit.BuildReturnUnitFor(returnArrows);
+               Current.NextTargetUnitOnReturn.Push(returnUnit);
+            }
+         }
+
+         void AccumulateArrow(
+         Arrow arrow)
+         {
+            switch (arrow)
+            {
+               case MergeArrow mergeArrow:
+                  // There may be 'set' parameters for a referential merge.
+                  EvaluateSettingsAndScores(arrow.Code, out string trace);
+                  accumulatedActionTexts += trace;
+
+                  if (DebugMode)
+                     accumulatedActionTexts += "@" + Game.PositiveDebugTextStart + "merge" + (mergeArrow.DebugSceneId != null ? " " + mergeArrow.DebugSceneId : "") + Game.DebugTextStop;
+
+                  // There are two kinds of merge arrows.
+                  Unit targetUnit;
+                  if (mergeArrow.TargetSceneUnit != null)
+                  {
+                     targetUnit = mergeArrow.TargetSceneUnit;
+                     // When we finish the jump to the other scene, we will continue merging with the action this arrow points to.
+                     Current.NextTargetUnitOnReturn.Push(mergeArrow.TargetUnit);
+                  }
+                  else
+                     // It's a local merge arrow. Merge the action it points to.
+                     // It should be impossible for it to have no target. Let it crash if that's the case.
+                     targetUnit = mergeArrow.TargetUnit;
+                  // Call this routine again recursively. It will append the target's text and examine the target's arrows.
+                  Accumulate(targetUnit);
+                  break;
+               case ReactionArrow reactionArrow:
+                  gotAReactionArrow = true;
+                  var reactionText = EvaluateText(reactionArrow.Code);
+                  // There's a little trickiness with links here...
+                  if (reactionText.Length > 0 && reactionText[0] == '{')
+                  {
+                     // If it's in braces, it refers to a hyperlink already in the text. Don't make a new hyperlink for it. Just take off the braces. When the user clicks on the link, it won't have braces.
+                     reactionText = reactionText.Substring(1);
+                     var end = reactionText.IndexOf("}");
+                     if (end != -1)
+                        reactionText = reactionText.Substring(0, end);
+                  }
+                  else
+                  {
+                     // Sort by scores.
+                     double highestScore = 0;
+                     var highestScoreIdPlusSpace = "";
+                     reactionArrow.Code.Traverse((code, originalSourceText) =>
+                     {
+                        if (!(code is ScoreCode scoreCode))
+                           return true;
+                        foreach (var id in scoreCode.Ids)
+                        {
+                           ScoreSetting scoreSetting;
+                           if (Current.Settings.TryGetValue(id, out Setting setting))
+                              scoreSetting = setting as ScoreSetting;
+                           else
+                           {
+                              scoreSetting = new ScoreSetting();
+                              Current.Settings.Add(id, scoreSetting);
+                           }
+
+                           var value = scoreSetting.ScoreValue;
+                           if (value > highestScore)
+                           {
+                              highestScore = value;
+                              highestScoreIdPlusSpace = id + " ";
+                           }
+                        }
+                        return true;
+                     });
+                     if (DebugMode)
+                        reactionText =
+                           Game.PositiveDebugTextStart +
+                           highestScoreIdPlusSpace +
+                           ((int)(highestScore * 100)).ToString() +
+                           "% " +
+                           Game.DebugTextStop +
+                           reactionText;
+                     accumulatedReactionTexts[highestScore + reactionScoreDisambiguator] = "{" + reactionText + "}";
+                     reactionScoreDisambiguator += 0.00001;
+                  }
+                  ReactionArrowsByLink[reactionText] = reactionArrow;
+                  break;
             }
          }
       }
 
-      public void MoveToReaction(
+      public (string, List<string>) FirstPage()
+      {
+         return BuildCurrentPage("");
+      }
+
+      public (string, List<string>) MoveToReaction(
          string reactionText)
       {
          UndoStack.Push(new State(Current));
@@ -482,27 +540,30 @@ namespace Gamebook
          // Move to the unit it points to.
          Current.Unit = chosenReactionArrow.TargetUnit;
 
-         // Add to the chosen counts for the arrow.
-         chosenReactionArrow.Code.Traverse((code, originalSourceText) =>
-         {
-            if (!(code is ScoreCode scoreCode))
-               return true;
-            foreach (var id in scoreCode.Ids)
-               // Ex. if the chosen arrow has the score 'brave', and one to the 'brave' score's chosen count.
-               (Current.Settings[id] as ScoreSetting).RaiseChosenCount();
-            return true;
-         });
+         var trace = "";
 
-         // Add to the opportunity counts for all the arrows.
+         // Add to the score counts for all the offered arrows.
          foreach (var offeredReactionArrow in ReactionArrowsByLink.Values)
          {
             offeredReactionArrow.Code.Traverse((code, originalSourceText) =>
             {
-               if (!(code is ScoreCode scoreCode))
+               if (!(code is ScoreCode scoreCode) || scoreCode.SortOnly)
                   return true;
                foreach (var id in scoreCode.Ids)
-                  // Ex. if an opportunity to choose the score 'brave', and one to the 'brave' score's opportunity count.
-                  (Current.Settings[id] as ScoreSetting).RaiseOpportunityCount();
+               {
+                  var scoreSetting = Current.Settings[id] as ScoreSetting;
+                  var oldRatio = scoreSetting.RatioString();
+                  scoreSetting.RaiseOpportunityCount();
+                  var chosen = false;
+                  if (offeredReactionArrow == chosenReactionArrow)
+                  {
+                     chosen = true;
+                     scoreSetting.RaiseChosenCount();
+                  }
+                  if (DebugMode)
+                     trace += String.Format($"@{Game.PositiveDebugTextStart}{(chosen ? "<" : "")}{id} {oldRatio} → {scoreSetting.RatioString()} {scoreSetting.PercentString()} {(scoreSetting.Value ? "true" : "false")}{(chosen ? ">" : "")}{Game.DebugTextStop}");
+
+               }
                return true;
             });
          }
@@ -515,8 +576,7 @@ namespace Gamebook
             // Ex. brave    43% (3/7) 
             if (setting.Value is ScoreSetting scoreSetting)
             {
-               int percent = (int)(scoreSetting.ScoreValue * 100);
-               string line = String.Format($"{setting.Key,-12} {percent.ToString() + "%", 4} ({scoreSetting.GetChosenCount()}/{scoreSetting.GetOpportunityCount()})");
+               string line = String.Format($"{setting.Key,-12} {scoreSetting.PercentString()} ({scoreSetting.RatioString()}) {(scoreSetting.Value ? "true" : "false")}");
                sortDictionary.Add(scoreSetting.ScoreValue + uniquifier, line);
                uniquifier += 0.00001;
             }
@@ -527,6 +587,8 @@ namespace Gamebook
             scoresReportWriter.WriteLine(line);
          }
          scoresReportWriter.Close();
+
+         return BuildCurrentPage(trace);
       }
    }
 }
