@@ -352,8 +352,8 @@ You don't have to always be the tough guy, you know."
 "Thanks for listening to me, [Jane]."
 @[Jane] turned away and looked out the window.
 "But still, I don't know what we're going to do."
-@"Don't worry about that.
-I'll take care of it.
+@"Don't worry about that, honey.
+I'll take care of us, one way or another.
 Look, I've got to get to work."</y:NodeLabel>
         </y:GenericNode>
       </data>
@@ -446,7 +446,7 @@ She handed him his hat.</y:NodeLabel>
           <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="75.1640625" horizontalTextPosition="center" iconTextGap="4" modelName="internal" modelPosition="c" textColor="#000000" verticalTextPosition="bottom" visible="true" width="202.0302734375" x="0.0" xml:space="preserve" y="0.0">"Don't you have to get to work?"
 @"Yeah.
 And don't worry [Jane].
-Everything will be fine.."</y:NodeLabel>
+Everything will be fine."</y:NodeLabel>
         </y:GenericNode>
       </data>
     </node>

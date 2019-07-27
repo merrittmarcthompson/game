@@ -65,7 +65,7 @@ set not signedUpForVault]</y:NodeLabel>
               <y:Geometry height="75.1640625" width="517.5341796875" x="110.17894190228174" y="276.021484375"/>
               <y:Fill color="#FFFFFF" transparent="false"/>
               <y:BorderStyle color="#000000" type="line" width="1.0"/>
-              <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="75.1640625" horizontalTextPosition="center" iconTextGap="4" modelName="internal" modelPosition="c" textColor="#000000" verticalTextPosition="bottom" visible="true" width="517.5341796875" x="0.0" xml:space="preserve" y="0.0">@"The US and China have terminated diplomatic relations."
+              <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="75.1640625" horizontalTextPosition="center" iconTextGap="4" modelName="internal" modelPosition="c" textColor="#000000" verticalTextPosition="bottom" visible="true" width="517.5341796875" x="0.0" xml:space="preserve" y="0.0">@"The US and China have terminated diplomatic relations,"
 came a voice beside her. Tom had set up {the TV} on a pile of moving boxes.
 "With the latest on America's defenses in the event of nuclear war, here's Jack Winslow."
 @But [Jane] wasn't looking at the TV. [She] was watching a man across the street.</y:NodeLabel>
@@ -1648,7 +1648,7 @@ Cynical: It's a scam.]]<y:PreferredPlacementDescriptor angle="0.0" angleOffsetOn
           </y:Path>
           <y:LineStyle color="#000000" type="line" width="1.0"/>
           <y:Arrows source="none" target="standard"/>
-          <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="33.40234375" horizontalTextPosition="center" iconTextGap="4" modelName="free" modelPosition="anywhere" preferredPlacement="anywhere" ratio="0.5" textColor="#000000" verticalTextPosition="bottom" visible="true" width="262.169921875" x="7.9891562810020105" xml:space="preserve" y="56.701171875000114">Brighter &lt;underground?&gt; What does that mean?
+          <y:EdgeLabel alignment="center" configuration="AutoFlippingLabel" distance="2.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="33.40234375" horizontalTextPosition="center" iconTextGap="4" modelName="free" modelPosition="anywhere" preferredPlacement="anywhere" ratio="0.5" textColor="#000000" verticalTextPosition="bottom" visible="true" width="140.74609375" x="68.70107034350201" xml:space="preserve" y="56.701171875000114">What's Vault Tec?
 [[This could be anything.]]<y:PreferredPlacementDescriptor angle="0.0" angleOffsetOnRightSide="0" angleReference="absolute" angleRotationOnRightSide="co" distance="-1.0" frozen="true" placement="anywhere" side="anywhere" sideReference="relative_to_edge_flow"/></y:EdgeLabel>
           <y:BendStyle smoothed="false"/>
         </y:PolyLineEdge>

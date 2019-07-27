@@ -70,7 +70,8 @@ namespace Gamebook
 
       private void UndoItemSelected(object sender, RoutedEventArgs e)
       {
-         SetupScreen(Game.MoveBack());
+         Game.Undo();
+         SetupScreen();
       }
 
       private void DebugModeItemSelected(object sender, RoutedEventArgs e)
@@ -115,7 +116,8 @@ namespace Gamebook
          var hyperlink = (Hyperlink)sender;
          var link = hyperlink.CommandParameter as string;
          CloseCharacterInfoBox();
-         SetupScreen(Game.MoveToReaction(link));
+         Game.MoveToReaction(link);
+         SetupScreen();
       }
 
       private List<Inline> BuildInlines(
@@ -229,31 +231,30 @@ namespace Gamebook
          return paragraph;
       }
 
-      private void SetupScreen(
-         (string actionText, List<string> reactionTexts) page)
+      private void SetupScreen()
       {
-         // It's simple. The engine builds a text version of the screen. Then this main window code converts that into WPF objects for display.
+         // It's simple. The Game contains a text version of the screen. This main window code converts that into WPF objects for display.
          var first = true;
          FlowDocument document = new FlowDocument();
          document.FontFamily = new FontFamily("Calibri");
          document.FontSize = 13;
          document.MouseDown += StoryAreaClicked;
          document.TextAlignment = TextAlignment.Left;
-         foreach (var paragraphText in page.actionText.Split('@'))
+         foreach (var paragraphText in Game.CurrentPage.ActionText.Split('@'))
          {
             if (first && paragraphText.Length < 1)
                continue;
             first = false;
             document.Blocks.Add(BuildParagraph(paragraphText));
          }
-         foreach (var reactionText in page.reactionTexts)
+         foreach (var reactionText in Game.CurrentPage.ReactionTexts)
          {
             document.Blocks.Add(BuildBullet(reactionText));
          }
          var storyArea = (FlowDocumentScrollViewer)FindName("StoryArea");
          storyArea.Document = document;
          var undoItem = (ListBoxItem)FindName("UndoItem");
-         undoItem.IsEnabled = Game.CanMoveBack();
+         undoItem.IsEnabled = Game.CanUndo();
          var characterInfoBox = (Border)FindName("CharacterInfoBox");
          characterInfoBox.Visibility = Visibility.Hidden;
          var hamburgerMenu = (ListBox)FindName("HamburgerMenu");
@@ -280,9 +281,12 @@ namespace Gamebook
             Game.FixAfterDeserialization();
          }
          else
-            Game = new Game(Unit.LoadFirst(arguments[1]));
+         {
+            var firstUnitInGame = Unit.LoadFirst(arguments[1]);
+            Game = new Game(firstUnitInGame);
+         }
 
-         SetupScreen(Game.FirstPage());
+         SetupScreen();
       }
    }
 }
