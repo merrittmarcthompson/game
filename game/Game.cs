@@ -10,17 +10,42 @@ namespace Gamebook
    [JsonObject(MemberSerialization.OptOut)]
    public class Game
    {
+      public class ScoredReactionArrow
+      {
+         public double Score;
+         public ReactionArrow ReactionArrow;
+
+         public ScoredReactionArrow(
+            double score,
+            ReactionArrow reactionArrow)
+         {
+            Score = score;
+            ReactionArrow = reactionArrow;
+         }
+      }
+
       public class Page
       {
+         // This is the body of the text on the screen.
          public string ActionText { get; private set; }
-         public List<string> ReactionTexts { get; private set; }
+
+         // The keys are the reaction texts that appear below the action text. The reaction arrow data is used by the game to transition to the next unit.
+         public Dictionary<string, ScoredReactionArrow> Reactions { get; private set; }
 
          public Page(
             string actionText,
-            List<string> reactionTexts)
+            Dictionary<string, ScoredReactionArrow> reactions)
          {
             ActionText = actionText;
-            ReactionTexts = reactionTexts;
+            Reactions = reactions;
+         }
+
+         public Page(
+            Page other)
+         {
+            ActionText = other.ActionText;
+            // Don't need to duplicate reaction arrows; they are immutable.
+            Reactions = new Dictionary<string, ScoredReactionArrow>(other.Reactions);
          }
       }
 
@@ -36,23 +61,17 @@ namespace Gamebook
          // A character version of the rendered page that appears on the screen. This value is set on Game construction.
          public Page Page;
 
-         // This relates the user choice of reactions to the next units that are associated with them. This is what gets us to the next state.
-         public Dictionary<string, ReactionArrow> ReactionArrowsByLink = new Dictionary<string, ReactionArrow>();
-
          public State() { }
 
          public State(State other)
          {
-            // Make a copy of the other state which is completely detached and independent.
+            // Make a copy of the other state which is completely detached and independent. We need this to push copies of states on the stack.
             Settings = new Dictionary<string, Setting>(other.Settings);
 
             // Don't forget to reverse due to C# stack enumeration bug.
             NextTargetUnitOnReturn = new Stack<Unit>(other.NextTargetUnitOnReturn.Reverse());
 
-            ReactionArrowsByLink = new Dictionary<string, ReactionArrow>(other.ReactionArrowsByLink);
-
-            // Don't need to duplicate this; it's immutable.
-            Page = other.Page;
+            Page = new Page(other.Page);
          }
       }
 
@@ -112,15 +131,15 @@ namespace Gamebook
          UndoStack.Push(new State(Current));
 
          // Get the chosen arrow.
-         if (!Current.ReactionArrowsByLink.TryGetValue(reactionText, out var chosenReactionArrow))
-            Log.Fail(String.Format($"No arrow for reaction '{reactionText}'"));
+         if (!Current.Page.Reactions.TryGetValue(reactionText, out var chosen))
+            throw new InvalidOperationException(string.Format($"No arrow for reaction '{reactionText}'."));
 
          var trace = "";
 
          // Add to the score counts for all the offered arrows.
-         foreach (var offeredReactionArrow in Current.ReactionArrowsByLink.Values)
+         foreach (var offered in Current.Page.Reactions.Values)
          {
-            offeredReactionArrow.Code.Traverse((code, originalSourceText) =>
+            offered.ReactionArrow.Code.Traverse((code, originalSourceText) =>
             {
                if (!(code is ScoreCode scoreCode) || scoreCode.SortOnly)
                   return true;
@@ -129,14 +148,14 @@ namespace Gamebook
                   var scoreSetting = Current.Settings[id] as ScoreSetting;
                   var oldRatio = scoreSetting.RatioString();
                   scoreSetting.RaiseOpportunityCount();
-                  var chosen = false;
-                  if (offeredReactionArrow == chosenReactionArrow)
+                  bool italics = false;
+                  if (offered.ReactionArrow == chosen.ReactionArrow)
                   {
-                     chosen = true;
+                     italics = true;
                      scoreSetting.RaiseChosenCount();
                   }
                   if (DebugMode)
-                     trace += String.Format($"@{Game.PositiveDebugTextStart}{(chosen ? "<" : "")}{id} {oldRatio} → {scoreSetting.RatioString()} {scoreSetting.PercentString()} {(scoreSetting.Value ? "true" : "false")}{(chosen ? ">" : "")}{Game.DebugTextStop}");
+                     trace += string.Format($"@{Game.PositiveDebugTextStart}{(italics ? "<" : "")}{id} {oldRatio} → {scoreSetting.RatioString()} {scoreSetting.PercentString()} {(scoreSetting.Value ? "true" : "false")}{(italics ? ">" : "")}{Game.DebugTextStop}");
 
                }
                return true;
@@ -164,7 +183,7 @@ namespace Gamebook
          scoresReportWriter.Close();
 
          // Move to the unit the chosen arrow points to.
-         BuildPage(chosenReactionArrow.TargetUnit, trace);
+         BuildPage(chosen.ReactionArrow.TargetUnit, trace);
       }
 
       private void BuildPage(
@@ -172,11 +191,9 @@ namespace Gamebook
          string startingTrace)
       {
          // Starting with the current unit box, a) merge the texts of all units connected below it into one text, and b) collect all the reaction arrows.
-         Dictionary<double, string> accumulatedReactionTexts = new Dictionary<double, string>();
+         var reactions = new Dictionary<string, ScoredReactionArrow>();
          // The action text will contain all the merged action texts.
          var accumulatedActionTexts = startingTrace;
-         // Build these too.
-         Current.ReactionArrowsByLink = new Dictionary<string, ReactionArrow>();
          // If there were no reaction arrows, we've reached an end point and need to return to 
          var gotAReactionArrow = false;
          // Reactions are sorted by score, which is a floating point number. But some reactions may have the same score. So add a small floating-point sequence number to each one, to disambiguate them.
@@ -200,7 +217,7 @@ namespace Gamebook
             Accumulate(unit);
          }
 
-         Current.Page = new Page(FixPlus(accumulatedActionTexts), accumulatedReactionTexts.OrderByDescending(pair => pair.Key).Select(pair => pair.Value).ToList());
+         Current.Page = new Page(FixPlus(accumulatedActionTexts), reactions);
 
          void Accumulate(
             Unit unit)
@@ -280,6 +297,7 @@ namespace Gamebook
                   break;
                case ReactionArrow reactionArrow:
                   gotAReactionArrow = true;
+                  double highestScore = 0;
                   var reactionText = EvaluateText(reactionArrow.Code);
                   // There's a little trickiness with links here...
                   if (reactionText.Length > 0 && reactionText[0] == '{')
@@ -289,11 +307,12 @@ namespace Gamebook
                      var end = reactionText.IndexOf("}");
                      if (end != -1)
                         reactionText = reactionText.Substring(0, end);
+                     // -1 tells the UI to not put embedded hyperlinks on the list on the screen.
+                     highestScore = -1;
                   }
                   else
                   {
                      // Sort by scores.
-                     double highestScore = 0;
                      var highestScoreIdPlusSpace = "";
                      reactionArrow.Code.Traverse((code, originalSourceText) =>
                      {
@@ -327,10 +346,9 @@ namespace Gamebook
                            "% " +
                            Game.DebugTextStop +
                            reactionText;
-                     accumulatedReactionTexts[highestScore + reactionScoreDisambiguator] = "{" + reactionText + "}";
-                     reactionScoreDisambiguator += 0.00001;
                   }
-                  Current.ReactionArrowsByLink[reactionText] = reactionArrow;
+                  reactions[reactionText] = new ScoredReactionArrow(highestScore, reactionArrow);
+                  reactionScoreDisambiguator += 0.00001;
                   break;
             }
          }

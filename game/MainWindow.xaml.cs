@@ -8,6 +8,7 @@ using System.Windows.Controls.Primitives;
 using Newtonsoft.Json;
 using System.IO;
 using System;
+using System.Linq;
 
 namespace Gamebook
 {
@@ -247,10 +248,10 @@ namespace Gamebook
             first = false;
             document.Blocks.Add(BuildParagraph(paragraphText));
          }
-         foreach (var reactionText in Game.CurrentPage.ReactionTexts)
-         {
-            document.Blocks.Add(BuildBullet(reactionText));
-         }
+         foreach ((var reactionText, var score) in Game.CurrentPage.Reactions.OrderByDescending(pair => pair.Value.Score).Select(pair => (pair.Key, pair.Value.Score)))
+            // It's an embedded hyperlink if the score is -1.
+            if (score != -1)
+               document.Blocks.Add(BuildBullet("{" + reactionText + "}"));
          var storyArea = (FlowDocumentScrollViewer)FindName("StoryArea");
          storyArea.Document = document;
          var undoItem = (ListBoxItem)FindName("UndoItem");
