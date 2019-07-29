@@ -58,8 +58,8 @@ namespace Gamebook
 
       public string RatioString() => String.Format($"{ChosenCount}/{OpportunityCount}");
 
-      private int ChosenCount = 0;
-      private int OpportunityCount = 0;
+      private int ChosenCount;
+      private int OpportunityCount;
 
       public int GetChosenCount() => ChosenCount;
       public int GetOpportunityCount() => OpportunityCount;
@@ -74,5 +74,18 @@ namespace Gamebook
          ++OpportunityCount;
       }
 
+      public ScoreSetting()
+      {
+         ChosenCount = 0;
+         OpportunityCount = 0;
+      }
+
+      public ScoreSetting(
+         int chosenCount,
+         int opportunityCount)
+      {
+         ChosenCount = chosenCount;
+         OpportunityCount = opportunityCount;
+      }
    }
 }

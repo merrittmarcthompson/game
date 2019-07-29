@@ -1,6 +1,4 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -8,7 +6,17 @@ namespace Gamebook
 {
    //  All of the graphml source code gets converted into this data structure.
 
-   public class Arrow
+   public class WithId
+   {
+      protected static string BuildUniqueId(
+         string sourceName,
+         string sourceId)
+      {
+         return sourceName.Replace(' ', '-') + ":" + sourceId;
+      }
+   }
+
+   public class Arrow: WithId
    {
       public Unit TargetUnit { get; protected set; }
       public Code Code { get; protected set;  }
@@ -56,53 +64,36 @@ namespace Gamebook
 
    public class ReactionArrow: Arrow
    {
+      private string SourceName;
+      private string SourceId;
+
+      public string UniqueId
+      {
+         get => BuildUniqueId(SourceName, SourceId);
+         private set { }
+      }
+
       private ReactionArrow() { }
       // This lets the Load function make arrows. 
       public ReactionArrow(
          Unit targetUnit,
-         Code code): base (targetUnit, code)
+         Code code,
+         string sourceName,
+         string sourceId): base (targetUnit, code)
       {
+         SourceName = sourceName;
+         SourceId = sourceId;
       }
    }
 
-   [JsonObject(MemberSerialization.OptIn)]
-   public class Unit
+   public class Unit: WithId
    {
-      private class Converter: JsonConverter<Unit>
-      {
-         Dictionary<string, Unit> UnitsBySourceAndId;
-
-         public Converter(
-            Dictionary<string, Unit> unitsBySourceAndId)
-         {
-            UnitsBySourceAndId = unitsBySourceAndId;
-         }
-
-         public override void WriteJson(JsonWriter writer, Unit value, JsonSerializer serializer)
-         {
-            throw new NotImplementedException();
-         }
-
-         public override Unit ReadJson(JsonReader reader, Type objectType, Unit existingValue, bool hasExistingValue, JsonSerializer serializer)
-         {
-            var jsonObject = JObject.Load(reader);
-            var sourceName = (string)jsonObject["SourceName"];
-            var sourceId = (string)jsonObject["SourceId"];
-            return UnitsBySourceAndId[sourceName + ":" + sourceId];
-         }
-      }
-
       // When we save the game state, we don't save the units, reactions, code, etc. That is already coming from the .graphml files. Instead, when there is a reference to a unit, we just save the file name and internal ID of the unit. We hook up to the actual units after deserialization based on the file and ID.
-      [JsonProperty]
       private string SourceName;
-      [JsonProperty]
       private string SourceId;
-      public string Id
+      public string UniqueId
       {
-         get
-         {
-            return SourceName + ":" + SourceId;
-         }
+         get => BuildUniqueId(SourceName, SourceId);
          private set { }
       }
 
@@ -136,38 +127,23 @@ namespace Gamebook
          return result;
       }
 
-      public static JsonConverter LoadConverter(
+      public static (Unit, Dictionary<string, Unit>, Dictionary<string, ReactionArrow>) Load(
          string sourceDirectory)
-      {
-         Load(sourceDirectory, out var first, out var unitsBySourceAndId);
-         return new Converter(unitsBySourceAndId);
-      }
-
-      public static Unit LoadFirst(
-         string sourceDirectory)
-      {
-         Load(sourceDirectory, out var first, out var unitsBySourceAndId);
-         return first;
-      }
-
-      private static void Load(
-         string sourceDirectory,
-         out Unit startUnit,
-         out Dictionary<string, Unit> unitsBySourceAndId)
       {
          // Load all the graphml files in the source directory.
          var sourcePaths = Directory.GetFiles(sourceDirectory, "*.graphml");
          if (sourcePaths.Length < 1)
             Log.Fail(String.Format($"no .graphml files in directory {sourceDirectory}"));
 
-         startUnit = null;
+         // These are the return values.
+         Unit firstUnit = null;
+         var unitsByUniqueId = new Dictionary<string, Unit>();
+         var reactionArrowsByUniqueId = new Dictionary<string, ReactionArrow>();
 
          // Create a temporary list of actions from the nodes in the graphml that have scene IDs, so we can link merges to them in this routine later.
          var unitsBySceneId = new Dictionary<string, Unit>();
          // Create a temporary list of merges that need to be linked to actions by scene ID.
          var mergeFixups = new List<MergeArrow>();
-
-         unitsBySourceAndId = new Dictionary<string, Unit>();
 
          var settingsReportWriter = new StreamWriter("settings.csv", false);
          settingsReportWriter.WriteLine("SETTING,OPERATION,VALUE,FILE");
@@ -187,7 +163,7 @@ namespace Gamebook
                Unit unit = new Unit();
                unit.SourceName = sourceName;
                unit.SourceId = nodeId;
-               unitsBySourceAndId[sourceName + ":" + nodeId] = unit;
+               unitsByUniqueId[sourceName + ":" + nodeId] = unit;
                unit.ActionCode = Code.Compile(label, sourceName);
                EvaluateSettingsReport(unit.ActionCode, sourceName, settingsReportWriter);
                unitsByNodeId.Add(nodeId, unit);
@@ -201,15 +177,15 @@ namespace Gamebook
                   unitsBySceneId.Add(declaredSceneId, unit);
                   if (declaredSceneId == "start")
                   {
-                     if (startUnit != null)
+                     if (firstUnit != null)
                         Log.Fail("More than one start scene");
-                     startUnit = unit;
+                     firstUnit = unit;
                   }
                }
             }
 
             // Create and attach merges and reactions to the actions we just created.
-            foreach (var (sourceNodeId, targetNodeId, label) in graphml.Edges())
+            foreach (var (edgeId, sourceNodeId, targetNodeId, label) in graphml.Edges())
             {
                // Point the arrow to its target action.
                if (!unitsByNodeId.TryGetValue(targetNodeId, out var targetUnit))
@@ -228,8 +204,11 @@ namespace Gamebook
                else if (isReturn)
                   arrow = new ReturnArrow(targetUnit, code);
                else
-                  arrow = new ReactionArrow(targetUnit, code);
-
+               {
+                  var reactionArrow = new ReactionArrow(targetUnit, code, sourceName, edgeId);
+                  reactionArrowsByUniqueId[reactionArrow.UniqueId] = reactionArrow;
+                  arrow = reactionArrow;
+               }
                // Add the arrow to the source action's arrows.
                if (!unitsByNodeId.TryGetValue(sourceNodeId, out var sourceUnit))
                   Log.Fail($"Internal error: no node declaration for referenced source node '{sourceNodeId}'");
@@ -252,9 +231,10 @@ namespace Gamebook
 
          Log.SetSourceName(null);
 
-         if (startUnit == null)
+         if (firstUnit == null)
             Log.Fail("No start scene found.");
 
+         return (firstUnit, unitsByUniqueId, reactionArrowsByUniqueId);
 
          // Some helper functions.
 

@@ -5,7 +5,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Collections.Generic;
 using System.Windows.Controls.Primitives;
-using Newtonsoft.Json;
 using System.IO;
 using System;
 using System.Linq;
@@ -93,9 +92,8 @@ namespace Gamebook
 
       private void SaveItemSelected(object sender, RoutedEventArgs e)
       {
-         string json = JsonConvert.SerializeObject(Game, Formatting.Indented);
-         var writer = new StreamWriter("save.json", false);
-         writer.WriteLine(json);
+         var writer = new StreamWriter("save.txt", false);
+         Game.Save(writer);
          writer.Close();
       }
 
@@ -274,18 +272,15 @@ namespace Gamebook
          var arguments = Environment.GetCommandLineArgs();
          if (arguments.Length < 2)
             Log.Fail("usage: gamebook.exe source-directory");
+         
+         // Load the static game story.
+         var (firstUnit, unitsByUniqueId, reactionArrowsByUniqueId) = Unit.Load(arguments[1]);
 
-         // If there's a save game, deserialize it. Otherwise make a fresh game.
-         if (File.Exists("save.json"))
-         {
-            Game = JsonConvert.DeserializeObject<Game>(File.ReadAllText("save.json"), Unit.LoadConverter(arguments[1]));
-            Game.FixAfterDeserialization();
-         }
+         // If there's a save game state file, load it. Otherwise make a fresh game.
+         if (File.Exists("save.txt"))
+            Game = new Game(new StreamReader("save.txt"), unitsByUniqueId, reactionArrowsByUniqueId);
          else
-         {
-            var firstUnitInGame = Unit.LoadFirst(arguments[1]);
-            Game = new Game(firstUnitInGame);
-         }
+            Game = new Game(firstUnit);
 
          SetupScreen();
       }

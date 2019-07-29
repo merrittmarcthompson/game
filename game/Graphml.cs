@@ -21,14 +21,20 @@ namespace Gamebook
          return
             from node in Root.Descendants(g + "node")
             where node.Attribute("yfiles.foldertype")?.Value != "group"
-            select (node.Attribute("id").Value, node.Descendants(y + "NodeLabel").First().Value);
+            select (
+               node.Attribute("id").Value,
+               node.Descendants(y + "NodeLabel").First().Value);
       }
 
-      public IEnumerable<(string sourceNode, string targetNode, string label)> Edges()
+      public IEnumerable<(string edgeId, string sourceNode, string targetNode, string label)> Edges()
       {
          return
             from edge in Root.Descendants(g + "edge")
-            select (edge.Attribute("source").Value, edge.Attribute("target").Value, edge.Descendants(y + "EdgeLabel").DefaultIfEmpty(null)?.First()?.Value);
+            select (
+               edge.Attribute("id").Value,
+               edge.Attribute("source").Value,
+               edge.Attribute("target").Value,
+               edge.Descendants(y + "EdgeLabel").DefaultIfEmpty(null)?.First()?.Value);
       }
    }
 }

@@ -1,13 +1,10 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
 namespace Gamebook
 {
-   // To save the game, we just serialize this whole class.
-   [JsonObject(MemberSerialization.OptOut)]
    public class Game
    {
       public class ScoredReactionArrow
@@ -27,10 +24,10 @@ namespace Gamebook
       public class Page
       {
          // This is the body of the text on the screen.
-         public string ActionText { get; private set; }
+         public string ActionText;
 
          // The keys are the reaction texts that appear below the action text. The reaction arrow data is used by the game to transition to the next unit.
-         public Dictionary<string, ScoredReactionArrow> Reactions { get; private set; }
+         public Dictionary<string, ScoredReactionArrow> Reactions;
 
          public Page(
             string actionText,
@@ -55,7 +52,7 @@ namespace Gamebook
          // The settings contain the state of the game: where you are, what people think of you, etc.
          public Dictionary<string, Setting> Settings = new Dictionary<string, Setting>();
 
-         // Stack of return merge locations for referential merges.
+         // Stack of return merge locations.
          public Stack<Unit> NextTargetUnitOnReturn = new Stack<Unit>();
 
          // A character version of the rendered page that appears on the screen. This value is set on Game construction.
@@ -63,7 +60,8 @@ namespace Gamebook
 
          public State() { }
 
-         public State(State other)
+         public State(
+            State other)
          {
             // Make a copy of the other state which is completely detached and independent. We need this to push copies of states on the stack.
             Settings = new Dictionary<string, Setting>(other.Settings);
@@ -73,31 +71,156 @@ namespace Gamebook
 
             Page = new Page(other.Page);
          }
+
+         public void Save(
+            StreamWriter writer)
+         {
+            foreach (var setting in Settings)
+            {
+               writer.Write("s" + SaveFileDelimiter + setting.Key + SaveFileDelimiter);
+               switch (setting.Value)
+               {
+                  case StringSetting stringSetting:
+                     writer.WriteLine("s" + SaveFileDelimiter + stringSetting.Value);
+                     break;
+                  case ScoreSetting scoreSetting:
+                     writer.WriteLine("c" + SaveFileDelimiter + scoreSetting.GetChosenCount().ToString() + "‖" + scoreSetting.GetOpportunityCount());
+                     break;
+                  case BooleanSetting booleanSetting:
+                     writer.WriteLine("b" + SaveFileDelimiter + (booleanSetting.Value ? "1" : "0"));
+                     break;
+               }
+            }
+
+            foreach (var unit in NextTargetUnitOnReturn)
+               writer.WriteLine("n" + SaveFileDelimiter + unit.UniqueId);
+
+            writer.WriteLine("a" + SaveFileDelimiter + Page.ActionText);
+
+            foreach (var reaction in Page.Reactions)
+               writer.WriteLine("r" + SaveFileDelimiter + reaction.Value.ReactionArrow.UniqueId + SaveFileDelimiter + reaction.Value.Score + SaveFileDelimiter + reaction.Key);
+
+            writer.WriteLine("x");
+         }
+
+         public static State TryLoad(
+            StreamReader reader,
+            Dictionary<string, Unit> unitsByUniqueId,
+            Dictionary<string, ReactionArrow> reactionArrowsByUniqueId)
+         {
+            var result = new State();
+            result.Page = new Page(null, new Dictionary<string, ScoredReactionArrow>());
+
+            // End of file right at the beginning (maybe after an 'x' operation) indicates a valid end of the file.
+            var line = reader.ReadLine();
+            if (line == null)
+               return null;
+
+            while (true)
+            {
+               var parts = line.Split(SaveFileDelimiter);
+               switch (parts[0])
+               {
+                  case "s":
+                     Setting setting;
+                     switch (parts[2])
+                     {
+                        case "s":
+                           setting = new StringSetting(parts[3]);
+                           break;
+                        case "c":
+                           if (!int.TryParse(parts[3], out var chosen))
+                              throw new InvalidOperationException(string.Format($"Can't parse int chosen '{parts[3]}'."));
+                           if (!int.TryParse(parts[4], out var opportunity))
+                              throw new InvalidOperationException(string.Format($"Can't parse int opportunity '{parts[4]}'."));
+                           setting = new ScoreSetting(chosen, opportunity);
+                           break;
+                        case "b":
+                           switch (parts[3])
+                           {
+                              case "0":
+                                 setting = new BooleanSetting(false);
+                                 break;
+                              case "1":
+                                 setting = new BooleanSetting(true);
+                                 break;
+                              default:
+                                 throw new InvalidOperationException(string.Format($"Unexpected boolean value '{parts[3]}'."));
+                           }
+                           break;
+                        default:
+                           throw new InvalidOperationException(string.Format($"Unexpected setting type '{parts[2]}'."));
+                     }
+                     result.Settings.Add(parts[1], setting);
+                     break;
+                  case "n":
+                     result.NextTargetUnitOnReturn.Push(unitsByUniqueId[parts[1]]);
+                     break;
+                  case "a":
+                     result.Page.ActionText = parts[1];
+                     break;
+                  case "r":
+                     if (!double.TryParse(parts[2], out var score))
+                        throw new InvalidOperationException(string.Format($"Can't parse double score '{parts[2]}'."));
+                     result.Page.Reactions.Add(parts[3], new ScoredReactionArrow(score, reactionArrowsByUniqueId[parts[1]]));
+                     break;
+                  case "x":
+                     // Flip the stack so it's going the right way. When you copy a stack, it flips it.
+                     result.NextTargetUnitOnReturn = new Stack<Unit>(result.NextTargetUnitOnReturn);
+                     return result;
+                  default:
+                     throw new InvalidOperationException(string.Format($"Unexpected operation '{parts[0]}'."));
+               }
+               line = reader.ReadLine();
+               if (line == null)
+                  throw new InvalidOperationException(string.Format($"Unexpected end of save file."));
+            }
+         }
       }
 
       // VARIABLES
 
       // The current state of the game: what unit we are on, what are the current settings, etc.
-      // Have to add JsonProperty for private members.
-      [JsonProperty] private State Current = new State();
+      private State Current = new State();
 
       // Pop back to old states to implement undo.
-      [JsonProperty] private Stack<State> UndoStack = new Stack<State>();
+      private Stack<State> UndoStack = new Stack<State>();
 
       // Add annotations about how merges were done, etc.
       public bool DebugMode = false;
 
-      public const char NegativeDebugTextStart = '\u0001';
-      public const char PositiveDebugTextStart = '\u0002';
-      public const char DebugTextStop = '\u0003';
+      public const char NegativeDebugTextStart = '′';
+      public const char PositiveDebugTextStart = '″';
+      public const char DebugTextStop = '‴';
+      public const char SaveFileDelimiter = '‖';
 
       // FUNCTIONS
 
       public Game(
          Unit firstUnitInGame)
       {
-         // The game constructs its first page right away, ready to go. The game is always in a valid state, that is, it contains a completed page, ready to display. When we serialize and deserialize a game, we always save and restore a valid state.
+         // This constructs the first page right away, ready to go, starting with the first unit in the game. The game is always in a valid state, that is, it contains a completed page, ready to display.
          BuildPage(firstUnitInGame, "");
+      }
+
+      public Game(
+         StreamReader reader,
+         Dictionary<string, Unit> unitsByUniqueId,
+         Dictionary<string, ReactionArrow> reactionArrowsByUniqueId)
+      {
+         // This reads the state of an existing game and links it to the static parts of the game in the dictionaries.
+         Current = State.TryLoad(reader, unitsByUniqueId, reactionArrowsByUniqueId);
+         if (Current == null)
+            throw new InvalidOperationException(string.Format($"Save file is empty."));
+         while (true)
+         {
+            var undoState = State.TryLoad(reader, unitsByUniqueId, reactionArrowsByUniqueId);
+            if (undoState == null)
+               break;
+            UndoStack.Push(undoState);
+         }
+         // Flip the stack so it goes the right way.
+         UndoStack = new Stack<State>(UndoStack);
       }
 
       public void FixAfterDeserialization()
@@ -109,6 +232,14 @@ namespace Gamebook
          {
             state.NextTargetUnitOnReturn = new Stack<Unit>(state.NextTargetUnitOnReturn);
          }
+      }
+
+      public void Save(
+         StreamWriter writer)
+      {
+         Current.Save(writer);
+         foreach (var state in UndoStack)
+            state.Save(writer);
       }
 
       public Page CurrentPage { get => Current.Page; private set { } }
@@ -213,7 +344,7 @@ namespace Gamebook
                throw new InvalidOperationException(string.Format($"Got to a dead end with no place to return to."));
             var unit = Current.NextTargetUnitOnReturn.Pop();
             if (DebugMode)
-               accumulatedActionTexts += "@" + Game.PositiveDebugTextStart + "pop " + unit.Id + Game.DebugTextStop;
+               accumulatedActionTexts += "@" + Game.PositiveDebugTextStart + "pop " + unit.UniqueId + Game.DebugTextStop;
             Accumulate(unit);
          }
 
