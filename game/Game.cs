@@ -21,31 +21,6 @@ namespace Gamebook
          }
       }
 
-      public class Page
-      {
-         // This is the body of the text on the screen.
-         public string ActionText;
-
-         // The keys are the reaction texts that appear below the action text. The reaction arrow data is used by the game to transition to the next unit.
-         public Dictionary<string, ScoredReactionArrow> Reactions;
-
-         public Page(
-            string actionText,
-            Dictionary<string, ScoredReactionArrow> reactions)
-         {
-            ActionText = actionText;
-            Reactions = reactions;
-         }
-
-         public Page(
-            Page other)
-         {
-            ActionText = other.ActionText;
-            // Don't need to duplicate reaction arrows; they are immutable.
-            Reactions = new Dictionary<string, ScoredReactionArrow>(other.Reactions);
-         }
-      }
-
       // State represents the state of the game. It implements undoing game choices and going back to previous game states. A state is a finished page, ready for display.
       private class State
       {
@@ -55,8 +30,12 @@ namespace Gamebook
          // Stack of return merge locations.
          public Stack<Unit> NextTargetUnitOnReturn = new Stack<Unit>();
 
-         // A character version of the rendered page that appears on the screen. This value is set on Game construction.
-         public Page Page;
+         // This is the body of the text on the screen.
+         public string ActionText;
+
+         // The keys are the reaction texts that appear below the action text. The reaction arrow data is used by the game to transition to the next unit.
+         public Dictionary<string, ScoredReactionArrow> Reactions;
+
 
          public State() { }
 
@@ -66,10 +45,15 @@ namespace Gamebook
             // Make a copy of the other state which is completely detached and independent. We need this to push copies of states on the stack.
             Settings = new Dictionary<string, Setting>(other.Settings);
 
-            // Don't forget to reverse due to C# stack enumeration bug.
+            // C# stack copy flips the stack, so reverse that.
             NextTargetUnitOnReturn = new Stack<Unit>(other.NextTargetUnitOnReturn.Reverse());
 
-            Page = new Page(other.Page);
+            // Immutable so no need to duplicate.
+            ActionText = other.ActionText;
+
+            // Don't need to duplicate the reaction arrows; they are immutable.
+            Reactions = new Dictionary<string, ScoredReactionArrow>(other.Reactions);
+
          }
 
          public void Save(
@@ -95,9 +79,9 @@ namespace Gamebook
             foreach (var unit in NextTargetUnitOnReturn)
                writer.WriteLine("n" + SaveFileDelimiter + unit.UniqueId);
 
-            writer.WriteLine("a" + SaveFileDelimiter + Page.ActionText);
+            writer.WriteLine("a" + SaveFileDelimiter + ActionText);
 
-            foreach (var reaction in Page.Reactions)
+            foreach (var reaction in Reactions)
                writer.WriteLine("r" + SaveFileDelimiter + reaction.Value.ReactionArrow.UniqueId + SaveFileDelimiter + reaction.Value.Score + SaveFileDelimiter + reaction.Key);
 
             writer.WriteLine("x");
@@ -109,7 +93,8 @@ namespace Gamebook
             Dictionary<string, ReactionArrow> reactionArrowsByUniqueId)
          {
             var result = new State();
-            result.Page = new Page(null, new Dictionary<string, ScoredReactionArrow>());
+            result.ActionText = null;
+            result.Reactions = new Dictionary<string, ScoredReactionArrow>();
 
             // End of file right at the beginning (maybe after an 'x' operation) indicates a valid end of the file.
             var line = reader.ReadLine();
@@ -157,12 +142,12 @@ namespace Gamebook
                      result.NextTargetUnitOnReturn.Push(unitsByUniqueId[parts[1]]);
                      break;
                   case "a":
-                     result.Page.ActionText = parts[1];
+                     result.ActionText = parts[1];
                      break;
                   case "r":
                      if (!double.TryParse(parts[2], out var score))
                         throw new InvalidOperationException(string.Format($"Can't parse double score '{parts[2]}'."));
-                     result.Page.Reactions.Add(parts[3], new ScoredReactionArrow(score, reactionArrowsByUniqueId[parts[1]]));
+                     result.Reactions.Add(parts[3], new ScoredReactionArrow(score, reactionArrowsByUniqueId[parts[1]]));
                      break;
                   case "x":
                      // Flip the stack so it's going the right way. When you copy a stack, it flips it.
@@ -196,6 +181,17 @@ namespace Gamebook
 
       // FUNCTIONS
 
+      public string GetActionText()
+      {
+         return Current.ActionText;
+      }
+
+      public IEnumerable<string> GetReactionTextsByScore()
+      {
+         // -1 scores are links.
+         return Current.Reactions.OrderByDescending(pair => pair.Value.Score).Where(pair => pair.Value.Score != -1).Select(pair => pair.Key);
+      }
+
       public Game(
          Unit firstUnitInGame)
       {
@@ -223,17 +219,6 @@ namespace Gamebook
          UndoStack = new Stack<State>(UndoStack);
       }
 
-      public void FixAfterDeserialization()
-      {
-         // C# stacks incorrectly enumerate backwards, so when you serialize then deserialize them, they come back reversed! Therefore make a copy of the stack to fix it. Since stacks always enumerate backwards, the process of making the new copy will reverse it!
-         UndoStack = new Stack<State>(UndoStack);
-         Current.NextTargetUnitOnReturn = new Stack<Unit>(Current.NextTargetUnitOnReturn);
-         foreach (var state in UndoStack)
-         {
-            state.NextTargetUnitOnReturn = new Stack<Unit>(state.NextTargetUnitOnReturn);
-         }
-      }
-
       public void Save(
          StreamWriter writer)
       {
@@ -241,8 +226,6 @@ namespace Gamebook
          foreach (var state in UndoStack)
             state.Save(writer);
       }
-
-      public Page CurrentPage { get => Current.Page; private set { } }
 
       public void Undo()
       {
@@ -262,13 +245,13 @@ namespace Gamebook
          UndoStack.Push(new State(Current));
 
          // Get the chosen arrow.
-         if (!Current.Page.Reactions.TryGetValue(reactionText, out var chosen))
+         if (!Current.Reactions.TryGetValue(reactionText, out var chosen))
             throw new InvalidOperationException(string.Format($"No arrow for reaction '{reactionText}'."));
 
          var trace = "";
 
          // Add to the score counts for all the offered arrows.
-         foreach (var offered in Current.Page.Reactions.Values)
+         foreach (var offered in Current.Reactions.Values)
          {
             offered.ReactionArrow.Code.Traverse((code, originalSourceText) =>
             {
@@ -322,7 +305,7 @@ namespace Gamebook
          string startingTrace)
       {
          // Starting with the current unit box, a) merge the texts of all units connected below it into one text, and b) collect all the reaction arrows.
-         var reactions = new Dictionary<string, ScoredReactionArrow>();
+         var accumulatedReactions = new Dictionary<string, ScoredReactionArrow>();
          // The action text will contain all the merged action texts.
          var accumulatedActionTexts = startingTrace;
          // If there were no reaction arrows, we've reached an end point and need to return to 
@@ -348,7 +331,8 @@ namespace Gamebook
             Accumulate(unit);
          }
 
-         Current.Page = new Page(FixPlus(accumulatedActionTexts), reactions);
+         Current.ActionText = FixPlus(accumulatedActionTexts);
+         Current.Reactions = accumulatedReactions;
 
          void Accumulate(
             Unit unit)
@@ -478,7 +462,7 @@ namespace Gamebook
                            Game.DebugTextStop +
                            reactionText;
                   }
-                  reactions[reactionText] = new ScoredReactionArrow(highestScore, reactionArrow);
+                  accumulatedReactions[reactionText] = new ScoredReactionArrow(highestScore, reactionArrow);
                   reactionScoreDisambiguator += 0.00001;
                   break;
             }

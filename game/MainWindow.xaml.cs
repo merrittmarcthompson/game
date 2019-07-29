@@ -239,17 +239,15 @@ namespace Gamebook
          document.FontSize = 13;
          document.MouseDown += StoryAreaClicked;
          document.TextAlignment = TextAlignment.Left;
-         foreach (var paragraphText in Game.CurrentPage.ActionText.Split('@'))
+         foreach (var paragraphText in Game.GetActionText().Split('@'))
          {
             if (first && paragraphText.Length < 1)
                continue;
             first = false;
             document.Blocks.Add(BuildParagraph(paragraphText));
          }
-         foreach ((var reactionText, var score) in Game.CurrentPage.Reactions.OrderByDescending(pair => pair.Value.Score).Select(pair => (pair.Key, pair.Value.Score)))
-            // It's an embedded hyperlink if the score is -1.
-            if (score != -1)
-               document.Blocks.Add(BuildBullet("{" + reactionText + "}"));
+         foreach (var reactionText in Game.GetReactionTextsByScore())
+            document.Blocks.Add(BuildBullet("{" + reactionText + "}"));
          var storyArea = (FlowDocumentScrollViewer)FindName("StoryArea");
          storyArea.Document = document;
          var undoItem = (ListBoxItem)FindName("UndoItem");
