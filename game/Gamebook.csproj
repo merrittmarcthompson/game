@@ -89,7 +89,6 @@
     <Compile Include="Unit.cs" />
     <Compile Include="Graphml.cs" />
     <Compile Include="Token.cs" />
-    <Compile Include="Log.cs" />
     <Compile Include="Game.cs" />
     <Compile Include="Code.cs" />
     <Compile Include="MainWindow.xaml.cs">

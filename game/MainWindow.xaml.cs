@@ -269,7 +269,7 @@ namespace Gamebook
          // Get the source directory.
          var arguments = Environment.GetCommandLineArgs();
          if (arguments.Length < 2)
-            Log.Fail("usage: gamebook.exe source-directory");
+            throw new InvalidOperationException("usage: gamebook.exe source-directory");
          
          // Load the static game story.
          var (firstUnit, unitsByUniqueId, reactionArrowsByUniqueId) = Unit.Load(arguments[1]);

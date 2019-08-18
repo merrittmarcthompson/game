@@ -56,6 +56,8 @@ namespace Gamebook
 
          }
 
+         public const char SaveFileDelimiter = '∙';
+
          public void Save(
             StreamWriter writer)
          {
@@ -68,7 +70,7 @@ namespace Gamebook
                      writer.WriteLine("s" + SaveFileDelimiter + stringSetting.Value);
                      break;
                   case ScoreSetting scoreSetting:
-                     writer.WriteLine("c" + SaveFileDelimiter + scoreSetting.GetChosenCount().ToString() + "‖" + scoreSetting.GetOpportunityCount());
+                     writer.WriteLine("c" + SaveFileDelimiter + scoreSetting.GetChosenCount().ToString() + SaveFileDelimiter + scoreSetting.GetOpportunityCount());
                      break;
                   case BooleanSetting booleanSetting:
                      writer.WriteLine("b" + SaveFileDelimiter + (booleanSetting.Value ? "1" : "0"));
@@ -177,7 +179,6 @@ namespace Gamebook
       public const char NegativeDebugTextStart = '′';
       public const char PositiveDebugTextStart = '″';
       public const char DebugTextStop = '‴';
-      public const char SaveFileDelimiter = '‖';
 
       // FUNCTIONS
 
@@ -570,7 +571,8 @@ namespace Gamebook
       }
 
       private string GetSpecialText(
-         string specialId)
+         string specialId,
+         string originalSourceText)
       {
          if (specialId == "John" || specialId == "Jane")
             return DereferenceString("jane");
@@ -608,7 +610,7 @@ namespace Gamebook
             else if (specialId == "Mrs")
                return heroIsMale ? "Mr." : "Mrs.";
             else
-               Log.Fail(String.Format("Unknown special ID {0}.", specialId));
+               throw new InvalidOperationException(string.Format($"Unknown special ID '{specialId}' in\n{originalSourceText}"));
          }
          return "";
       }
@@ -654,7 +656,7 @@ namespace Gamebook
                case IfCode ifCode:
                   return EvaluateConditions(ifCode.GetExpressions(), out var trace, originalSourceText);
                case SpecialCode specialCode:
-                  accumulator += GetSpecialText(specialCode.Id);
+                  accumulator += GetSpecialText(specialCode.Id, originalSourceText);
                   break;
             }
             return true;

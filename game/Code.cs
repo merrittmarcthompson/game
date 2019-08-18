@@ -26,7 +26,6 @@ namespace Gamebook
         string sourceNameForErrorMessages)
       {
          // Compile the text to a code sequence.
-         Log.SetSourceCode(sourceCode);
          var tokens = Token.Tokenize(sourceCode, sourceNameForErrorMessages);
          return SequenceCode.BuildFromTokens(tokens, sourceCode, sourceNameForErrorMessages);
       }

@@ -133,7 +133,7 @@ namespace Gamebook
          // Load all the graphml files in the source directory.
          var sourcePaths = Directory.GetFiles(sourceDirectory, "*.graphml");
          if (sourcePaths.Length < 1)
-            Log.Fail(String.Format($"no .graphml files in directory {sourceDirectory}"));
+            throw new InvalidOperationException(string.Format($"no .graphml files in directory {sourceDirectory}"));
 
          // These are the return values.
          Unit firstUnit = null;
@@ -151,8 +151,6 @@ namespace Gamebook
          foreach (var sourcePath in sourcePaths)
          {
             var sourceName = Path.GetFileName(sourcePath);
-
-            Log.SetSourceName(sourceName);
 
             // Create a temporary list of actions from the nodes in the graphml, so we can link arrows to them in this routine later.
             var unitsByNodeId = new Dictionary<string, Unit>();
@@ -173,12 +171,12 @@ namespace Gamebook
                if (declaredSceneId != null)
                {
                   if (unitsBySceneId.ContainsKey(declaredSceneId))
-                     Log.Fail(String.Format($"Scene '{declaredSceneId}' declared twice"));
+                     throw new InvalidOperationException(string.Format($"{sourceName}: Scene '{declaredSceneId}' declared twice"));
                   unitsBySceneId.Add(declaredSceneId, unit);
                   if (declaredSceneId == "start")
                   {
                      if (firstUnit != null)
-                        Log.Fail("More than one start scene");
+                        throw new InvalidOperationException(string.Format($"{sourceName}: More than one start scene"));
                      firstUnit = unit;
                   }
                }
@@ -189,7 +187,7 @@ namespace Gamebook
             {
                // Point the arrow to its target action.
                if (!unitsByNodeId.TryGetValue(targetNodeId, out var targetUnit))
-                  Log.Fail($"Internal error: no node declaration for referenced target node '{targetNodeId}'");
+                  throw new InvalidOperationException(string.Format($"{sourceName}: Internal error: no node declaration for referenced target node '{targetNodeId}'"));
 
                Code code = Code.Compile(label, sourceName);
                EvaluateSettingsReport(code, sourceName, settingsReportWriter);
@@ -211,28 +209,23 @@ namespace Gamebook
                }
                // Add the arrow to the source action's arrows.
                if (!unitsByNodeId.TryGetValue(sourceNodeId, out var sourceUnit))
-                  Log.Fail($"Internal error: no node declaration for referenced source node '{sourceNodeId}'");
+                  throw new InvalidOperationException(string.Format($"{sourceName}: Internal error: no node declaration for referenced source node '{sourceNodeId}'"));
                sourceUnit.Arrows.Add(arrow);
             }
          }
 
-         Log.SetSourceCode(null);
-
          // Make a second pass to point merges that reference scenes to the scene's first action.
          foreach (var mergeArrow in mergeFixups)
          {
-            Log.SetSourceName(mergeArrow.DebugSourceName);
             if (!unitsBySceneId.TryGetValue(mergeArrow.DebugSceneId, out var targetSceneUnit))
-               Log.Fail($"No scene declaration for referenced scene ID '{mergeArrow.DebugSceneId}'");
+               throw new InvalidOperationException(string.Format($"No scene declaration for referenced scene ID '{mergeArrow.DebugSceneId}'"));
             mergeArrow.TargetSceneUnit = targetSceneUnit;
          }
 
          settingsReportWriter.Close();
 
-         Log.SetSourceName(null);
-
          if (firstUnit == null)
-            Log.Fail("No start scene found.");
+            throw new InvalidOperationException("No start scene found.");
 
          return (firstUnit, unitsByUniqueId, reactionArrowsByUniqueId);
 

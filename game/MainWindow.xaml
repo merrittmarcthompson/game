@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:Gamebook"
         Title="Gamebook - Mobile Phone Game" Height="545" Width="305"
         ResizeMode="NoResize">
-    <Grid Background="Beige" Margin="0,0,0,0">
+    <Grid Background="#FFFCF8" Margin="0,0,0,0">
         <FlowDocumentScrollViewer VerticalScrollBarVisibility="Hidden" x:Name="StoryArea" >
         </FlowDocumentScrollViewer>
         <Button x:Name="HamburgerButton" HorizontalAlignment="Left" VerticalAlignment="Top" Width="26" Height="26" Margin="260,476,0,0" Click="HamburgerClicked" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}">
