@@ -85,6 +85,7 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Page.cs" />
     <Compile Include="Setting.cs" />
     <Compile Include="Unit.cs" />
     <Compile Include="Graphml.cs" />
