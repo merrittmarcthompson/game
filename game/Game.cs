@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Gamebook
 {
-   public partial class Game
+   public class Game
    {
       // Game is the API the UI uses to interact with the UI-independent game engine.
 
@@ -24,6 +24,7 @@ namespace Gamebook
 
       // FUNCTIONS
 
+      // These are the two functions used to show the current page on the screen. GetActionText gets the description on top. GetReactionTextsByScore gets the list of reactions that appear on the bottom.
       public string GetActionText()
       {
          return CurrentPage.ActionText;
@@ -35,6 +36,7 @@ namespace Gamebook
          return CurrentPage.Reactions.OrderByDescending(pair => pair.Value.Score).Where(pair => pair.Value.Score != -1).Select(pair => pair.Key);
       }
 
+      // There are two ways to create the game initially. Either you create a fresh game from the game description, or you read an existing game from a file and link it up to the game description.
       public Game(
          Unit firstUnitInGame)
       {
@@ -63,6 +65,7 @@ namespace Gamebook
          UndoStack = new Stack<Page>(UndoStack);
       }
 
+      // This is how you save the game to a file.
       public void Save(
          StreamWriter writer)
       {
@@ -71,17 +74,20 @@ namespace Gamebook
             page.Save(writer);
       }
 
+      // This is how you go back to an earlier page.
       public void Undo()
       {
          if (CanUndo())
             CurrentPage = UndoStack.Pop();
       }
 
+      // This tells you whether your undo button should be grayed out or not.
       public bool CanUndo()
       {
          return UndoStack.Count != 0;
       }
 
+      // This changes the state of the game by picking one of the reaction texts on the bottom of the screen.
       public void MoveToReaction(
          string reactionText)
       {
@@ -91,6 +97,7 @@ namespace Gamebook
          CurrentPage = CurrentPage.BuildNext(reactionText);
       }
 
+      // These let you set and get game variables, like the name of the player character.
       public void Set(
          string id,
          string value)
