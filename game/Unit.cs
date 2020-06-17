@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace Gamebook
 {
@@ -19,12 +20,12 @@ namespace Gamebook
    public class Arrow: WithId
    {
       public Unit TargetUnit { get; protected set; }
-      public Code Code { get; protected set;  }
+      public CodeTree Code { get; protected set;  }
 
       protected Arrow() { }
       protected Arrow(
          Unit targetUnit,
-         Code code)
+         CodeTree code)
       {
          TargetUnit = targetUnit;
          Code = code;
@@ -40,7 +41,7 @@ namespace Gamebook
       // This lets the Load function make arrows. 
       public MergeArrow(
          Unit targetUnit,
-         Code code,
+         CodeTree code,
          string debugSceneId,
          string debugSourceName): base (targetUnit, code)
       {
@@ -57,7 +58,7 @@ namespace Gamebook
       // This lets the Load function make arrows. 
       public ReturnArrow(
          Unit targetUnit,
-         Code code) : base(targetUnit, code)
+         CodeTree code) : base(targetUnit, code)
       {
       }
    }
@@ -77,7 +78,7 @@ namespace Gamebook
       // This lets the Load function make arrows. 
       public ReactionArrow(
          Unit targetUnit,
-         Code code,
+         CodeTree code,
          string sourceName,
          string sourceId): base (targetUnit, code)
       {
@@ -100,7 +101,7 @@ namespace Gamebook
       // Each Unit represents a unit of play. It has two parts:
       // a. The text that describes the opposing turn (the "action"), ex. "@Black Bart said, "I'm gonna burn this town to the ground!"
       // b. The list of texts that describes the options for your turn, ex. "Try to reason with him.", "Shoot him.", etc.
-      public Code ActionCode { get; private set; }
+      public CodeTree ActionCode { get; private set; }
    
       private List<Arrow> Arrows = new List<Arrow>();
       public IEnumerable<Arrow> GetArrows ()
@@ -118,7 +119,7 @@ namespace Gamebook
          var result = new Unit();
          result.SourceId = "returnUnit";
          result.SourceName = "returnUnit";
-         result.ActionCode = Code.Compile("", "returnUnit");
+         result.ActionCode = CodeTree.Compile("", "returnUnit");
          foreach (var returnArrow in returnArrows)
          {
             var mergeArrow = new MergeArrow(returnArrow.TargetUnit, returnArrow.Code, "returnArrow", "returnArrow");
@@ -127,9 +128,40 @@ namespace Gamebook
          return result;
       }
 
-      public static (Unit, Dictionary<string, Unit>, Dictionary<string, ReactionArrow>) Load(
+      private static Dictionary<string, Setting> LoadSettings(
          string sourceDirectory)
       {
+         var result = new Dictionary<string, Setting>();
+
+         // This is just a quick, cheesy way to load this.
+         foreach (var words in
+            File.ReadLines(Path.Combine(sourceDirectory, "settings.txt"))
+               .Select(line => line.Split(' ')))
+         {
+            switch (words[0])
+            {
+               case "score":
+                  // ex. 'score brave'
+                  result.Add(words[1], new ScoreSetting());
+                  break;
+               case "state":
+                  // ex. 'state tvOn'
+                  result.Add(words[1], new BooleanSetting(false));
+                  break;
+               case "string":
+                  result.Add(words[1], new StringSetting(""));
+                  break;
+               // Ignore anything else as comments.
+            }
+         }
+         return result;
+      }
+
+      public static (Unit, Dictionary<string, Unit>, Dictionary<string, ReactionArrow>, Dictionary<string, Setting>) Load(
+         string sourceDirectory)
+      {
+         var settings = LoadSettings(sourceDirectory);
+
          // Load all the graphml files in the source directory.
          var sourcePaths = Directory.GetFiles(sourceDirectory, "*.graphml");
          if (sourcePaths.Length < 1)
@@ -162,7 +194,7 @@ namespace Gamebook
                unit.SourceName = sourceName;
                unit.SourceId = nodeId;
                unitsByUniqueId[sourceName + ":" + nodeId] = unit;
-               unit.ActionCode = Code.Compile(label, sourceName);
+               unit.ActionCode = CodeTree.Compile(label, sourceName);
                EvaluateSettingsReport(unit.ActionCode, sourceName, settingsReportWriter);
                unitsByNodeId.Add(nodeId, unit);
 
@@ -189,7 +221,7 @@ namespace Gamebook
                if (!unitsByNodeId.TryGetValue(targetNodeId, out var targetUnit))
                   throw new InvalidOperationException(string.Format($"{sourceName}: Internal error: no node declaration for referenced target node '{targetNodeId}'"));
 
-               Code code = Code.Compile(label, sourceName);
+               var code = CodeTree.Compile(label, sourceName);
                EvaluateSettingsReport(code, sourceName, settingsReportWriter);
                var (isMerge, referencedSceneId, isReturn) = EvaluateArrowType(code);
                Arrow arrow;
@@ -227,76 +259,68 @@ namespace Gamebook
          if (firstUnit == null)
             throw new InvalidOperationException("No start scene found.");
 
-         return (firstUnit, unitsByUniqueId, reactionArrowsByUniqueId);
+         return (firstUnit, unitsByUniqueId, reactionArrowsByUniqueId, settings);
 
          // Some helper functions.
 
          string EvaluateScene(
-            Code topCode)
+            CodeTree codeTree)
          {
-            string result = null;
-            topCode.Traverse((code, originalSourceText) =>
-            {
-               switch (code)
-               {
-                  case SceneCode sceneCode:
-                     result = sceneCode.SceneId;
-                     return true;
-               }
-               return false;
-            });
-            return result;
+            return codeTree
+               .Traverse()
+               .Where(code => code is SceneCode)
+               .Select(code => (code as SceneCode).SceneId)
+               .DefaultIfEmpty(null)
+               .First();
          }
 
          (bool, string, bool) EvaluateArrowType(
-            Code topCode)
+            CodeTree codeTree)
          {
             bool isMerge = false;
             bool isReturn = false;
             string referencedSceneId = null;
-            topCode.Traverse((code, originalSourceText) =>
+            foreach (var code in codeTree.Traverse())
             {
                switch (code)
                {
                   case MergeCode mergeCode:
                      if (isReturn)
-                        throw new InvalidOperationException(string.Format($"Can't return and merge in the same arrow in\n{originalSourceText}."));
+                        throw new InvalidOperationException(string.Format($"Can't return and merge in the same arrow in\n{codeTree.SourceText}."));
                      isMerge = true;
                      referencedSceneId = mergeCode.SceneId;
-                     return true;
+                     break;
                   case ReturnCode returnCode:
                      if (isMerge)
-                        throw new InvalidOperationException(string.Format($"Can't merge and return in the same arrow in\n{originalSourceText}."));
+                        throw new InvalidOperationException(string.Format($"Can't merge and return in the same arrow in\n{codeTree.SourceText}."));
                      isReturn = true;
-                     return true;
+                     break;
                }
-               return false;
-            });
+            }
             return (isMerge, referencedSceneId, isReturn);
          }
 
          void EvaluateSettingsReport(
-            Code topCode,
+            CodeTree codeTree,
             string sourceName,
             StreamWriter writer)
          {
             var sourceNameWithoutExtension = Path.GetFileNameWithoutExtension(sourceName);
-            topCode.Traverse((code, originalSourceText) =>
+            foreach(var code in codeTree.Traverse())
             {
                switch (code)
                {
                   case SetCode setCode:
                      Write("set", setCode.GetExpressions());
-                     return true;
+                     break;
                   case WhenCode whenCode:
                      Write("when", whenCode.GetExpressions());
-                     return true;
+                     break;
                   case IfCode ifCode:
                      Write("if", ifCode.GetExpressions());
-                     return true;
+                     break;
                }
-               return false;
-            });
+            }
 
             void Write(
                string operation,

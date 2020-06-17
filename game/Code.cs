@@ -5,23 +5,27 @@ namespace Gamebook
 {
    // These classes make up the Code data structure.
 
-   public abstract class Code
+   public class CodeTree
    {
-      // Traverse is the routine that allows other modules to execute the code.
-      public void Traverse(
-        Func<Code, string, bool> examine)
+      private SequenceCode RootCode;
+
+      public string SourceText { get; private set; }
+
+      public CodeTree(
+         SequenceCode rootCode,
+         string sourceText)
       {
-         (this as SequenceCode).StartTraverse(examine);
+         SourceText = sourceText;
+         RootCode = rootCode;
       }
 
-      public abstract void Traverse(
-        Func<Code, string, bool> examine,
-        string originalSourceText);
+      public IEnumerable<Code> Traverse(
+         Func<List<Expression>, bool?> branchPicker = null)
+      {
+         return RootCode.Traverse(branchPicker);
+      }
 
-      // This makes Code objects appear in the debugger.
-      public abstract override string ToString();
-
-      public static Code Compile(
+      public static CodeTree Compile(
         string sourceCode,
         string sourceNameForErrorMessages)
       {
@@ -31,24 +35,29 @@ namespace Gamebook
       }
    }
 
+   public abstract class Code
+   {
+      // Traverse is the routine that allows other modules to execute the code.
+      public abstract IEnumerable<Code> Traverse(
+         Func<List<Expression>, bool?> branchPicker = null);
+
+      // This makes Code objects appear in the debugger.
+      public abstract override string ToString();
+   }
+
+   // Sequence Code
+
    public class SequenceCode: Code
    {
       // This is a sequence of code operations. The Traverse function is the only way to get to the Codes.
       private List<Code> Codes { get; set; } = new List<Code>();
-      private string SourceText = null;
 
-      public void StartTraverse(
-        Func<Code, string, bool> examine)
-      {
-         Traverse(examine, SourceText);
-      }
-
-      public override void Traverse(
-        Func<Code, string, bool> examine,
-        string originalSourceText)
+      public override IEnumerable<Code> Traverse(
+         Func<List<Expression>, bool?> branchPicker)
       {
          foreach (var code in Codes)
-            code.Traverse(examine, originalSourceText);
+            foreach (var subcode in code.Traverse(branchPicker))
+               yield return subcode;
       }
 
       public override string ToString()
@@ -109,7 +118,7 @@ namespace Gamebook
       private SequenceCode() { }
 
       // This allows base Code class to construct a sequence.
-      public static SequenceCode BuildFromTokens(
+      public static CodeTree BuildFromTokens(
          List<Token> tokens,
          string sourceTextForErrorMessages,
          string sourceNameForErrorMessages)
@@ -117,8 +126,7 @@ namespace Gamebook
          LookAhead Look = new LookAhead(tokens);
          var sequenceCode = GetSequence();
          Look.Require(TokenType.EndOfSourceText, sourceTextForErrorMessages, sourceNameForErrorMessages);
-         sequenceCode.SourceText = sourceTextForErrorMessages;
-         return sequenceCode;
+         return new CodeTree(sequenceCode, sourceTextForErrorMessages);
 
          // Some local helper functions.
 
@@ -277,7 +285,7 @@ namespace Gamebook
          return Expressions;
       }
       public Code TrueCode { get; private set; }
-      public Code FalseCode { get; private set; }
+      public Code? FalseCode { get; private set; }
 
       private IfCode() { }
       public IfCode(
@@ -290,14 +298,18 @@ namespace Gamebook
          FalseCode = falseCode;
       }
 
-      public override void Traverse(
-        Func<Code, string, bool> examine,
-        string originalSourceText)
+      public override IEnumerable<Code> Traverse(
+         Func<List<Expression>, bool?> branchPicker)
       {
-         if (examine(this, originalSourceText))
-            TrueCode.Traverse(examine, originalSourceText);
-         else if (FalseCode != null)
-            FalseCode.Traverse(examine, originalSourceText);
+         bool? branchesToExecute = branchPicker == null? null: branchesToExecute = branchPicker(Expressions);
+
+         if (branchesToExecute == null || branchesToExecute == true)
+            foreach (var code in TrueCode.Traverse())
+               yield return code;
+         if (FalseCode != null)
+            if (branchesToExecute == null || branchesToExecute == false)
+               foreach (var code in FalseCode.Traverse())
+                  yield return code;
       }
 
       public override string ToString()
@@ -321,11 +333,10 @@ namespace Gamebook
          Expressions = expressions;
       }
 
-      public override void Traverse(
-        Func<Code, string, bool> examine,
-        string originalSourceText)
+      public override IEnumerable<Code> Traverse(
+         Func<List<Expression>, bool?> branchPicker)
       {
-         examine(this, originalSourceText);
+         yield return this;
       }
 
       public override string ToString()
@@ -338,11 +349,10 @@ namespace Gamebook
    {
       public WhenElseCode() { }
 
-      public override void Traverse(
-        Func<Code, string, bool> examine,
-        string originalSourceText)
+      public override IEnumerable<Code> Traverse(
+         Func<List<Expression>, bool?> branchPicker)
       {
-         examine(this, originalSourceText);
+         yield return this;
       }
 
       public override string ToString()
@@ -366,11 +376,10 @@ namespace Gamebook
          Expressions = expressions;
       }
 
-      public override void Traverse(
-         Func<Code, string, bool> examine,
-         string originalSourceText)
+      public override IEnumerable<Code> Traverse(
+         Func<List<Expression>, bool?> branchPicker)
       {
-         examine(this, originalSourceText);
+         yield return this;
       }
 
       public override string ToString()
@@ -392,12 +401,10 @@ namespace Gamebook
          Ids = ids;
          SortOnly = sortOnly;
       }
-
-      public override void Traverse(
-         Func<Code, string, bool> examine,
-         string originalSourceText)
+      public override IEnumerable<Code> Traverse(
+         Func<List<Expression>, bool?> branchPicker)
       {
-         examine(this, originalSourceText);
+         yield return this;
       }
 
       public override string ToString()
@@ -420,11 +427,10 @@ namespace Gamebook
          Text = text;
       }
 
-      public override void Traverse(
-         Func<Code, string, bool> examine,
-         string originalSourceText)
+      public override IEnumerable<Code> Traverse(
+         Func<List<Expression>, bool?> branchPicker)
       {
-         examine(this, originalSourceText);
+         yield return this;
       }
 
       public override string ToString()
@@ -443,13 +449,12 @@ namespace Gamebook
       {
          Characters = characters;
       }
-
-      public override void Traverse(
-         Func<Code, string, bool> examine,
-         string originalSourceText)
+      public override IEnumerable<Code> Traverse(
+         Func<List<Expression>, bool?> branchPicker)
       {
-         examine(this, originalSourceText);
+         yield return this;
       }
+
       public override string ToString()
       {
          return Characters;
@@ -467,11 +472,10 @@ namespace Gamebook
          SceneId = sceneId;
       }
 
-      public override void Traverse(
-         Func<Code, string, bool> examine,
-         string originalSourceText)
+      public override IEnumerable<Code> Traverse(
+         Func<List<Expression>, bool?> branchPicker)
       {
-         examine(this, originalSourceText);
+         yield return this;
       }
 
       public override string ToString()
@@ -484,11 +488,10 @@ namespace Gamebook
    {
       public ReturnCode() { }
 
-      public override void Traverse(
-         Func<Code, string, bool> examine,
-         string originalSourceText)
+      public override IEnumerable<Code> Traverse(
+         Func<List<Expression>, bool?> branchPicker)
       {
-         examine(this, originalSourceText);
+         yield return this;
       }
 
       public override string ToString()
@@ -508,11 +511,10 @@ namespace Gamebook
          SceneId = sceneId;
       }
 
-      public override void Traverse(
-         Func<Code, string, bool> examine,
-         string originalSourceText)
+      public override IEnumerable<Code> Traverse(
+         Func<List<Expression>, bool?> branchPicker)
       {
-         examine(this, originalSourceText);
+         yield return this;
       }
 
       public override string ToString()
@@ -531,12 +533,10 @@ namespace Gamebook
       {
          Id = id;
       }
-
-      public override void Traverse(
-         Func<Code, string, bool> examine,
-         string originalSourceText)
+      public override IEnumerable<Code> Traverse(
+         Func<List<Expression>, bool?> branchPicker)
       {
-         examine(this, originalSourceText);
+         yield return this;
       }
 
       public override string ToString()

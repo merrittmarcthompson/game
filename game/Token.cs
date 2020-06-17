@@ -304,7 +304,11 @@ namespace Gamebook
                            else if (specialIds.Contains(id))
                               result.Add(new Token(TokenType.Special, id, lineNumber));
                            else
+                           {
                               result.Add(new Token(TokenType.Id, id, lineNumber));
+                              // Quick way to get a list of all the IDs in use:
+                              // Console.WriteLine(id);
+                           }
                            break;
                      }
                   }

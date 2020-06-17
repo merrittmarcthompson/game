@@ -272,13 +272,13 @@ namespace Gamebook
             throw new InvalidOperationException("usage: gamebook.exe source-directory");
          
          // Load the static game story.
-         var (firstUnit, unitsByUniqueId, reactionArrowsByUniqueId) = Unit.Load(arguments[1]);
+         var (firstUnit, unitsByUniqueId, reactionArrowsByUniqueId, settings) = Unit.Load(arguments[1]);
 
          // If there's a save game state file, load it. Otherwise make a fresh game.
          if (File.Exists("save.txt"))
-            Game = new Game(new StreamReader("save.txt"), unitsByUniqueId, reactionArrowsByUniqueId);
+            Game = new Game(new StreamReader("save.txt"), unitsByUniqueId, reactionArrowsByUniqueId, settings);
          else
-            Game = new Game(firstUnit);
+            Game = new Game(firstUnit, settings);
 
          SetupScreen();
       }

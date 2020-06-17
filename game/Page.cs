@@ -23,10 +23,10 @@ namespace Gamebook
       }
 
       // The settings contain the state of the game: where you are, what people think of you, etc.
-      public Dictionary<string, Setting> Settings = new Dictionary<string, Setting>();
+      public Dictionary<string, Setting> Settings;
 
       // Stack of return merge locations.
-      public Stack<Unit> NextTargetUnitOnReturn = new Stack<Unit>();
+      private Stack<Unit> NextTargetUnitOnReturn = new Stack<Unit>();
 
       // This is the body of the text on the screen.
       public string ActionText;
@@ -34,8 +34,12 @@ namespace Gamebook
       // The keys are the reaction texts that appear below the action text. The reaction arrow data is used by the game to transition to the next unit.
       public Dictionary<string, ScoredReactionArrow> Reactions;
 
-
-      public Page() { }
+      public Page(
+         Dictionary<string, Setting> initialSettings)
+      {
+         // The initial settings are a complete list of all the settings in use by the game code.
+         Settings = initialSettings;
+      }
 
       public Page(
          Page other)
@@ -90,9 +94,10 @@ namespace Gamebook
       public static Page TryLoad(
          StreamReader reader,
          Dictionary<string, Unit> unitsByUniqueId,
-         Dictionary<string, ReactionArrow> reactionArrowsByUniqueId)
+         Dictionary<string, ReactionArrow> reactionArrowsByUniqueId,
+         Dictionary<string, Setting> initialSettings)
       {
-         var result = new Page();
+         var result = new Page(initialSettings);
          result.ActionText = null;
          result.Reactions = new Dictionary<string, ScoredReactionArrow>();
 
@@ -136,7 +141,7 @@ namespace Gamebook
                      default:
                         throw new InvalidOperationException(string.Format($"Unexpected setting type '{parts[2]}'."));
                   }
-                  result.Settings.Add(parts[1], setting);
+                  result.Settings[parts[1]] = setting;
                   break;
                case "n":
                   result.NextTargetUnitOnReturn.Push(unitsByUniqueId[parts[1]]);
@@ -174,47 +179,41 @@ namespace Gamebook
 
          var trace = "";
 
-         // Add to the score counts for all the offered arrows.
-         foreach (var offered in nextPage.Reactions.Values)
+         // Add to the score counts for all the arrows offered to the player. So map from the list of reactions to a list of corresponding score settings. The 'SelectMany(result => result)' at the bottom merges together the results from the query and functional parts. Without it, it would be an enumeration of the offered items containing an enumeration of the code/id items. We need the query part so we can store the isChosenOne value in the 'let' for use later on.
+         foreach ((var isChosenOne, var scoreSetting) in
+            (
+               from offered in nextPage.Reactions.Values
+               let isChosenOne = offered.ReactionArrow == chosen.ReactionArrow
+               select offered.ReactionArrow.Code
+                  .Traverse()
+                  .Where(code => (code is ScoreCode scoreCode) && !scoreCode.SortOnly)
+                  .SelectMany(code => (code as ScoreCode).Ids)
+                  .Select(id => (isChosenOne, nextPage.Settings[id] as ScoreSetting))
+            ).SelectMany(result => result))
          {
-            offered.ReactionArrow.Code.Traverse((code, originalSourceText) =>
-            {
-               if (!(code is ScoreCode scoreCode) || scoreCode.SortOnly)
-                  return true;
-               foreach (var id in scoreCode.Ids)
-               {
-                  var scoreSetting = nextPage.Settings[id] as ScoreSetting;
-                  var oldRatio = scoreSetting.RatioString();
-                  scoreSetting.RaiseOpportunityCount();
-                  bool italics = false;
-                  if (offered.ReactionArrow == chosen.ReactionArrow)
-                  {
-                     italics = true;
-                     scoreSetting.RaiseChosenCount();
-                  }
-                  if (Game.DebugMode)
-                     trace += string.Format($"@{Game.PositiveDebugTextStart}{(italics ? "<" : "")}{id} {oldRatio} → {scoreSetting.RatioString()} {scoreSetting.PercentString()} {(scoreSetting.Value ? "true" : "false")}{(italics ? ">" : "")}{Game.DebugTextStop}");
-
-               }
-               return true;
-            });
+            if (isChosenOne)
+               scoreSetting.RaiseChosenCount();
+            scoreSetting.RaiseOpportunityCount();
          }
 
          // Make a little report for debugging purposes.
          var sortDictionary = new Dictionary<double, string>();
          double uniquifier = 0.0;
-         foreach (var setting in nextPage.Settings)
+         foreach (var (key, scoreSetting) in
+            nextPage.Settings
+               .Where(setting => setting.Value is ScoreSetting)
+               .Select(setting => (setting.Key, setting.Value as ScoreSetting)))
          {
-            // Ex. brave    43% (3/7) 
-            if (setting.Value is ScoreSetting scoreSetting)
-            {
-               string line = String.Format($"{setting.Key,-12} {scoreSetting.PercentString()} ({scoreSetting.RatioString()}) {(scoreSetting.Value ? "true" : "false")}");
-               sortDictionary.Add(scoreSetting.ScoreValue + uniquifier, line);
-               uniquifier += 0.00001;
-            }
+            // Ex. brave    43% (3/7) false
+            string line = String.Format($"{key,-12} {scoreSetting.PercentString()} ({scoreSetting.RatioString()}) {(scoreSetting.Value ? "true" : "false")}");
+            sortDictionary.Add(scoreSetting.ScoreValue + uniquifier, line);
+            uniquifier += 0.00001;
          }
          var scoresReportWriter = new StreamWriter("scores.txt", false);
-         foreach (var line in sortDictionary.OrderByDescending(pair => pair.Key).Select(pair => pair.Value))
+         foreach (var line in
+            sortDictionary
+               .OrderByDescending(pair => pair.Key)
+               .Select(pair => pair.Value))
          {
             scoresReportWriter.WriteLine(line);
          }
@@ -239,7 +238,12 @@ namespace Gamebook
          double reactionScoreDisambiguator = 0;
 
          // Scores use this to compute whether you are above average in a score. Set it now, before creating the page, so it can be used in conditions evaluated throughout page creation.
-         ScoreSetting.Average = Settings.Values.Where(setting => setting is ScoreSetting).Select(setting => (setting as ScoreSetting).ScoreValue).DefaultIfEmpty().Average();
+         ScoreSetting.Average = Settings.Values
+            .Where(setting => setting is ScoreSetting)
+            .Select(setting => (setting as ScoreSetting).ScoreValue)
+            .DefaultIfEmpty()
+            .Average();
+
          if (Game.DebugMode)
             accumulatedActionTexts += String.Format($"@{Game.PositiveDebugTextStart}average = {ScoreSetting.Average:0.00}%{Game.DebugTextStop}");
 
@@ -280,7 +284,7 @@ namespace Gamebook
                if (arrow is ReturnArrow returnArrow)
                   // We'll deal with these return arrows at the end of the loop.
                   returnArrows.Add(returnArrow);
-               else if (EvaluateWhenElse(arrow.Code))
+               else if (arrow.Code.Traverse().Where(code => code is WhenElseCode).Any())
                   // Save 'when else' arrows for possible later execution.
                   whenElseArrows.Add(arrow);
                else
@@ -354,38 +358,12 @@ namespace Gamebook
                   {
                      // Sort by scores.
                      var highestScoreIdPlusSpace = "";
-                     reactionArrow.Code.Traverse((code, originalSourceText) =>
-                     {
-                        if (!(code is ScoreCode scoreCode))
-                           return true;
-                        foreach (var id in scoreCode.Ids)
-                        {
-                           ScoreSetting scoreSetting;
-                           if (Settings.TryGetValue(id, out Setting setting))
-                              scoreSetting = setting as ScoreSetting;
-                           else
-                           {
-                              scoreSetting = new ScoreSetting();
-                              Settings.Add(id, scoreSetting);
-                           }
-
-                           var value = scoreSetting.ScoreValue;
-                           if (value > highestScore)
-                           {
-                              highestScore = value;
-                              highestScoreIdPlusSpace = id + " ";
-                           }
-                        }
-                        return true;
-                     });
-                     if (Game.DebugMode)
-                        reactionText =
-                           Game.PositiveDebugTextStart +
-                           highestScoreIdPlusSpace +
-                           ((int)(highestScore * 100)).ToString() +
-                           "% " +
-                           Game.DebugTextStop +
-                           reactionText;
+                     highestScore = reactionArrow.Code.Traverse()
+                        .Where(code => code is ScoreCode)
+                        .SelectMany(code => (code as ScoreCode).Ids)
+                        .Select(id => (Settings[id] as ScoreSetting).ScoreValue)
+                        .DefaultIfEmpty(0)
+                        .Max();
                   }
                   accumulatedReactions[reactionText] = new ScoredReactionArrow(highestScore, reactionArrow);
                   reactionScoreDisambiguator += 0.00001;
@@ -450,23 +428,17 @@ namespace Gamebook
       }
 
       private (bool, bool) EvaluateWhen(
-         Code topCode,
+         CodeTree codeTree,
          out string outTrace)
       {
          string trace = "";
          // When there are no 'when' directives, it always succeeds.
-         var allSucceeded = true;
-         var hadWhen = false;
-         topCode.Traverse((code, originalSourceText) =>
-         {
-            if (code is WhenCode whenCode)
-            {
-               hadWhen = true;
-               if (!EvaluateConditions(whenCode.GetExpressions(), out trace, originalSourceText))
-                  allSucceeded = false;
-            }
-            return true;
-         });
+         var whenCodes = codeTree.Traverse().Where(code => code is WhenCode).Select(code => code as WhenCode);
+         var whenCount = whenCodes.Count();
+         var hadWhen = whenCount > 0;
+         var allSucceeded = whenCodes
+                  .Where(whenCode => EvaluateConditions(whenCode.GetExpressions(), out trace, codeTree.SourceText))
+                  .Count() == whenCount;
          outTrace = trace;
          return (allSucceeded, hadWhen);
       }
@@ -491,7 +463,7 @@ namespace Gamebook
             return DereferenceString("smith");
          else
          {
-            bool heroIsMale = Settings.ContainsKey("male");
+            bool heroIsMale = (Settings["male"] as BooleanSetting).Value == true;
             if (specialId == "he" || specialId == "she")
                return heroIsMale ? "he" : "she";
             else if (specialId == "He" || specialId == "She")
@@ -554,47 +526,30 @@ namespace Gamebook
       }
 
       private string EvaluateText(
-         Code value)
+         CodeTree codeTree)
       {
          string accumulator = "";
-         value.Traverse((code, originalSourceText) =>
+         foreach (var code in codeTree.Traverse(ifExpressions => EvaluateConditions(ifExpressions, out var trace, codeTree.SourceText)))
          {
-            switch (code)
+            accumulator += code switch
             {
-               case CharacterCode characterCode:
-                  accumulator += characterCode.Characters;
-                  break;
-               case IfCode ifCode:
-                  return EvaluateConditions(ifCode.GetExpressions(), out var trace, originalSourceText);
-               case SpecialCode specialCode:
-                  accumulator += GetSpecialText(specialCode.Id, originalSourceText);
-                  break;
-            }
-            return true;
-         });
+               CharacterCode characterCode => characterCode.Characters,
+               SpecialCode specialCode => GetSpecialText(specialCode.Id, codeTree.SourceText),
+               _ => ""
+            };
+         }
          // Always returns an empty string if there is no useful text.
          return NormalizeText(accumulator);
       }
 
-      private bool EvaluateWhenElse(
-         Code topCode)
-      {
-         bool result = false;
-         topCode.Traverse((code, originalSourceText) =>
-         {
-            if (code is WhenElseCode whenElseCode)
-               result = true;
-            return true;
-         });
-         return result;
-      }
-
       private void EvaluateSettingsAndScores(
-         Code topCode,
+         CodeTree codeTree,
          out string outTrace)
       {
          string trace = "";
-         topCode.Traverse((code, originalSourceText) =>
+
+         foreach (var code in
+            codeTree.Traverse(ifExpressions => EvaluateConditions(ifExpressions, out var trace, codeTree.SourceText)))
          {
             switch (code)
             {
@@ -617,9 +572,8 @@ namespace Gamebook
                   break;
                case ScoreCode scoreCode:
                   if (!scoreCode.SortOnly)
-                     foreach (var id in scoreCode.Ids)
+                     foreach (var (id, scoreSetting) in scoreCode.Ids.Select(id => (id, Settings[id] as ScoreSetting)))
                      {
-                        var scoreSetting = Settings[id] as ScoreSetting;
                         scoreSetting.RaiseChosenCount();
                         // Better raise this too, otherwise you could have more choices than opportunities to choose, i.e greater than 100% score.
                         scoreSetting.RaiseOpportunityCount();
@@ -628,15 +582,14 @@ namespace Gamebook
                      }
                   break;
             }
-            return true;
-         });
+         }
          outTrace = trace;
       }
 
       private string FixPlus(
          string text)
       {
-         // We always put in a space when we concatenate different text parts, but sometimes you don't want that, so you can put in a plus sign to stop that. Ex. "hello" joined with "there" => "hello there", but "hello+" joined with "there" => "hellothere".  Useful for things like 'He said "+' joined with "'I am a fish."' => 'He said "I am a fish."'
+         // We always put in a space when we concatenate different text parts, but sometimes you don't want that, so you can put in a plus sign to stop that. Ex. "hello" joined with "there" => "hello there", but "hello+" joined with "there" => "hellothere".  Useful for things like 'He said "+' joined with 'I am a fish."' => 'He said "I am a fish."'
          string fixedText = "";
          bool addSpaces = true;
          foreach (char letter in text)

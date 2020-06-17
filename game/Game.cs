@@ -38,25 +38,27 @@ namespace Gamebook
 
       // There are two ways to create the game initially. Either you create a fresh game from the game description, or you read an existing game from a file and link it up to the game description.
       public Game(
-         Unit firstUnitInGame)
+         Unit firstUnitInGame,
+         Dictionary<string, Setting> settings)
       {
          // This constructs the first page right away, ready to go, starting with the first unit in the game. The game is always in a valid state, that is, it contains a completed page, ready to display.
-         CurrentPage = new Page();
+         CurrentPage = new Page(settings);
          CurrentPage.Build(firstUnitInGame, "");
       }
 
       public Game(
          StreamReader reader,
          Dictionary<string, Unit> unitsByUniqueId,
-         Dictionary<string, ReactionArrow> reactionArrowsByUniqueId)
+         Dictionary<string, ReactionArrow> reactionArrowsByUniqueId,
+         Dictionary<string, Setting> settings)
       {
          // This reads the state of an existing game and links it to the static parts of the game in the dictionaries.
-         CurrentPage = Page.TryLoad(reader, unitsByUniqueId, reactionArrowsByUniqueId);
+         CurrentPage = Page.TryLoad(reader, unitsByUniqueId, reactionArrowsByUniqueId, settings);
          if (CurrentPage == null)
             throw new InvalidOperationException(string.Format($"Save file is empty."));
          while (true)
          {
-            var undoPage = Page.TryLoad(reader, unitsByUniqueId, reactionArrowsByUniqueId);
+            var undoPage = Page.TryLoad(reader, unitsByUniqueId, reactionArrowsByUniqueId, settings);
             if (undoPage == null)
                break;
             UndoStack.Push(undoPage);

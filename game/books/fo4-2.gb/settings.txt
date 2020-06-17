@@ -1,0 +1,53 @@
+﻿[[Wizard of Oz scores]]
+
+score proper
+score improper
+
+score brave
+score timid
+
+score clever
+score stupid
+
+score kind
+score cruel
+
+[[Other scores]]
+
+score victor
+score victim
+
+score dependent
+score independent
+
+score cynical
+score trusting
+
+score sexpot
+score puritan
+
+[[States]]
+
+state haveBobby
+
+state cried
+
+state lookingForBooze
+
+state lookingForCoffee
+
+state heardTomsStory
+
+state blindsOpen
+
+state signedUpForVault
+
+state tvOn
+
+state soldOnVaultByRealtor
+
+[[Required settings]]
+state male
+
+[[Strings]]
+string tomVaultTecMan
