@@ -27,10 +27,11 @@ namespace Gamebook
 
       public static CodeTree Compile(
         string sourceCode,
-        string sourceNameForErrorMessages)
+        string sourceNameForErrorMessages,
+        Dictionary<string, Setting> settings)
       {
          // Compile the text to a code sequence.
-         var tokens = Token.Tokenize(sourceCode, sourceNameForErrorMessages);
+         var tokens = Token.Tokenize(sourceCode, sourceNameForErrorMessages, settings);
          return SequenceCode.BuildFromTokens(tokens, sourceCode, sourceNameForErrorMessages);
       }
    }
@@ -138,7 +139,7 @@ namespace Gamebook
             {
                if (Look.Got(TokenType.Characters))
                   result.Codes.Add(new CharacterCode(Look.Value));
-               else if (Look.Got(TokenType.Special))
+               else if (Look.Got(TokenType.SpecialId))
                   // Ex. [he]
                   result.Codes.Add(new SpecialCode(Look.Value));
                else if (Look.Got(TokenType.Merge))
@@ -163,13 +164,13 @@ namespace Gamebook
                }
                else if (Look.Got(TokenType.Score) || Look.Got(TokenType.Sort))
                {
-                  // SCORE ID [, ID...]
-                  // SORT ID [, ID...]
+                  // SCORE SCOREID [, SCOREID...]
+                  // SORT SCOREID [, ID...]
                   var sortOnly = Look.Type == TokenType.Sort;
                   List<string> ids = new List<string>();
                   do
                   {
-                     Look.Require(TokenType.Id, sourceTextForErrorMessages, sourceNameForErrorMessages);
+                     Look.Require(TokenType.ScoreId, sourceTextForErrorMessages, sourceNameForErrorMessages);
                      ids.Add(Look.Value);
                   } while (Look.Got(TokenType.Comma));
                   result.Codes.Add(new ScoreCode(ids, sortOnly));
@@ -212,25 +213,28 @@ namespace Gamebook
          List<Expression> GetExpressions(
             bool allowNotEqual)
          {
-            // ID
-            // NOT ID
-            // ID=ID
-            // NOT ID=ID
+            // BOOLEANID
+            // NOT BOOLEANID
+            // STRINGID=ID
+            // NOT STRINGID=ID
             // allowNotEqual: [when not a=b] makes sense. But [set not a=b] doesn't mean anything.
             var result = new List<Expression>();
             do
             {
                var not = Look.Got(TokenType.Not);
-               Look.Require(TokenType.Id, sourceTextForErrorMessages, sourceNameForErrorMessages);
-               var leftId = Look.Value;
+               string leftId;
                string rightId = null;
-               if (allowNotEqual || !not)
+               if (Look.Got(TokenType.BooleanId) || Look.Got(TokenType.ScoreId))
+                  leftId = Look.Value;
+               else
                {
-                  if (Look.Got(TokenType.Equal))
-                  {
-                     Look.Require(TokenType.Id, sourceTextForErrorMessages, sourceNameForErrorMessages);
-                     rightId = Look.Value;
-                  }
+                  if (not && !allowNotEqual)
+                     throw new InvalidOperationException(string.Format($"file {sourceNameForErrorMessages}: unexpected {TokenType.Not} in\n{sourceTextForErrorMessages}"));
+                  Look.Require(TokenType.StringId, sourceTextForErrorMessages, sourceNameForErrorMessages);
+                  leftId = Look.Value;
+                  Look.Require(TokenType.Equal, sourceTextForErrorMessages, sourceNameForErrorMessages);
+                  Look.Require(TokenType.Id, sourceTextForErrorMessages, sourceNameForErrorMessages);
+                  rightId = Look.Value;
                }
                result.Add(new Expression(not, leftId, rightId));
             } while (Look.Got(TokenType.Comma));

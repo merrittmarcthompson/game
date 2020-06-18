@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:java="http://www.yworks.com/xml/yfiles-common/1.0/java" xmlns:sys="http://www.yworks.com/xml/yfiles-common/markup/primitives/2.0" xmlns:x="http://www.yworks.com/xml/yfiles-common/markup/2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:y="http://www.yworks.com/xml/graphml" xmlns:yed="http://www.yworks.com/xml/yed/3" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://www.yworks.com/xml/schema/graphml/1.1/ygraphml.xsd">
-  <!--Created by yEd 3.19-->
+  <!--Created by yEd 3.19.1.1-->
   <key attr.name="Description" attr.type="string" for="graph" id="d0"/>
   <key for="port" id="d1" yfiles.type="portgraphics"/>
   <key for="port" id="d2" yfiles.type="portgeometry"/>
@@ -180,8 +180,7 @@ Tom had set up {the TV} on a pile of moving boxes, but [Jane] had turned it off.
               <y:Geometry height="248.07421875" width="497.55810546875" x="1528.0130107576886" y="682.23193359375"/>
               <y:Fill color="#FFFFFF" transparent="false"/>
               <y:BorderStyle color="#000000" type="line" width="1.0"/>
-              <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="248.07421875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="497.55810546875" x="2.2737367544323206E-13" xml:space="preserve" y="0.0">[set vaultTecMan.familiar]
-@[Jane] drew the blinds and busied herself with a shipping box. &lt;Kitchen Supplies.&gt;
+              <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="248.07421875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="497.55810546875" x="2.2737367544323206E-13" xml:space="preserve" y="0.0">@[Jane] drew the blinds and busied herself with a shipping box. &lt;Kitchen Supplies.&gt;
 [set not blindsOpen]
 There was a scale, some measuring cups, and a carving knife.
 @The doorbell rang.
@@ -663,8 +662,7 @@ I'd like to sign you up with a high-IQ fee waiver."<y:LabelModel><y:SmartNodeLab
               <y:Geometry height="213.4921875" width="468.84765625" x="4478.7571242559525" y="682.23193359375"/>
               <y:Fill color="#FFFFFF" transparent="false"/>
               <y:BorderStyle color="#000000" type="line" width="1.0"/>
-              <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="213.4921875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="468.84765625" x="0.0" xml:space="preserve" y="0.0">[set vaultTecMan.familiar]
-@[Jane] opened the front door.
+              <y:NodeLabel alignment="left" autoSizePolicy="node_size" fontFamily="Segoe UI" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="213.4921875" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="468.84765625" x="0.0" xml:space="preserve" y="0.0">@[Jane] opened the front door.
 "Hey!" [she] said.
 The man across the street was facing away, making a note on his clipboard.
 "Hey, Vault Tec man!" she repeated.

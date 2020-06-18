@@ -26,28 +26,28 @@ score trusting
 score sexpot
 score puritan
 
-[[States]]
+[[Flags]]
 
-state haveBobby
+flag haveBobby
 
-state cried
+flag cried
 
-state lookingForBooze
+flag lookingForBooze
 
-state lookingForCoffee
+flag lookingForCoffee
 
-state heardTomsStory
+flag heardTomsStory
 
-state blindsOpen
+flag blindsOpen
 
-state signedUpForVault
+flag signedUpForVault
 
-state tvOn
+flag tvOn
 
-state soldOnVaultByRealtor
+flag soldOnVaultByRealtor
 
 [[Required settings]]
-state male
+flag male
 
 [[Strings]]
 string tomVaultTecMan

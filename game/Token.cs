@@ -21,7 +21,11 @@ namespace Gamebook
       public static readonly TokenType EndOfSourceText = new TokenType("end of source text");
 
       public static readonly TokenType Id = new TokenType("an identifier");
-      public static readonly TokenType Special = new TokenType("a special identifier");
+      public static readonly TokenType ScoreId = new TokenType("a score identifier");
+      public static readonly TokenType StringId = new TokenType("a string identifier");
+      public static readonly TokenType BooleanId = new TokenType("a flag identifier");
+      public static readonly TokenType SpecialId = new TokenType("a special identifier");
+
       public static readonly TokenType Characters = new TokenType("characters");
 
       public static readonly TokenType End = new TokenType("'end'");
@@ -70,7 +74,8 @@ namespace Gamebook
 
       public static List<Token> Tokenize(
          string sourceText,
-         string sourceNameForErrorMessages)
+         string sourceNameForErrorMessages,
+         Dictionary<string, Setting> settings)
       {
          char pushedLetter = '\0';
          char gottenLetter;
@@ -302,12 +307,24 @@ namespace Gamebook
                            else if (id == "scene")
                               result.Add(new Token(TokenType.Scene, id, lineNumber));
                            else if (specialIds.Contains(id))
-                              result.Add(new Token(TokenType.Special, id, lineNumber));
+                              result.Add(new Token(TokenType.SpecialId, id, lineNumber));
                            else
                            {
-                              result.Add(new Token(TokenType.Id, id, lineNumber));
-                              // Quick way to get a list of all the IDs in use:
-                              // Console.WriteLine(id);
+                              if (settings.ContainsKey(id))
+                                 switch (settings[id])
+                                 {
+                                    case ScoreSetting scoreSetting:
+                                       result.Add(new Token(TokenType.ScoreId, id, lineNumber));
+                                       break;
+                                    case StringSetting stringSetting:
+                                       result.Add(new Token(TokenType.StringId, id, lineNumber));
+                                       break;
+                                    case BooleanSetting booleanSetting:
+                                       result.Add(new Token(TokenType.BooleanId, id, lineNumber));
+                                       break;
+                                 }
+                              else
+                                 result.Add(new Token(TokenType.Id, id, lineNumber));
                            }
                            break;
                      }
