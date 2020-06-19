@@ -29,21 +29,13 @@ score puritan
 [[Flags]]
 
 flag haveBobby
-
 flag cried
-
 flag lookingForBooze
-
 flag lookingForCoffee
-
 flag heardTomsStory
-
 flag blindsOpen
-
 flag signedUpForVault
-
 flag tvOn
-
 flag soldOnVaultByRealtor
 
 [[Required settings]]

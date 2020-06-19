@@ -3,11 +3,11 @@ using System.Collections.Generic;
 
 namespace Gamebook
 {
-   // These classes make up the Code data structure. All of the concrete derived classes can masquerade as the abstract base class.
+   // Code trees are composed of Code objects. All of the concrete derived code classes (SequenceCode, IfCode, etc.) can masquerade as the abstract base class.
 
    public abstract class Code
    {
-      // Traverse is the routine that allows other modules to execute the code.
+      // Traverse is the routine that allows other modules to examine the code.
       public abstract IEnumerable<Code> Traverse(
          Func<List<Expression>, bool?> branchPicker = null);
 

@@ -8,6 +8,7 @@ namespace Gamebook
 {
    public class CodeTree
    {
+      // CodeTree is an easy-to-use interface for clients of code trees. It lets you create them from source code text and then traverse the tree. The tree is composed of Code objects.
       private readonly SequenceCode RootCode;
       public string SourceText { get; private set; }
 
@@ -18,16 +19,16 @@ namespace Gamebook
       }
 
       public CodeTree(
-        string sourceCode,
+        string sourceText,
         string sourceNameForErrorMessages,
         Dictionary<string, Setting> settings)
       {
          // Compile the text to a code sequence.
-         var tokens = Token.Tokenize(sourceCode, sourceNameForErrorMessages, settings);
+         var tokens = Token.Tokenize(sourceText, sourceNameForErrorMessages, settings);
          LookAhead Look = new LookAhead(tokens);
-         SourceText = sourceCode;
+         SourceText = sourceText;
          RootCode = GetSequence();
-         Look.Require(TokenType.EndOfSourceText, sourceCode, sourceNameForErrorMessages);
+         Look.Require(TokenType.EndOfSourceText, sourceText, sourceNameForErrorMessages);
 
          // Some local helper functions.
 
@@ -59,7 +60,7 @@ namespace Gamebook
                else if (Look.Got(TokenType.Scene))
                {
                   // [scene soundsLikeAScam]
-                  Look.Require(TokenType.Id, sourceCode, sourceNameForErrorMessages);
+                  Look.Require(TokenType.Id, sourceText, sourceNameForErrorMessages);
                   result.Add(new SceneCode(Look.Value));
                }
                else if (Look.Got(TokenType.Score) || Look.Got(TokenType.Sort))
@@ -70,19 +71,19 @@ namespace Gamebook
                   List<string> ids = new List<string>();
                   do
                   {
-                     Look.Require(TokenType.ScoreId, sourceCode, sourceNameForErrorMessages);
+                     Look.Require(TokenType.ScoreId, sourceText, sourceNameForErrorMessages);
                      ids.Add(Look.Value);
                   } while (Look.Got(TokenType.Comma));
                   result.Add(new ScoreCode(ids, sortOnly));
                }
                else if (Look.Got(TokenType.Text))
                {
-                  Look.Require(TokenType.Id, sourceCode, sourceNameForErrorMessages);
+                  Look.Require(TokenType.Id, sourceText, sourceNameForErrorMessages);
                   string id = Look.Value;
                   string text = "";
                   if (Look.Got(TokenType.Characters))
                      text = Look.Value;
-                  Look.Require(TokenType.End, sourceCode, sourceNameForErrorMessages);
+                  Look.Require(TokenType.End, sourceText, sourceNameForErrorMessages);
                   result.Add(new TextCode(id, text));
                }
                else if (Look.Got(TokenType.Set))
@@ -100,7 +101,7 @@ namespace Gamebook
                   result.Add(ifCode);
 
                   // The whole if/or case statement is terminated by 'end'.
-                  Look.Require(TokenType.End, sourceCode, sourceNameForErrorMessages);
+                  Look.Require(TokenType.End, sourceText, sourceNameForErrorMessages);
                }
                else
                {
@@ -129,11 +130,11 @@ namespace Gamebook
                else
                {
                   if (not && !allowNotEqual)
-                     throw new InvalidOperationException(string.Format($"file {sourceNameForErrorMessages}: unexpected {TokenType.Not} in\n{sourceCode}"));
-                  Look.Require(TokenType.StringId, sourceCode, sourceNameForErrorMessages);
+                     throw new InvalidOperationException(string.Format($"file {sourceNameForErrorMessages}: unexpected {TokenType.Not} in\n{sourceText}"));
+                  Look.Require(TokenType.StringId, sourceText, sourceNameForErrorMessages);
                   leftId = Look.Value;
-                  Look.Require(TokenType.Equal, sourceCode, sourceNameForErrorMessages);
-                  Look.Require(TokenType.Id, sourceCode, sourceNameForErrorMessages);
+                  Look.Require(TokenType.Equal, sourceText, sourceNameForErrorMessages);
+                  Look.Require(TokenType.Id, sourceText, sourceNameForErrorMessages);
                   rightId = Look.Value;
                }
                result.Add(new Expression(not, leftId, rightId));
