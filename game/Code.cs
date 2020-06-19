@@ -307,6 +307,9 @@ namespace Gamebook
       {
          bool? branchesToExecute = branchPicker == null? null: branchesToExecute = branchPicker(Expressions);
 
+         // This yield lets any clients see the IF itself, for example for reporting purposes. It is filtered out and ignored in most cases.
+         yield return this;
+
          if (branchesToExecute == null || branchesToExecute == true)
             foreach (var code in TrueCode.Traverse())
                yield return code;

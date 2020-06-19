@@ -319,6 +319,9 @@ namespace Gamebook
                   case IfCode ifCode:
                      Write("if", ifCode.GetExpressions());
                      break;
+                  //case ScoreCode scoreCode:
+                  //   Write("score", scoreCode.Ids.Select(id => new Expression(false, id, null)));
+                  //   break;
                }
             }
 
