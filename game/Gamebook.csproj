@@ -84,6 +84,8 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="CodeTree.cs" />
+    <Compile Include="LookAhead.cs" />
     <Compile Include="Page.cs" />
     <Compile Include="Setting.cs" />
     <Compile Include="Unit.cs" />

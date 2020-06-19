@@ -119,7 +119,7 @@ namespace Gamebook
          var result = new Unit();
          result.SourceId = "returnUnit";
          result.SourceName = "returnUnit";
-         result.ActionCode = CodeTree.Compile("", "returnUnit", new Dictionary<string, Setting>());
+         result.ActionCode = new CodeTree("", "returnUnit", new Dictionary<string, Setting>());
          foreach (var returnArrow in returnArrows)
          {
             var mergeArrow = new MergeArrow(returnArrow.TargetUnit, returnArrow.Code, "returnArrow", "returnArrow");
@@ -194,7 +194,7 @@ namespace Gamebook
                unit.SourceName = sourceName;
                unit.SourceId = nodeId;
                unitsByUniqueId[sourceName + ":" + nodeId] = unit;
-               unit.ActionCode = CodeTree.Compile(label, sourceName, settings);
+               unit.ActionCode = new CodeTree(label, sourceName, settings);
                EvaluateSettingsReport(unit.ActionCode, sourceName, settingsReportWriter);
                unitsByNodeId.Add(nodeId, unit);
 
@@ -221,7 +221,7 @@ namespace Gamebook
                if (!unitsByNodeId.TryGetValue(targetNodeId, out var targetUnit))
                   throw new InvalidOperationException(string.Format($"{sourceName}: Internal error: no node declaration for referenced target node '{targetNodeId}'"));
 
-               var code = CodeTree.Compile(label, sourceName, settings);
+               var code = new CodeTree(label, sourceName, settings);
                EvaluateSettingsReport(code, sourceName, settingsReportWriter);
                var (isMerge, referencedSceneId, isReturn) = EvaluateArrowType(code);
                Arrow arrow;

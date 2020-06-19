@@ -380,6 +380,7 @@ namespace Gamebook
          outTrace = "";
          foreach (var expression in expressions)
          {
+            // These should be impossible due to syntax checking in the parser.
             if (!Settings.TryGetValue(expression.LeftId, out Setting leftSetting))
                throw new InvalidOperationException(String.Format($"Referenced undefined setting {expression.LeftId} in\n{originalSourceText}."));
 
@@ -437,8 +438,8 @@ namespace Gamebook
          var whenCount = whenCodes.Count();
          var hadWhen = whenCount > 0;
          var allSucceeded = whenCodes
-                  .Where(whenCode => EvaluateConditions(whenCode.GetExpressions(), out trace, codeTree.SourceText))
-                  .Count() == whenCount;
+            .Where(whenCode => EvaluateConditions(whenCode.GetExpressions(), out trace, codeTree.SourceText))
+            .Count() == whenCount;
          outTrace = trace;
          return (allSucceeded, hadWhen);
       }
