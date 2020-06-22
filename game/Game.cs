@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -15,12 +16,17 @@ namespace Gamebook
       // Pop back to old pages to implement undo.
       private Stack<Page> UndoStack = new Stack<Page>();
 
+      private PageCreator PageCreator = new PageCreator();
+
       public const char NegativeDebugTextStart = '′';
       public const char PositiveDebugTextStart = '″';
       public const char DebugTextStop = '‴';
 
-      // Add annotations about how merges were done, etc.
-      public static bool DebugMode;
+      public bool DebugMode
+      {
+         get => PageCreator.DebugMode;
+         set => PageCreator.DebugMode = value;
+      }
 
       // FUNCTIONS
 
@@ -36,29 +42,31 @@ namespace Gamebook
          return CurrentPage.Reactions.OrderByDescending(pair => pair.Value.Score).Where(pair => pair.Value.Score != -1).Select(pair => pair.Key);
       }
 
-      // There are two ways to create the game initially. Either you create a fresh game from the game description, or you read an existing game from a file and link it up to the game description.
       public Game(
-         Unit firstUnitInGame,
-         Dictionary<string, Setting> settings)
+         World world)
       {
+         // There are two ways to create the game initially. The first is to create a fresh game from the game world description.
+         if (world == null) throw new ArgumentNullException(nameof(world));
          // This constructs the first page right away, ready to go, starting with the first unit in the game. The game is always in a valid state, that is, it contains a completed page, ready to display.
-         CurrentPage = new Page(settings);
-         CurrentPage.Build(firstUnitInGame, "");
+         CurrentPage = PageCreator.BuildFirst(world);
+         SetCharacterName("Sarah", "Spaulding");
       }
 
       public Game(
-         StreamReader reader,
-         Dictionary<string, Unit> unitsByUniqueId,
-         Dictionary<string, ReactionArrow> reactionArrowsByUniqueId,
-         Dictionary<string, Setting> settings)
+         TextReader reader,
+         World world)
       {
+         // The other way to create the game is to read an existing game state from a file and link it up to the game world description.
+         if (reader == null) throw new ArgumentNullException(nameof(reader));
+         if (world == null) throw new ArgumentNullException(nameof(world));
          // This reads the state of an existing game and links it to the static parts of the game in the dictionaries.
-         CurrentPage = Page.TryLoad(reader, unitsByUniqueId, reactionArrowsByUniqueId, settings);
-         if (CurrentPage == null)
+         var page = PageSerializer.TryLoad(reader, world);
+         if (page == null)
             throw new InvalidOperationException(string.Format($"Save file is empty."));
+         CurrentPage = page;
          while (true)
          {
-            var undoPage = Page.TryLoad(reader, unitsByUniqueId, reactionArrowsByUniqueId, settings);
+            var undoPage = PageSerializer.TryLoad(reader, world);
             if (undoPage == null)
                break;
             UndoStack.Push(undoPage);
@@ -71,9 +79,10 @@ namespace Gamebook
       public void Save(
          StreamWriter writer)
       {
-         CurrentPage.Save(writer);
+         if (writer == null) throw new ArgumentNullException(nameof(writer));
+         PageSerializer.Save(CurrentPage, writer);
          foreach (var page in UndoStack)
-            page.Save(writer);
+            PageSerializer.Save(page, writer);
       }
 
       // This is how you go back to an earlier page.
@@ -96,21 +105,29 @@ namespace Gamebook
          // Before we change the page, save the old page for restoration on undo.
          UndoStack.Push(CurrentPage);
 
-         CurrentPage = CurrentPage.BuildNext(reactionText);
+         CurrentPage = PageCreator.BuildNext(CurrentPage, reactionText);
       }
 
       // These let you set and get game variables, like the name of the player character.
-      public void Set(
-         string id,
-         string value)
+      public void SetCharacterName(
+         string jane,
+         string smith)
       {
-         CurrentPage.Settings[id] = new StringSetting(value);
+         CurrentPage.Settings["jane"] = new StringSetting(jane);
+         CurrentPage.Settings["smith"] = new StringSetting(smith);
       }
 
-      public string Get(
-         string id)
+      public (string, string) GetCharacterName()
       {
-         return CurrentPage.DereferenceString(id);
+         var janeSetting = (CurrentPage.Settings["jane"] as StringSetting) ??
+#pragma warning disable CA1303 // Do not pass literals as localized parameters
+            throw new InvalidOperationException("Internal error: 'jane' setting is missing.");
+#pragma warning restore CA1303 // Do not pass literals as localized parameters
+         var smithSetting = (CurrentPage.Settings["smith"] as StringSetting) ??
+#pragma warning disable CA1303 // Do not pass literals as localized parameters
+            throw new InvalidOperationException("Internal error: 'smith' setting is missing.");
+#pragma warning restore CA1303 // Do not pass literals as localized parameters
+         return (janeSetting.Value, smithSetting.Value);
       }
    }
 }

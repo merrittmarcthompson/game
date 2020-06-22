@@ -1,8 +1,6 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Gamebook
 {
@@ -10,10 +8,12 @@ namespace Gamebook
    {
       // CodeTree is an easy-to-use interface for clients of code trees. It lets you create them from source code text and then traverse the tree. The tree is composed of Code objects.
       private readonly SequenceCode RootCode;
+
+      // You can also get the original source code text for error messages.
       public string SourceText { get; private set; }
 
       public IEnumerable<Code> Traverse(
-         Func<List<Expression>, bool?> branchPicker = null)
+         Func<List<Expression>, bool?>? branchPicker = null)
       {
          return RootCode.Traverse(branchPicker);
       }
@@ -23,10 +23,11 @@ namespace Gamebook
         string sourceNameForErrorMessages,
         Dictionary<string, Setting> settings)
       {
-         // Compile the text to a code sequence.
-         var tokens = Token.Tokenize(sourceText, sourceNameForErrorMessages, settings);
-         LookAhead Look = new LookAhead(tokens);
+         // Compile the text to a code tree.
          SourceText = sourceText;
+         var tokenList = new TokenList(sourceText, sourceNameForErrorMessages, settings);
+         var Look = new LookAhead(tokenList);
+
          RootCode = GetSequence();
          Look.Require(TokenType.EndOfSourceText, sourceText, sourceNameForErrorMessages);
 
@@ -34,34 +35,32 @@ namespace Gamebook
 
          SequenceCode GetSequence()
          {
-            var result = new List<Code>();
+            var codes = new List<Code>();
 
             while (true)
             {
                if (Look.Got(TokenType.Characters))
-                  result.Add(new CharacterCode(Look.Value));
+                  codes.Add(new CharacterCode(Look.Value));
                else if (Look.Got(TokenType.SpecialId))
                   // Ex. [he]
-                  result.Add(new SpecialCode(Look.Value));
+                  codes.Add(new SpecialCode(Look.Value));
                else if (Look.Got(TokenType.Merge))
                {
                   // [merge]
                   // [merge sceneId]
-                  string sceneId = null;
-                  if (Look.Got(TokenType.Id))
-                     sceneId = Look.Value;
-                  result.Add(new MergeCode(sceneId));
+                  string? sceneId = Look.Got(TokenType.Id) ? Look.Value : null;
+                  codes.Add(new MergeCode(sceneId));
                }
                else if (Look.Got(TokenType.Return))
                {
                   // [return]
-                  result.Add(new ReturnCode());
+                  codes.Add(new ReturnCode());
                }
                else if (Look.Got(TokenType.Scene))
                {
                   // [scene soundsLikeAScam]
                   Look.Require(TokenType.Id, sourceText, sourceNameForErrorMessages);
-                  result.Add(new SceneCode(Look.Value));
+                  codes.Add(new SceneCode(Look.Value));
                }
                else if (Look.Got(TokenType.Score) || Look.Got(TokenType.Sort))
                {
@@ -74,7 +73,7 @@ namespace Gamebook
                      Look.Require(TokenType.ScoreId, sourceText, sourceNameForErrorMessages);
                      ids.Add(Look.Value);
                   } while (Look.Got(TokenType.Comma));
-                  result.Add(new ScoreCode(ids, sortOnly));
+                  codes.Add(new ScoreCode(ids, sortOnly));
                }
                else if (Look.Got(TokenType.Text))
                {
@@ -84,21 +83,21 @@ namespace Gamebook
                   if (Look.Got(TokenType.Characters))
                      text = Look.Value;
                   Look.Require(TokenType.End, sourceText, sourceNameForErrorMessages);
-                  result.Add(new TextCode(id, text));
+                  codes.Add(new TextCode(id, text));
                }
                else if (Look.Got(TokenType.Set))
-                  result.Add(new SetCode(GetExpressions(false)));
+                  codes.Add(new SetCode(GetExpressions(false)));
                else if (Look.Got(TokenType.When))
                {
                   if (Look.Got(TokenType.Else))
-                     result.Add(new WhenElseCode());
+                     codes.Add(new WhenElseCode());
                   else
-                     result.Add(new WhenCode(GetExpressions(true)));
+                     codes.Add(new WhenCode(GetExpressions(true)));
                }
                else if (Look.Got(TokenType.If))
                {
                   var ifCode = GetIf();
-                  result.Add(ifCode);
+                  codes.Add(ifCode);
 
                   // The whole if/or case statement is terminated by 'end'.
                   Look.Require(TokenType.End, sourceText, sourceNameForErrorMessages);
@@ -106,7 +105,7 @@ namespace Gamebook
                else
                {
                   // Hopefully the token we've been looking at is something the caller is expecting to see next (i.e. end of source text).
-                  return new SequenceCode(result);
+                  return new SequenceCode(codes);
                }
             }
          }
@@ -124,7 +123,7 @@ namespace Gamebook
             {
                var not = Look.Got(TokenType.Not);
                string leftId;
-               string rightId = null;
+               string? rightId = null;
                if (Look.Got(TokenType.BooleanId) || Look.Got(TokenType.ScoreId))
                   leftId = Look.Value;
                else
@@ -170,7 +169,7 @@ namespace Gamebook
             //   [if not killedInspector]
             var expressions = GetExpressions(true);
             var trueCode = GetSequence();
-            Code falseCode = null;
+            Code? falseCode = null;
 
             if (Look.Got(TokenType.Else))
                falseCode = GetSequence();

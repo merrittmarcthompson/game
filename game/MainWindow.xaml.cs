@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿#nullable enable
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
@@ -16,7 +17,7 @@ namespace Gamebook
       private Game Game;
 
       // ex. change "hello" to “hello”.
-      private string VerticalToMatchingQuotes(
+      private static string VerticalToMatchingQuotes(
         string text)
       {
          var result = "";
@@ -52,9 +53,8 @@ namespace Gamebook
          var characterInfoBox = (Border)FindName("CharacterInfoBox");
          characterInfoBox.Visibility = Visibility.Hidden;
          var firstNameBox = (TextBox)FindName("FirstNameBox");
-         Game.Set("jane", firstNameBox.Text);
          var lastNameBox = (TextBox)FindName("LastNameBox");
-         Game.Set("smith", lastNameBox.Text);
+         Game.SetCharacterName(firstNameBox.Text, lastNameBox.Text);
       }
 
       private void StoryAreaClicked(object sender, MouseButtonEventArgs e)
@@ -114,6 +114,8 @@ namespace Gamebook
       {
          var hyperlink = (Hyperlink)sender;
          var link = hyperlink.CommandParameter as string;
+         if (link == null)
+            throw new InvalidOperationException(string.Format($"Internal error: hyperlink has no link"));
          CloseCharacterInfoBox();
          Game.MoveToReaction(link);
          SetupScreen();
@@ -206,7 +208,9 @@ namespace Gamebook
          textBlock.Margin = new Thickness(8, 0, 0, 0);
 
          var bulletDecorator = new BulletDecorator();
+#pragma warning disable CA1303 // Do not pass literals as localized parameters
          bulletDecorator.Bullet = new TextBlock(new Run("○"));
+#pragma warning restore CA1303 // Do not pass literals as localized parameters
          bulletDecorator.Child = textBlock;
 
          var paragraph = new Paragraph();
@@ -257,9 +261,7 @@ namespace Gamebook
          var hamburgerMenu = (ListBox)FindName("HamburgerMenu");
          hamburgerMenu.Visibility = Visibility.Hidden;
          var firstNameBox = (TextBox)FindName("FirstNameBox");
-         firstNameBox.Text = Game.Get("jane");
-         var lastNameBox = (TextBox)FindName("LastNameBox");
-         lastNameBox.Text = Game.Get("smith");
+         (firstNameBox.Text, LastNameBox.Text) = Game.GetCharacterName();
       }
 
       public MainWindow()
@@ -269,19 +271,21 @@ namespace Gamebook
          // Get the source directory.
          var arguments = Environment.GetCommandLineArgs();
          if (arguments.Length < 2)
+#pragma warning disable CA1303 // Do not pass literals as localized parameters
             throw new InvalidOperationException("usage: gamebook.exe source-directory");
-         
-         // Load the static game story.
-         var (firstUnit, unitsByUniqueId, reactionArrowsByUniqueId, settings) = Unit.Load(arguments[1]);
+#pragma warning restore CA1303 // Do not pass literals as localized parameters
+
+         // Load the static game world from .graphml files in this directory.
+         var world = new World(arguments[1]);
 
          // If there's a save game state file, load it. Otherwise make a fresh game.
          if (File.Exists("save.txt"))
-            Game = new Game(new StreamReader("save.txt"), unitsByUniqueId, reactionArrowsByUniqueId, settings);
+            using (var reader = new StreamReader("save.txt"))
+               Game = new Game(reader, world);
          else
-            Game = new Game(firstUnit, settings);
+            Game = new Game(world);
 
          SetupScreen();
       }
    }
 }
-

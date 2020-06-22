@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable enable
+using System;
 
 namespace Gamebook
 {
@@ -42,7 +43,7 @@ namespace Gamebook
 
       public override bool Value
       {
-         // You are brave (for example) if your brave score is greater than average..
+         // You are brave (for example) if your brave score is greater than average.
          get => ScoreValue > Average;
          protected set { }
       }
@@ -64,12 +65,12 @@ namespace Gamebook
       public int GetChosenCount() => ChosenCount;
       public int GetOpportunityCount() => OpportunityCount;
 
-      public void RaiseChosenCount()
+      public void IncreaseChosenCount()
       {
          ++ChosenCount;
       }
 
-      public void RaiseOpportunityCount()
+      public void IncreaseOpportunityCount()
       {
          ++OpportunityCount;
       }

@@ -1,176 +1,34 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
 namespace Gamebook
 {
-   //  All of the graphml source code gets converted into this data structure.
-
-   public class WithId
+   public class World
    {
-      protected static string BuildUniqueId(
-         string sourceName,
-         string sourceId)
-      {
-         return sourceName.Replace(' ', '-') + ":" + sourceId;
-      }
-   }
+      // World loads the static description of the game world from .graphml files in a directory.
 
-   public class Arrow: WithId
-   {
-      public Unit TargetUnit { get; protected set; }
-      public CodeTree Code { get; protected set;  }
+      // These members describe the game world.
+      public Unit FirstUnit { get; private set; }
+      public Dictionary<string, Unit> UnitsByUniqueId { get; private set; }
+      public Dictionary<string, ReactionArrow> ReactionArrowsByUniqueId { get; private set; }
+      public Dictionary<string, Setting> Settings { get; private set; }
 
-      protected Arrow() { }
-      protected Arrow(
-         Unit targetUnit,
-         CodeTree code)
-      {
-         TargetUnit = targetUnit;
-         Code = code;
-      }
-   }
-
-   public class MergeArrow: Arrow
-   {
-      public string DebugSceneId { get; private set; }
-      public string DebugSourceName { get; private set; }
-
-      private MergeArrow() { }
-      // This lets the Load function make arrows. 
-      public MergeArrow(
-         Unit targetUnit,
-         CodeTree code,
-         string debugSceneId,
-         string debugSourceName): base (targetUnit, code)
-      {
-         DebugSceneId = debugSceneId;
-         DebugSourceName = debugSourceName;
-      }
-      // This lets the Load function add the target scene in a second pass after construction.
-      public Unit TargetSceneUnit { get; set; }
-   }
-
-   public class ReturnArrow: Arrow
-   {
-      private ReturnArrow() { }
-      // This lets the Load function make arrows. 
-      public ReturnArrow(
-         Unit targetUnit,
-         CodeTree code) : base(targetUnit, code)
-      {
-      }
-   }
-
-   public class ReactionArrow: Arrow
-   {
-      private string SourceName;
-      private string SourceId;
-
-      public string UniqueId
-      {
-         get => BuildUniqueId(SourceName, SourceId);
-         private set { }
-      }
-
-      private ReactionArrow() { }
-      // This lets the Load function make arrows. 
-      public ReactionArrow(
-         Unit targetUnit,
-         CodeTree code,
-         string sourceName,
-         string sourceId): base (targetUnit, code)
-      {
-         SourceName = sourceName;
-         SourceId = sourceId;
-      }
-   }
-
-   public class Unit: WithId
-   {
-      // When we save the game state, we don't save the units, reactions, code, etc. That is already coming from the .graphml files. Instead, when there is a reference to a unit, we just save the file name and internal ID of the unit. We hook up to the actual units after deserialization based on the file and ID.
-      private string SourceName;
-      private string SourceId;
-      public string UniqueId
-      {
-         get => BuildUniqueId(SourceName, SourceId);
-         private set { }
-      }
-
-      // Each Unit represents a unit of play. It has two parts:
-      // a. The text that describes the opposing turn (the "action"), ex. "@Black Bart said, "I'm gonna burn this town to the ground!"
-      // b. The list of texts that describes the options for your turn, ex. "Try to reason with him.", "Shoot him.", etc.
-      public CodeTree ActionCode { get; private set; }
-   
-      private List<Arrow> Arrows = new List<Arrow>();
-      public IEnumerable<Arrow> GetArrows ()
-      {
-         return Arrows;
-      }
-
-      // The only way to make a Unit is through the Load function, which creates all of them.
-      private Unit() { }
-
-      // Well, actually we also need to create them on the fly for return arrows.
-      public static Unit BuildReturnUnitFor(
-         List<ReturnArrow> returnArrows)
-      {
-         var result = new Unit();
-         result.SourceId = "returnUnit";
-         result.SourceName = "returnUnit";
-         result.ActionCode = new CodeTree("", "returnUnit", new Dictionary<string, Setting>());
-         foreach (var returnArrow in returnArrows)
-         {
-            var mergeArrow = new MergeArrow(returnArrow.TargetUnit, returnArrow.Code, "returnArrow", "returnArrow");
-            result.Arrows.Add(mergeArrow);
-         }
-         return result;
-      }
-
-      private static Dictionary<string, Setting> LoadSettings(
+      public World(
          string sourceDirectory)
       {
-         var result = new Dictionary<string, Setting>();
-
-         // This is just a quick, cheesy way to load this.
-         foreach (var words in
-            File.ReadLines(Path.Combine(sourceDirectory, "settings.txt"))
-               .Select(line => line.Split(' ')))
-         {
-            switch (words[0])
-            {
-               case "score":
-                  // ex. 'score brave'
-                  result.Add(words[1], new ScoreSetting());
-                  break;
-               case "flag":
-                  // ex. 'flag tvOn'
-                  result.Add(words[1], new BooleanSetting(false));
-                  break;
-               case "string":
-                  result.Add(words[1], new StringSetting(""));
-                  break;
-               // Ignore anything else as comments.
-            }
-         }
-         return result;
-      }
-
-      public static (Unit, Dictionary<string, Unit>, Dictionary<string, ReactionArrow>, Dictionary<string, Setting>) Load(
-         string sourceDirectory)
-      {
-         var settings = LoadSettings(sourceDirectory);
-
          // Load all the graphml files in the source directory.
          var sourcePaths = Directory.GetFiles(sourceDirectory, "*.graphml");
          if (sourcePaths.Length < 1)
             throw new InvalidOperationException(string.Format($"no .graphml files in directory {sourceDirectory}"));
 
-         // These are the return values.
-         Unit firstUnit = null;
-         var unitsByUniqueId = new Dictionary<string, Unit>();
-         var reactionArrowsByUniqueId = new Dictionary<string, ReactionArrow>();
+         Unit? hopefullyFirstUnit = null;
+
+         Settings = LoadSettings(sourceDirectory);
+         UnitsByUniqueId = new Dictionary<string, Unit>();
+         ReactionArrowsByUniqueId = new Dictionary<string, ReactionArrow>();
 
          // Create a temporary list of actions from the nodes in the graphml that have scene IDs, so we can link merges to them in this routine later.
          var unitsBySceneId = new Dictionary<string, Unit>();
@@ -190,11 +48,8 @@ namespace Gamebook
             var graphml = new Graphml(File.ReadAllText(sourcePath));
             foreach (var (nodeId, label) in graphml.Nodes())
             {
-               Unit unit = new Unit();
-               unit.SourceName = sourceName;
-               unit.SourceId = nodeId;
-               unitsByUniqueId[sourceName + ":" + nodeId] = unit;
-               unit.ActionCode = new CodeTree(label, sourceName, settings);
+               Unit unit = new Unit(sourceName, nodeId, new CodeTree(label, sourceName, Settings));
+               UnitsByUniqueId[sourceName + ":" + nodeId] = unit;
                EvaluateSettingsReport(unit.ActionCode, sourceName, settingsReportWriter);
                unitsByNodeId.Add(nodeId, unit);
 
@@ -207,9 +62,9 @@ namespace Gamebook
                   unitsBySceneId.Add(declaredSceneId, unit);
                   if (declaredSceneId == "start")
                   {
-                     if (firstUnit != null)
+                     if (hopefullyFirstUnit != null)
                         throw new InvalidOperationException(string.Format($"{sourceName}: More than one start scene"));
-                     firstUnit = unit;
+                     hopefullyFirstUnit = unit;
                   }
                }
             }
@@ -221,22 +76,23 @@ namespace Gamebook
                if (!unitsByNodeId.TryGetValue(targetNodeId, out var targetUnit))
                   throw new InvalidOperationException(string.Format($"{sourceName}: Internal error: no node declaration for referenced target node '{targetNodeId}'"));
 
-               var code = new CodeTree(label, sourceName, settings);
+               var code = new CodeTree(label, sourceName, Settings);
                EvaluateSettingsReport(code, sourceName, settingsReportWriter);
                var (isMerge, referencedSceneId, isReturn) = EvaluateArrowType(code);
                Arrow arrow;
                if (isMerge)
                {
-                  arrow = new MergeArrow(targetUnit, code, referencedSceneId, sourceName);
+                  var mergeArrow = new MergeArrow(targetUnit, code, referencedSceneId, sourceName);
                   if (referencedSceneId != null)
-                     mergeFixups.Add(arrow as MergeArrow);
+                     mergeFixups.Add(mergeArrow);
+                  arrow = mergeArrow;
                }
                else if (isReturn)
                   arrow = new ReturnArrow(targetUnit, code);
                else
                {
                   var reactionArrow = new ReactionArrow(targetUnit, code, sourceName, edgeId);
-                  reactionArrowsByUniqueId[reactionArrow.UniqueId] = reactionArrow;
+                  ReactionArrowsByUniqueId[reactionArrow.UniqueId] = reactionArrow;
                   arrow = reactionArrow;
                }
                // Add the arrow to the source action's arrows.
@@ -249,6 +105,10 @@ namespace Gamebook
          // Make a second pass to point merges that reference scenes to the scene's first action.
          foreach (var mergeArrow in mergeFixups)
          {
+            if (mergeArrow.DebugSceneId == null)
+#pragma warning disable CA1303 // Do not pass literals as localized parameters
+               throw new InvalidOperationException("Internal error: unexpected null scene ID");
+#pragma warning restore CA1303 // Do not pass literals as localized parameters
             if (!unitsBySceneId.TryGetValue(mergeArrow.DebugSceneId, out var targetSceneUnit))
                throw new InvalidOperationException(string.Format($"No scene declaration for referenced scene ID '{mergeArrow.DebugSceneId}'"));
             mergeArrow.TargetSceneUnit = targetSceneUnit;
@@ -256,30 +116,61 @@ namespace Gamebook
 
          settingsReportWriter.Close();
 
-         if (firstUnit == null)
+         if (hopefullyFirstUnit == null)
+#pragma warning disable CA1303 // Do not pass literals as localized parameters
             throw new InvalidOperationException("No start scene found.");
+#pragma warning restore CA1303 // Do not pass literals as localized parameters
 
-         return (firstUnit, unitsByUniqueId, reactionArrowsByUniqueId, settings);
+         FirstUnit = hopefullyFirstUnit;
 
          // Some helper functions.
 
-         string EvaluateScene(
+         Dictionary<string, Setting> LoadSettings(
+            string sourceDirectory)
+         {
+            var result = new Dictionary<string, Setting>();
+
+            // This is just a quick, cheesy way to load this.
+            foreach (var words in
+               File.ReadLines(Path.Combine(sourceDirectory, "settings.txt"))
+                  .Select(line => line.Split(' ')))
+            {
+               switch (words[0])
+               {
+                  case "score":
+                     // ex. 'score brave'
+                     result.Add(words[1], new ScoreSetting());
+                     break;
+                  case "flag":
+                     // ex. 'flag tvOn'
+                     result.Add(words[1], new BooleanSetting(false));
+                     break;
+                  case "string":
+                     result.Add(words[1], new StringSetting(""));
+                     break;
+                     // Ignore anything else as comments.
+               }
+            }
+            return result;
+         }
+
+         string? EvaluateScene(
             CodeTree codeTree)
          {
-            return codeTree
-               .Traverse()
-               .Where(code => code is SceneCode)
-               .Select(code => (code as SceneCode).SceneId)
+            return codeTree.Traverse()
+               .OfType<SceneCode>()
+               .Select(sceneCode => sceneCode.SceneId)
+               .Cast<string?>()
                .DefaultIfEmpty(null)
                .First();
          }
 
-         (bool, string, bool) EvaluateArrowType(
+         (bool, string?, bool) EvaluateArrowType(
             CodeTree codeTree)
          {
             bool isMerge = false;
             bool isReturn = false;
-            string referencedSceneId = null;
+            string? referencedSceneId = null;
             foreach (var code in codeTree.Traverse())
             {
                switch (code)
@@ -306,7 +197,7 @@ namespace Gamebook
             StreamWriter writer)
          {
             var sourceNameWithoutExtension = Path.GetFileNameWithoutExtension(sourceName);
-            foreach(var code in codeTree.Traverse())
+            foreach (var code in codeTree.Traverse())
             {
                switch (code)
                {
@@ -319,9 +210,9 @@ namespace Gamebook
                   case IfCode ifCode:
                      Write("if", ifCode.GetExpressions());
                      break;
-                  //case ScoreCode scoreCode:
-                  //   Write("score", scoreCode.Ids.Select(id => new Expression(false, id, null)));
-                  //   break;
+                     //case ScoreCode scoreCode:
+                     //   Write("score", scoreCode.Ids.Select(id => new Expression(false, id, null)));
+                     //   break;
                }
             }
 
@@ -346,6 +237,19 @@ namespace Gamebook
                }
             }
          }
+      }
+
+      public static Unit BuildReturnUnitFor(
+         List<ReturnArrow> returnArrows)
+      {
+         if (returnArrows == null) throw new ArgumentNullException(nameof(returnArrows));
+         var result = new Unit("returnUnit", "returnUnit", new CodeTree("", "returnUnit", new Dictionary<string, Setting>()));
+         foreach (var returnArrow in returnArrows)
+         {
+            var mergeArrow = new MergeArrow(returnArrow.TargetUnit, returnArrow.Code, "returnArrow", "returnArrow");
+            result.Arrows.Add(mergeArrow);
+         }
+         return result;
       }
    }
 }

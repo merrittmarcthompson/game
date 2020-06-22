@@ -1,29 +1,29 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Gamebook
 {
    public class LookAhead
    {
-      private List<Token> Tokens;
+      private TokenList TokenList;
       private int TokenIndex = 0;
       public string Value { get; private set; }
       public TokenType Type { get; private set; }
 
       public LookAhead(
-         List<Token> tokens)
+         TokenList tokenList)
       {
-         Tokens = tokens;
+         TokenList = tokenList;
+         Value = "";
+         Type = TokenType.EndOfSourceText;
       }
 
       public bool Got(
          TokenType type)
       {
          // This should never go off the end. There is already an end of source text marker at the end of the tokens.
-         var token = Tokens[TokenIndex++];
+         var token = TokenList.At(TokenIndex++);
          if (token.Type == type)
          {
             Value = token.Value;
@@ -40,7 +40,7 @@ namespace Gamebook
          string sourceNameForErrorMessages)
       {
          // This should never go off the end. There is already an end of source text marker at the end of the tokens.
-         var actual = Tokens[TokenIndex++];
+         var actual = TokenList.At(TokenIndex++);
          if (actual.Type != expected)
             throw new InvalidOperationException(string.Format($"file {sourceNameForErrorMessages} line {actual.LineNumber}: expected {expected} but got '{actual.Value}' in\n{sourceCode}"));
          Value = actual.Value;

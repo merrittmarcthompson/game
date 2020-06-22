@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using System.Collections.Generic;
 
 namespace Gamebook
@@ -9,7 +10,7 @@ namespace Gamebook
    {
       // Traverse is the routine that allows other modules to examine the code.
       public abstract IEnumerable<Code> Traverse(
-         Func<List<Expression>, bool?> branchPicker = null);
+         Func<List<Expression>, bool?>? branchPicker = null);
 
       // This makes Code objects appear in the debugger.
       public abstract override string ToString();
@@ -23,7 +24,7 @@ namespace Gamebook
       private readonly List<Code> Codes;
 
       public override IEnumerable<Code> Traverse(
-         Func<List<Expression>, bool?> branchPicker)
+         Func<List<Expression>, bool?>? branchPicker)
       {
          foreach (var code in Codes)
             foreach (var subcode in code.Traverse(branchPicker))
@@ -60,11 +61,10 @@ namespace Gamebook
       public Code TrueCode { get; private set; }
       public Code? FalseCode { get; private set; }
 
-      private IfCode() { }
       public IfCode(
          List<Expression> expressions,
          Code trueCode,
-         Code falseCode)
+         Code? falseCode)
       {
          Expressions = expressions;
          TrueCode = trueCode;
@@ -72,7 +72,7 @@ namespace Gamebook
       }
 
       public override IEnumerable<Code> Traverse(
-         Func<List<Expression>, bool?> branchPicker)
+         Func<List<Expression>, bool?>? branchPicker)
       {
          bool? branchesToExecute = branchPicker == null? null: branchesToExecute = branchPicker(Expressions);
 
@@ -102,7 +102,6 @@ namespace Gamebook
          return Expressions;
       }
 
-      private WhenCode() { }
       public WhenCode(
          List<Expression> expressions)
       {
@@ -110,7 +109,7 @@ namespace Gamebook
       }
 
       public override IEnumerable<Code> Traverse(
-         Func<List<Expression>, bool?> branchPicker)
+         Func<List<Expression>, bool?>? branchPicker)
       {
          yield return this;
       }
@@ -126,7 +125,7 @@ namespace Gamebook
       public WhenElseCode() { }
 
       public override IEnumerable<Code> Traverse(
-         Func<List<Expression>, bool?> branchPicker)
+         Func<List<Expression>, bool?>? branchPicker)
       {
          yield return this;
       }
@@ -145,7 +144,6 @@ namespace Gamebook
          return Expressions;
       }
 
-      private SetCode() { }
       public SetCode(
          List<Expression> expressions)
       {
@@ -153,7 +151,7 @@ namespace Gamebook
       }
 
       public override IEnumerable<Code> Traverse(
-         Func<List<Expression>, bool?> branchPicker)
+         Func<List<Expression>, bool?>? branchPicker)
       {
          yield return this;
       }
@@ -169,7 +167,6 @@ namespace Gamebook
       public List<string> Ids { get; private set; }
       public bool SortOnly { get; private set; }
 
-      private ScoreCode() { }
       public ScoreCode(
          List<string> ids,
          bool sortOnly)
@@ -178,7 +175,7 @@ namespace Gamebook
          SortOnly = sortOnly;
       }
       public override IEnumerable<Code> Traverse(
-         Func<List<Expression>, bool?> branchPicker)
+         Func<List<Expression>, bool?>? branchPicker)
       {
          yield return this;
       }
@@ -194,7 +191,6 @@ namespace Gamebook
       public string Id { get; private set; }
       public string Text { get; private set; }
 
-      private TextCode() { }
       public TextCode(
          string id,
          string text)
@@ -204,7 +200,7 @@ namespace Gamebook
       }
 
       public override IEnumerable<Code> Traverse(
-         Func<List<Expression>, bool?> branchPicker)
+         Func<List<Expression>, bool?>? branchPicker)
       {
          yield return this;
       }
@@ -219,14 +215,13 @@ namespace Gamebook
    {
       public string Characters { get; private set; }
 
-      private CharacterCode() { }
       public CharacterCode(
         string characters)
       {
          Characters = characters;
       }
       public override IEnumerable<Code> Traverse(
-         Func<List<Expression>, bool?> branchPicker)
+         Func<List<Expression>, bool?>? branchPicker)
       {
          yield return this;
       }
@@ -239,17 +234,16 @@ namespace Gamebook
 
    public class MergeCode: Code
    {
-      public string SceneId { get; private set; }
+      public string? SceneId { get; private set; }
 
-      private MergeCode() { }
       public MergeCode(
-         string sceneId)
+         string? sceneId)
       {
          SceneId = sceneId;
       }
 
       public override IEnumerable<Code> Traverse(
-         Func<List<Expression>, bool?> branchPicker)
+         Func<List<Expression>, bool?>? branchPicker)
       {
          yield return this;
       }
@@ -265,7 +259,7 @@ namespace Gamebook
       public ReturnCode() { }
 
       public override IEnumerable<Code> Traverse(
-         Func<List<Expression>, bool?> branchPicker)
+         Func<List<Expression>, bool?>? branchPicker)
       {
          yield return this;
       }
@@ -280,7 +274,6 @@ namespace Gamebook
    {
       public string SceneId { get; private set; }
 
-      private SceneCode() { }
       public SceneCode(
          string sceneId)
       {
@@ -288,7 +281,7 @@ namespace Gamebook
       }
 
       public override IEnumerable<Code> Traverse(
-         Func<List<Expression>, bool?> branchPicker)
+         Func<List<Expression>, bool?>? branchPicker)
       {
          yield return this;
       }
@@ -303,14 +296,13 @@ namespace Gamebook
    {
       public string Id { get; private set; }
 
-      private SpecialCode() { }
       public SpecialCode(
         string id)
       {
          Id = id;
       }
       public override IEnumerable<Code> Traverse(
-         Func<List<Expression>, bool?> branchPicker)
+         Func<List<Expression>, bool?>? branchPicker)
       {
          yield return this;
       }
@@ -329,14 +321,13 @@ namespace Gamebook
       //    tvOn=mr_rogers
       //    not tvOn=mr_rogers
       public string LeftId { get; private set; }
-      public string RightId { get; private set; }
+      public string? RightId { get; private set; }
       public bool Not { get; private set; }
 
-      private Expression() { }
       public Expression(
          bool not,
          string leftId,
-         string rightId)
+         string? rightId)
       {
          Not = not;
          LeftId = leftId;
