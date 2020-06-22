@@ -302,7 +302,7 @@ namespace Gamebook
          var whenCount = whenCodes.Count();
          var hadWhen = whenCount > 0;
          var allSucceeded = whenCodes
-            .Where(whenCode => EvaluateConditions(whenCode.GetExpressions(), settings, out trace, codeTree.SourceText))
+            .Where(whenCode => EvaluateConditions(whenCode.Expressions, settings, out trace, codeTree.SourceText))
             .Count() == whenCount;
          outTrace = trace;
          return (allSucceeded, hadWhen);
@@ -422,7 +422,7 @@ namespace Gamebook
             switch (code)
             {
                case SetCode setCode:
-                  foreach (var expression in setCode.GetExpressions())
+                  foreach (var expression in setCode.Expressions)
                   {
                      if (expression.RightId == null)
                         // This is [set tvOn] or [set not tvOn].

@@ -53,11 +53,7 @@ namespace Gamebook
 
    public class IfCode: Code
    {
-      private readonly List<Expression> Expressions;
-      public IEnumerable<Expression> GetExpressions()
-      {
-         return Expressions;
-      }
+      public List<Expression> Expressions { get; private set; }
       public Code TrueCode { get; private set; }
       public Code? FalseCode { get; private set; }
 
@@ -96,11 +92,7 @@ namespace Gamebook
 
    public class WhenCode: Code
    {
-      private readonly List<Expression> Expressions;
-      public IEnumerable<Expression> GetExpressions()
-      {
-         return Expressions;
-      }
+      public List<Expression> Expressions { get; private set; }
 
       public WhenCode(
          List<Expression> expressions)
@@ -138,11 +130,7 @@ namespace Gamebook
 
    public class SetCode: Code
    {
-      private readonly List<Expression> Expressions;
-      public IEnumerable<Expression> GetExpressions()
-      {
-         return Expressions;
-      }
+      public List<Expression> Expressions { get; private set; }
 
       public SetCode(
          List<Expression> expressions)

@@ -202,13 +202,13 @@ namespace Gamebook
                switch (code)
                {
                   case SetCode setCode:
-                     Write("set", setCode.GetExpressions());
+                     Write("set", setCode.Expressions);
                      break;
                   case WhenCode whenCode:
-                     Write("when", whenCode.GetExpressions());
+                     Write("when", whenCode.Expressions);
                      break;
                   case IfCode ifCode:
-                     Write("if", ifCode.GetExpressions());
+                     Write("if", ifCode.Expressions);
                      break;
                      //case ScoreCode scoreCode:
                      //   Write("score", scoreCode.Ids.Select(id => new Expression(false, id, null)));
