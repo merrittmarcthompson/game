@@ -8,6 +8,8 @@ namespace Gamebook
 {
    public class ScoredReactionArrow
    {
+      // This is just part of the Page Reactions interface.
+
       public double Score { get; private set; }
       public ReactionArrow ReactionArrow { get; private set; }
 

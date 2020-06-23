@@ -48,7 +48,6 @@ namespace Gamebook
       {
          Codes = codes;
       }
-
    }
 
    public class IfCode: Code

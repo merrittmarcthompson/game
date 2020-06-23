@@ -99,6 +99,7 @@ namespace Gamebook
       // Each Unit has two parts:
       // a. The text that describes the opposing turn (the "action"), ex. "@Black Bart said, "I'm gonna burn this town to the ground!"
       // b. The list of texts that describes the options for your turn, ex. "Try to reason with him.", "Shoot him.", etc.
+      // Is it really that simple? No.
       public CodeTree ActionCode { get; private set; }
    
       public List<Arrow> Arrows { get; private set; }

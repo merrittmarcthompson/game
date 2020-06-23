@@ -47,5 +47,4 @@ namespace Gamebook
          Type = expected;
       }
    }
-
 }

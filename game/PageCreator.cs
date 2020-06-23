@@ -8,7 +8,7 @@ namespace Gamebook
 {
    class PageCreator
    {
-      // Either creates the first page of the world story, or creates the next page after a page, based on the chosen reaction.
+      // Either creates the first page of the world story (BuildFirst), or creates the next page after a page, based on the chosen reaction (BuildNext).
 
       // DebugMode on make it add annotations about how merges were done, etc.
       public bool DebugMode { get; set; } = false;
@@ -23,6 +23,14 @@ namespace Gamebook
          Page page,
          string reactionText)
       {
+         // We're going to start creating the new settings for the new page right away, so make a copy of the old ones, which we are going to modify.
+         var newSettings = new Dictionary<string, Setting>(page.Settings);
+
+         // Also make a copy of the return stack. It gets reversed on copy
+         var newNextTargetUnitOnReturn = new Stack<Unit>(page.NextTargetUnitOnReturn);
+         // Flip the stack back to the right direction.
+         newNextTargetUnitOnReturn = new Stack<Unit>(newNextTargetUnitOnReturn);
+
          // Get the chosen arrow.
          if (!page.Reactions.TryGetValue(reactionText, out var chosen))
             throw new InvalidOperationException(string.Format($"No arrow for reaction '{reactionText}'."));
@@ -39,7 +47,7 @@ namespace Gamebook
                   .OfType<ScoreCode>()
                   .Where(scoreCode => !scoreCode.SortOnly)
                   .SelectMany(scoreCode => scoreCode.Ids)
-                  .Select(id => (isChosenOne, page.Settings[id] as ScoreSetting))
+                  .Select(id => (isChosenOne, newSettings[id] as ScoreSetting))
             ).SelectMany(result => result))
          {
             if (isChosenOne)
@@ -50,10 +58,9 @@ namespace Gamebook
          // Make a little report for debugging purposes.
          var sortDictionary = new Dictionary<double, string>();
          double uniquifier = 0.0;
-         foreach (var (key, scoreSetting) in
-            page.Settings
-               .Where(setting => setting.Value is ScoreSetting)
-               .Select(setting => (setting.Key, setting.Value as ScoreSetting)))
+         foreach (var (key, scoreSetting) in newSettings
+            .Where(setting => setting.Value is ScoreSetting)
+            .Select(setting => (setting.Key, setting.Value as ScoreSetting)))
          {
             // Ex. brave    43% (3/7) false
             string line = String.Format($"{key,-12} {scoreSetting.PercentString()} ({scoreSetting.RatioString()}) {(scoreSetting.Value ? "true" : "false")}");
@@ -61,26 +68,25 @@ namespace Gamebook
             uniquifier += 0.00001;
          }
          var scoresReportWriter = new StreamWriter("scores.txt", false);
-         foreach (var line in
-            sortDictionary
-               .OrderByDescending(pair => pair.Key)
-               .Select(pair => pair.Value))
+         foreach (var line in sortDictionary
+            .OrderByDescending(pair => pair.Key)
+            .Select(pair => pair.Value))
          {
             scoresReportWriter.WriteLine(line);
          }
          scoresReportWriter.Close();
 
-         // Move to the unit the chosen arrow points to.
-         return Build(chosen.ReactionArrow.TargetUnit, page.Settings, page.NextTargetUnitOnReturn, trace);
+         return Build(chosen.ReactionArrow.TargetUnit, newSettings, newNextTargetUnitOnReturn, trace);
       }
 
       private Page Build(
          Unit firstUnit,
-         Dictionary<string, Setting> previousSettings,
-         Stack<Unit> previousNextTargetUnitOnReturn,
+         Dictionary<string, Setting> settings,
+         Stack<Unit> nextTargetUnitOnReturn,
          string startingTrace)
       {
          // Starting with the given unit box, a) merge the texts of all units connected below it into one text, and b) collect all the reaction arrows.
+         // These variables are all used by the recursive Accumulate... functions below.
          var accumulatedReactions = new Dictionary<string, ScoredReactionArrow>();
          // The action text will contain all the merged action texts.
          var accumulatedActionTexts = startingTrace;
@@ -88,11 +94,6 @@ namespace Gamebook
          var gotAReactionArrow = false;
          // Reactions are sorted by score, which is a floating point number. But some reactions may have the same score. So add a small floating-point sequence number to each one, to disambiguate them.
          double reactionScoreDisambiguator = 0;
-         // The next page will start with the previous page's settings and return stack.
-         var settings = new Dictionary<string, Setting>(previousSettings);
-         var nextTargetUnitOnReturn = new Stack<Unit>(previousNextTargetUnitOnReturn);
-         // Flip the stack back to the right direction.
-         nextTargetUnitOnReturn = new Stack<Unit>(nextTargetUnitOnReturn);
 
          // Scores use this to compute whether you are above average in a score. Set it now, before creating the page, so it can be used in conditions evaluated throughout page creation.
          ScoreSetting.Average = settings.Values
@@ -440,7 +441,8 @@ namespace Gamebook
                   break;
                case ScoreCode scoreCode:
                   if (!scoreCode.SortOnly)
-                     foreach (var (id, scoreSetting) in scoreCode.Ids.Select(id => (id, settings[id] as ScoreSetting)))
+                     foreach (var (id, scoreSetting) in scoreCode.Ids
+                        .Select(id => (id, settings[id] as ScoreSetting)))
                      {
                         scoreSetting.IncreaseChosenCount();
                         // Better raise this too, otherwise you could have more choices than opportunities to choose, i.e greater than 100% score.
