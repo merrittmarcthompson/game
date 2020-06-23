@@ -10,8 +10,8 @@ namespace Gamebook
    {
       // This is just part of the Page Reactions interface.
 
-      public double Score { get; private set; }
-      public ReactionArrow ReactionArrow { get; private set; }
+      public double Score { get; }
+      public ReactionArrow ReactionArrow { get; }
 
       public ScoredReactionArrow(
          double score,
@@ -26,16 +26,16 @@ namespace Gamebook
    public class Page
    {
       // The settings contain the state of the game: where you are, what people think of you, etc.
-      public Dictionary<string, Setting> Settings { get; private set; }
+      public Dictionary<string, Setting> Settings { get; }
 
       // Stack of return merge locations.
-      public Stack<Unit> NextTargetUnitOnReturn { get; private set; }
+      public Stack<Unit> NextTargetUnitOnReturn { get; }
 
       // This is the body of the text on the screen.
-      public string ActionText { get; private set; }
+      public string ActionText { get; }
 
       // The keys are the reaction texts that appear below the action text. The reaction arrow data is used by the game to transition to the next unit.
-      public Dictionary<string, ScoredReactionArrow> Reactions { get; private set; }
+      public Dictionary<string, ScoredReactionArrow> Reactions { get; }
 
       public Page(
          string actionText,

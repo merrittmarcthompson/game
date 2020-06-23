@@ -35,8 +35,8 @@ namespace Gamebook
 
    public class MergeArrow: Arrow
    {
-      public string? DebugSceneId { get; private set; }
-      public string DebugSourceName { get; private set; }
+      public string? DebugSceneId { get; }
+      public string DebugSourceName { get; }
 
       // This lets the Load function make arrows. 
       public MergeArrow(
@@ -70,7 +70,6 @@ namespace Gamebook
       public string UniqueId
       {
          get => BuildUniqueId(SourceName, SourceId);
-         private set { }
       }
 
       // This lets the Load function make arrows. 
@@ -93,16 +92,15 @@ namespace Gamebook
       public string UniqueId
       {
          get => BuildUniqueId(SourceName, SourceId);
-         private set { }
       }
 
       // Each Unit has two parts:
       // a. The text that describes the opposing turn (the "action"), ex. "@Black Bart said, "I'm gonna burn this town to the ground!"
       // b. The list of texts that describes the options for your turn, ex. "Try to reason with him.", "Shoot him.", etc.
       // Is it really that simple? No.
-      public CodeTree ActionCode { get; private set; }
+      public CodeTree ActionCode { get; }
    
-      public List<Arrow> Arrows { get; private set; }
+      public List<Arrow> Arrows { get; }
 
       public Unit(
          string sourceName,

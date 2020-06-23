@@ -11,10 +11,10 @@ namespace Gamebook
       // World loads the static description of the game world from .graphml files in a directory.
 
       // These members describe the game world.
-      public Unit FirstUnit { get; private set; }
-      public Dictionary<string, Unit> UnitsByUniqueId { get; private set; }
-      public Dictionary<string, ReactionArrow> ReactionArrowsByUniqueId { get; private set; }
-      public Dictionary<string, Setting> Settings { get; private set; }
+      public Unit FirstUnit { get; }
+      public Dictionary<string, Unit> UnitsByUniqueId { get; }
+      public Dictionary<string, ReactionArrow> ReactionArrowsByUniqueId { get; }
+      public Dictionary<string, Setting> Settings { get; }
 
       public World(
          string sourceDirectory)

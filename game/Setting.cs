@@ -9,7 +9,7 @@ namespace Gamebook
 
    public class StringSetting: Setting
    {
-      public string Value { get; private set; } = "";
+      public string Value { get; } = "";
 
       private StringSetting() { }
       public StringSetting(

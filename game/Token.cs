@@ -6,9 +6,9 @@ namespace Gamebook
 {
    public class Token
    {
-      public TokenType Type { get; private set; }
-      public string Value { get; private set; }
-      public int LineNumber { get; private set; }
+      public TokenType Type { get; }
+      public string Value { get; }
+      public int LineNumber { get; }
 
       public Token(
         TokenType type,

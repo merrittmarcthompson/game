@@ -10,7 +10,7 @@ namespace Gamebook
       private readonly SequenceCode RootCode;
 
       // You can also get the original source code text for error messages.
-      public string SourceText { get; private set; }
+      public string SourceText { get; }
 
       public IEnumerable<Code> Traverse(
          Func<List<Expression>, bool?>? branchPicker = null)

@@ -9,7 +9,7 @@ namespace Gamebook
 {
    public class TokenType
    {
-      public string Name { get; private set; }
+      public string Name { get; }
 
       // private: the static token types below are the only ones that can be created.
       private TokenType(
@@ -24,32 +24,32 @@ namespace Gamebook
       }
 
       // Here are all the token types:
-      public static TokenType EndOfSourceText { get; private set; } = new TokenType("end of source text");
+      public static TokenType EndOfSourceText { get; } = new TokenType("end of source text");
 
-      public static TokenType Id { get; private set; } = new TokenType("an identifier");
-      public static TokenType ScoreId { get; private set; } = new TokenType("a score identifier");
-      public static TokenType StringId { get; private set; } = new TokenType("a string identifier");
-      public static TokenType BooleanId { get; private set; } = new TokenType("a flag identifier");
-      public static TokenType SpecialId { get; private set; } = new TokenType("a special identifier");
+      public static TokenType Id { get; } = new TokenType("an identifier");
+      public static TokenType ScoreId { get; } = new TokenType("a score identifier");
+      public static TokenType StringId { get; } = new TokenType("a string identifier");
+      public static TokenType BooleanId { get; } = new TokenType("a flag identifier");
+      public static TokenType SpecialId { get; } = new TokenType("a special identifier");
 
-      public static TokenType Characters { get; private set; } = new TokenType("characters");
+      public static TokenType Characters { get; } = new TokenType("characters");
 
-      public static TokenType End { get; private set; } = new TokenType("'end'");
-      public static TokenType Else { get; private set; } = new TokenType("'else'");
-      public static TokenType If { get; private set; } = new TokenType("'if'");
-      public static TokenType Not { get; private set; } = new TokenType("'not'");
-      public static TokenType Merge { get; private set; } = new TokenType("'merge'");
-      public static TokenType Or { get; private set; } = new TokenType("'or'");
-      public static TokenType Return { get; private set; } = new TokenType("'return'");
-      public static TokenType Scene { get; private set; } = new TokenType("'scene'");
-      public static TokenType Set { get; private set; } = new TokenType("'set'");
-      public static TokenType Score { get; private set; } = new TokenType("'score'");
-      public static TokenType Sort { get; private set; } = new TokenType("'sort'");
-      public static TokenType Text { get; private set; } = new TokenType("'text'");
-      public static TokenType When { get; private set; } = new TokenType("'when'");
+      public static TokenType End { get; } = new TokenType("'end'");
+      public static TokenType Else { get; } = new TokenType("'else'");
+      public static TokenType If { get; } = new TokenType("'if'");
+      public static TokenType Not { get; } = new TokenType("'not'");
+      public static TokenType Merge { get; } = new TokenType("'merge'");
+      public static TokenType Or { get; } = new TokenType("'or'");
+      public static TokenType Return { get; } = new TokenType("'return'");
+      public static TokenType Scene { get; } = new TokenType("'scene'");
+      public static TokenType Set { get; } = new TokenType("'set'");
+      public static TokenType Score { get; } = new TokenType("'score'");
+      public static TokenType Sort { get; } = new TokenType("'sort'");
+      public static TokenType Text { get; } = new TokenType("'text'");
+      public static TokenType When { get; } = new TokenType("'when'");
 
-      public static TokenType Comma { get; private set; } = new TokenType("a comma");
-      public static TokenType Equal { get; private set; } = new TokenType("an equal sign");
-      public static TokenType Period { get; private set; } = new TokenType("a period");
+      public static TokenType Comma { get; } = new TokenType("a comma");
+      public static TokenType Equal { get; } = new TokenType("an equal sign");
+      public static TokenType Period { get; } = new TokenType("a period");
    }
 }

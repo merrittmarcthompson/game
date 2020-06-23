@@ -52,9 +52,9 @@ namespace Gamebook
 
    public class IfCode: Code
    {
-      public List<Expression> Expressions { get; private set; }
-      public Code TrueCode { get; private set; }
-      public Code? FalseCode { get; private set; }
+      public List<Expression> Expressions { get; }
+      public Code TrueCode { get; }
+      public Code? FalseCode { get; }
 
       public IfCode(
          List<Expression> expressions,
@@ -91,7 +91,7 @@ namespace Gamebook
 
    public class WhenCode: Code
    {
-      public List<Expression> Expressions { get; private set; }
+      public List<Expression> Expressions { get; }
 
       public WhenCode(
          List<Expression> expressions)
@@ -129,7 +129,7 @@ namespace Gamebook
 
    public class SetCode: Code
    {
-      public List<Expression> Expressions { get; private set; }
+      public List<Expression> Expressions { get; }
 
       public SetCode(
          List<Expression> expressions)
@@ -151,8 +151,8 @@ namespace Gamebook
 
    public class ScoreCode: Code
    {
-      public List<string> Ids { get; private set; }
-      public bool SortOnly { get; private set; }
+      public List<string> Ids { get; }
+      public bool SortOnly { get; }
 
       public ScoreCode(
          List<string> ids,
@@ -175,8 +175,8 @@ namespace Gamebook
 
    public class TextCode: Code
    {
-      public string Id { get; private set; }
-      public string Text { get; private set; }
+      public string Id { get; }
+      public string Text { get; }
 
       public TextCode(
          string id,
@@ -200,7 +200,7 @@ namespace Gamebook
 
    public class CharacterCode: Code
    {
-      public string Characters { get; private set; }
+      public string Characters { get; }
 
       public CharacterCode(
         string characters)
@@ -221,7 +221,7 @@ namespace Gamebook
 
    public class MergeCode: Code
    {
-      public string? SceneId { get; private set; }
+      public string? SceneId { get; }
 
       public MergeCode(
          string? sceneId)
@@ -259,7 +259,7 @@ namespace Gamebook
 
    public class SceneCode: Code
    {
-      public string SceneId { get; private set; }
+      public string SceneId { get; }
 
       public SceneCode(
          string sceneId)
@@ -281,7 +281,7 @@ namespace Gamebook
 
    public class SpecialCode: Code
    {
-      public string Id { get; private set; }
+      public string Id { get; }
 
       public SpecialCode(
         string id)
@@ -307,9 +307,9 @@ namespace Gamebook
       //    not tvOn
       //    tvOn=mr_rogers
       //    not tvOn=mr_rogers
-      public string LeftId { get; private set; }
-      public string? RightId { get; private set; }
-      public bool Not { get; private set; }
+      public string LeftId { get; }
+      public string? RightId { get; }
+      public bool Not { get; }
 
       public Expression(
          bool not,
