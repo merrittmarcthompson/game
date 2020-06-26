@@ -30,24 +30,22 @@ namespace Gamebook
 
       // FUNCTIONS
 
-      // These are the two functions used to show the current page on the screen. GetActionText gets the description on top. GetReactionTextsByScore gets the list of reactions that appear on the bottom.
-      public string GetActionText()
-      {
-         return CurrentPage.ActionText;
-      }
+      // These are the two functions used to show the current page on the screen. ActionText gets the description on top. ReactionTextsByScore gets the list of reactions that appear on the bottom.
+      public string ActionText { get => CurrentPage.ActionText; }
 
-      public IEnumerable<string> GetReactionTextsByScore()
-      {
-         // -1 scores are links.
-         return CurrentPage.Reactions.OrderByDescending(pair => pair.Value.Score).Where(pair => pair.Value.Score != -1).Select(pair => pair.Key);
-      }
+      // -1 scores are links.
+      public IEnumerable<string> ReactionTextsByScore { get =>
+         CurrentPage.Reactions
+            .OrderByDescending(pair => pair.Value.Score)
+            .Where(pair => pair.Value.Score != -1)
+            .Select(pair => pair.Key); }
 
       public Game(
          World world)
       {
          // There are two ways to create the game initially. The first is to create a fresh game from the game world description.
          if (world == null) throw new ArgumentNullException(nameof(world));
-         // This constructs the first page right away, ready to go, starting with the first unit in the game. The game is always in a valid state, that is, it contains a completed page, ready to display.
+         // This constructs the first page right away, ready to go, starting with the first node in the game. The game is always in a valid state, that is, it contains a completed page, ready to display.
          CurrentPage = PageCreator.BuildFirst(world);
          SetCharacterName("Sarah", "Spaulding");
       }

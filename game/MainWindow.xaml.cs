@@ -243,14 +243,14 @@ namespace Gamebook
          document.FontSize = 13;
          document.MouseDown += StoryAreaClicked;
          document.TextAlignment = TextAlignment.Left;
-         foreach (var paragraphText in Game.GetActionText().Split('@'))
+         foreach (var paragraphText in Game.ActionText.Split('@'))
          {
             if (first && paragraphText.Length < 1)
                continue;
             first = false;
             document.Blocks.Add(BuildParagraph(paragraphText));
          }
-         foreach (var reactionText in Game.GetReactionTextsByScore())
+         foreach (var reactionText in Game.ReactionTextsByScore)
             document.Blocks.Add(BuildBullet("{" + reactionText + "}"));
          var storyArea = (FlowDocumentScrollViewer)FindName("StoryArea");
          storyArea.Document = document;

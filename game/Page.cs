@@ -29,24 +29,24 @@ namespace Gamebook
       public Dictionary<string, Setting> Settings { get; }
 
       // Stack of return merge locations.
-      public Stack<Unit> NextTargetUnitOnReturn { get; }
+      public Stack<Node> NextTargetNodeOnReturn { get; }
 
       // This is the body of the text on the screen.
       public string ActionText { get; }
 
-      // The keys are the reaction texts that appear below the action text. The reaction arrow data is used by the game to transition to the next unit.
+      // The keys are the reaction texts that appear below the action text. The reaction arrow data is used by the game to transition to the next node.
       public Dictionary<string, ScoredReactionArrow> Reactions { get; }
 
       public Page(
          string actionText,
          Dictionary<string, ScoredReactionArrow> reactions,
          Dictionary<string, Setting> settings,
-         Stack<Unit> nextTargetUnitOnReturn)
+         Stack<Node> nextTargetNodeOnReturn)
       {
          ActionText = actionText;
          Reactions = reactions;
          Settings = settings;
-         NextTargetUnitOnReturn = nextTargetUnitOnReturn;
+         NextTargetNodeOnReturn = nextTargetNodeOnReturn;
       }
    }
 }

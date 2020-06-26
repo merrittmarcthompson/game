@@ -11,10 +11,10 @@ namespace Gamebook
       // World loads the static description of the game world from .graphml files in a directory.
 
       // These members describe the game world.
-      public Unit FirstUnit { get; }
-      public Dictionary<string, Unit> UnitsByUniqueId { get; }
+      public Node FirstNode { get; }
+      public Dictionary<string, Node> NodesByUniqueId { get; }
       public Dictionary<string, ReactionArrow> ReactionArrowsByUniqueId { get; }
-      public Dictionary<string, Setting> Settings { get; }
+      public Dictionary<string, Setting> InitialSettings { get; }
 
       public World(
          string sourceDirectory)
@@ -24,14 +24,14 @@ namespace Gamebook
          if (sourcePaths.Length < 1)
             throw new InvalidOperationException(string.Format($"no .graphml files in directory {sourceDirectory}"));
 
-         Unit? hopefullyFirstUnit = null;
+         Node? hopefullyFirstNode = null;
 
-         Settings = LoadSettings(sourceDirectory);
-         UnitsByUniqueId = new Dictionary<string, Unit>();
+         InitialSettings = LoadSettings(sourceDirectory);
+         NodesByUniqueId = new Dictionary<string, Node>();
          ReactionArrowsByUniqueId = new Dictionary<string, ReactionArrow>();
 
          // Create a temporary list of actions from the nodes in the graphml that have scene IDs, so we can link merges to them in this routine later.
-         var unitsBySceneId = new Dictionary<string, Unit>();
+         var nodesBySceneId = new Dictionary<string, Node>();
          // Create a temporary list of merges that need to be linked to actions by scene ID.
          var mergeFixups = new List<MergeArrow>();
 
@@ -43,28 +43,28 @@ namespace Gamebook
             var sourceName = Path.GetFileName(sourcePath);
 
             // Create a temporary list of actions from the nodes in the graphml, so we can link arrows to them in this routine later.
-            var unitsByNodeId = new Dictionary<string, Unit>();
+            var nodesByNodeId = new Dictionary<string, Node>();
 
             var graphml = new Graphml(File.ReadAllText(sourcePath));
             foreach (var (nodeId, label) in graphml.Nodes())
             {
-               Unit unit = new Unit(sourceName, nodeId, new CodeTree(label, sourceName, Settings));
-               UnitsByUniqueId[sourceName + ":" + nodeId] = unit;
-               EvaluateSettingsReport(unit.ActionCode, sourceName, settingsReportWriter);
-               unitsByNodeId.Add(nodeId, unit);
+               Node node = new Node(sourceName, nodeId, new CodeTree(label, sourceName, InitialSettings));
+               NodesByUniqueId[sourceName + ":" + nodeId] = node;
+               EvaluateSettingsReport(node.ActionCode, sourceName, settingsReportWriter);
+               nodesByNodeId.Add(nodeId, node);
 
                // Check if there's a [scene ID] declaration.
-               var declaredSceneId = EvaluateScene(unit.ActionCode);
+               var declaredSceneId = EvaluateScene(node.ActionCode);
                if (declaredSceneId != null)
                {
-                  if (unitsBySceneId.ContainsKey(declaredSceneId))
+                  if (nodesBySceneId.ContainsKey(declaredSceneId))
                      throw new InvalidOperationException(string.Format($"{sourceName}: Scene '{declaredSceneId}' declared twice"));
-                  unitsBySceneId.Add(declaredSceneId, unit);
+                  nodesBySceneId.Add(declaredSceneId, node);
                   if (declaredSceneId == "start")
                   {
-                     if (hopefullyFirstUnit != null)
+                     if (hopefullyFirstNode != null)
                         throw new InvalidOperationException(string.Format($"{sourceName}: More than one start scene"));
-                     hopefullyFirstUnit = unit;
+                     hopefullyFirstNode = node;
                   }
                }
             }
@@ -73,32 +73,32 @@ namespace Gamebook
             foreach (var (edgeId, sourceNodeId, targetNodeId, label) in graphml.Edges())
             {
                // Point the arrow to its target action.
-               if (!unitsByNodeId.TryGetValue(targetNodeId, out var targetUnit))
+               if (!nodesByNodeId.TryGetValue(targetNodeId, out var targetNode))
                   throw new InvalidOperationException(string.Format($"{sourceName}: Internal error: no node declaration for referenced target node '{targetNodeId}'"));
 
-               var code = new CodeTree(label, sourceName, Settings);
+               var code = new CodeTree(label, sourceName, InitialSettings);
                EvaluateSettingsReport(code, sourceName, settingsReportWriter);
                var (isMerge, referencedSceneId, isReturn) = EvaluateArrowType(code);
                Arrow arrow;
                if (isMerge)
                {
-                  var mergeArrow = new MergeArrow(targetUnit, code, referencedSceneId, sourceName);
+                  var mergeArrow = new MergeArrow(targetNode, code, referencedSceneId, sourceName);
                   if (referencedSceneId != null)
                      mergeFixups.Add(mergeArrow);
                   arrow = mergeArrow;
                }
                else if (isReturn)
-                  arrow = new ReturnArrow(targetUnit, code);
+                  arrow = new ReturnArrow(targetNode, code);
                else
                {
-                  var reactionArrow = new ReactionArrow(targetUnit, code, sourceName, edgeId);
+                  var reactionArrow = new ReactionArrow(targetNode, code, sourceName, edgeId);
                   ReactionArrowsByUniqueId[reactionArrow.UniqueId] = reactionArrow;
                   arrow = reactionArrow;
                }
                // Add the arrow to the source action's arrows.
-               if (!unitsByNodeId.TryGetValue(sourceNodeId, out var sourceUnit))
+               if (!nodesByNodeId.TryGetValue(sourceNodeId, out var sourceNode))
                   throw new InvalidOperationException(string.Format($"{sourceName}: Internal error: no node declaration for referenced source node '{sourceNodeId}'"));
-               sourceUnit.Arrows.Add(arrow);
+               sourceNode.Arrows.Add(arrow);
             }
          }
 
@@ -109,19 +109,19 @@ namespace Gamebook
 #pragma warning disable CA1303 // Do not pass literals as localized parameters
                throw new InvalidOperationException("Internal error: unexpected null scene ID");
 #pragma warning restore CA1303 // Do not pass literals as localized parameters
-            if (!unitsBySceneId.TryGetValue(mergeArrow.DebugSceneId, out var targetSceneUnit))
+            if (!nodesBySceneId.TryGetValue(mergeArrow.DebugSceneId, out var targetSceneNode))
                throw new InvalidOperationException(string.Format($"No scene declaration for referenced scene ID '{mergeArrow.DebugSceneId}'"));
-            mergeArrow.TargetSceneUnit = targetSceneUnit;
+            mergeArrow.TargetSceneNode = targetSceneNode;
          }
 
          settingsReportWriter.Close();
 
-         if (hopefullyFirstUnit == null)
+         if (hopefullyFirstNode == null)
 #pragma warning disable CA1303 // Do not pass literals as localized parameters
             throw new InvalidOperationException("No start scene found.");
 #pragma warning restore CA1303 // Do not pass literals as localized parameters
 
-         FirstUnit = hopefullyFirstUnit;
+         FirstNode = hopefullyFirstNode;
 
          // Some helper functions.
 
@@ -239,14 +239,14 @@ namespace Gamebook
          }
       }
 
-      public static Unit BuildReturnUnitFor(
+      public static Node BuildReturnNodeFor(
          List<ReturnArrow> returnArrows)
       {
          if (returnArrows == null) throw new ArgumentNullException(nameof(returnArrows));
-         var result = new Unit("returnUnit", "returnUnit", new CodeTree("", "returnUnit", new Dictionary<string, Setting>()));
+         var result = new Node("returnNode", "returnNode", new CodeTree("", "returnNode", new Dictionary<string, Setting>()));
          foreach (var returnArrow in returnArrows)
          {
-            var mergeArrow = new MergeArrow(returnArrow.TargetUnit, returnArrow.Code, "returnArrow", "returnArrow");
+            var mergeArrow = new MergeArrow(returnArrow.TargetNode, returnArrow.Code, "returnArrow", "returnArrow");
             result.Arrows.Add(mergeArrow);
          }
          return result;

@@ -21,14 +21,14 @@ namespace Gamebook
 
    public class Arrow: WithId
    {
-      public Unit TargetUnit { get; protected set; }
+      public Node TargetNode { get; protected set; }
       public CodeTree Code { get; protected set;  }
 
       protected Arrow(
-         Unit targetUnit,
+         Node targetNode,
          CodeTree code)
       {
-         TargetUnit = targetUnit;
+         TargetNode = targetNode;
          Code = code;
       }
    }
@@ -40,24 +40,24 @@ namespace Gamebook
 
       // This lets the Load function make arrows. 
       public MergeArrow(
-         Unit targetUnit,
+         Node targetNode,
          CodeTree code,
          string? debugSceneId,
-         string debugSourceName): base (targetUnit, code)
+         string debugSourceName): base (targetNode, code)
       {
          DebugSceneId = debugSceneId;
          DebugSourceName = debugSourceName;
       }
       // This lets the Load function add the target scene in a second pass after construction.
-      public Unit? TargetSceneUnit { get; set; }
+      public Node? TargetSceneNode { get; set; }
    }
 
    public class ReturnArrow: Arrow
    {
       // This lets the Load function make arrows. 
       public ReturnArrow(
-         Unit targetUnit,
-         CodeTree code) : base(targetUnit, code)
+         Node targetNode,
+         CodeTree code) : base(targetNode, code)
       {
       }
    }
@@ -74,19 +74,19 @@ namespace Gamebook
 
       // This lets the Load function make arrows. 
       public ReactionArrow(
-         Unit targetUnit,
+         Node targetNode,
          CodeTree code,
          string sourceName,
-         string sourceId): base (targetUnit, code)
+         string sourceId): base (targetNode, code)
       {
          SourceName = sourceName;
          SourceId = sourceId;
       }
    }
 
-   public class Unit: WithId
+   public class Node: WithId
    {
-      // When we save the game state, we don't save the units, reactions, code, etc. That is already coming from the .graphml files. Instead, when there is a reference to a unit, we just save the file name and internal ID of the unit. We hook up to the actual units after deserialization based on the file and ID.
+      // When we save the game state, we don't save the nodes, reactions, code, etc. That is already coming from the .graphml files. Instead, when there is a reference to a unit, we just save the file name and internal ID of the unit. We hook up to the actual units after deserialization based on the file and ID.
       private string SourceName;
       private string SourceId;
       public string UniqueId
@@ -94,7 +94,7 @@ namespace Gamebook
          get => BuildUniqueId(SourceName, SourceId);
       }
 
-      // Each Unit has two parts:
+      // Each Node has two parts:
       // a. The text that describes the opposing turn (the "action"), ex. "@Black Bart said, "I'm gonna burn this town to the ground!"
       // b. The list of texts that describes the options for your turn, ex. "Try to reason with him.", "Shoot him.", etc.
       // Is it really that simple? No.
@@ -102,7 +102,7 @@ namespace Gamebook
    
       public List<Arrow> Arrows { get; }
 
-      public Unit(
+      public Node(
          string sourceName,
          string sourceId,
          CodeTree actionCode)

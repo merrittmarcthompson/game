@@ -32,8 +32,8 @@ namespace Gamebook
             }
          }
 
-         foreach (var unit in page.NextTargetUnitOnReturn)
-            writer.WriteLine("n" + SaveFileDelimiter + unit.UniqueId);
+         foreach (var node in page.NextTargetNodeOnReturn)
+            writer.WriteLine("n" + SaveFileDelimiter + node.UniqueId);
 
          writer.WriteLine("a" + SaveFileDelimiter + page.ActionText);
 
@@ -49,10 +49,10 @@ namespace Gamebook
       {
          // Loads saved story state data and links it to the static world description. Either loads and returns a valid Page or returns null if it reaches the end of the reader. Run this multiple times to read multiple Pages from the reader.
 
-         var settings = new Dictionary<string, Setting>(world.Settings);
+         var settings = new Dictionary<string, Setting>(world.InitialSettings);
          string actionText = "";
          var reactions = new Dictionary<string, ScoredReactionArrow>();
-         var nextTargetUnitOnReturn = new Stack<Unit>();
+         var nextTargetNodeOnReturn = new Stack<Node>();
 
          // End of file right at the beginning (maybe after an 'x' operation) indicates a valid end of the file. That means we're done reading all the pages in the file.
          var line = reader.ReadLine();
@@ -97,7 +97,7 @@ namespace Gamebook
                   settings[parts[1]] = setting;
                   break;
                case "n":
-                  nextTargetUnitOnReturn.Push(world.UnitsByUniqueId[parts[1]]);
+                  nextTargetNodeOnReturn.Push(world.NodesByUniqueId[parts[1]]);
                   break;
                case "a":
                   actionText = parts[1];
@@ -109,8 +109,8 @@ namespace Gamebook
                   break;
                case "x":
                   // Flip the stack so it's going the right way. When you copy a stack, it flips it.
-                  nextTargetUnitOnReturn = new Stack<Unit>(nextTargetUnitOnReturn);
-                  return new Page(actionText, reactions, settings, nextTargetUnitOnReturn);
+                  nextTargetNodeOnReturn = new Stack<Node>(nextTargetNodeOnReturn);
+                  return new Page(actionText, reactions, settings, nextTargetNodeOnReturn);
                default:
                   throw new InvalidOperationException(string.Format($"Unexpected operation '{parts[0]}'."));
             }
