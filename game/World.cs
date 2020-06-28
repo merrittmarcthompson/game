@@ -14,7 +14,7 @@ namespace Gamebook
       public Node FirstNode { get; }
       public Dictionary<string, Node> NodesByUniqueId { get; }
       public Dictionary<string, ReactionArrow> ReactionArrowsByUniqueId { get; }
-      public Dictionary<string, Setting> InitialSettings { get; }
+      public Dictionary<string, Setting> Settings { get; }
 
       public World(
          string sourceDirectory)
@@ -26,7 +26,7 @@ namespace Gamebook
 
          Node? hopefullyFirstNode = null;
 
-         InitialSettings = LoadSettings(sourceDirectory);
+         Settings = LoadSettings(sourceDirectory);
          NodesByUniqueId = new Dictionary<string, Node>();
          ReactionArrowsByUniqueId = new Dictionary<string, ReactionArrow>();
 
@@ -48,7 +48,7 @@ namespace Gamebook
             var graphml = new Graphml(File.ReadAllText(sourcePath));
             foreach (var (nodeId, label) in graphml.Nodes())
             {
-               Node node = new Node(sourceName, nodeId, new CodeTree(label, sourceName, InitialSettings));
+               Node node = new Node(sourceName, nodeId, new CodeTree(label, sourceName, Settings));
                NodesByUniqueId[sourceName + ":" + nodeId] = node;
                EvaluateSettingsReport(node.ActionCode, sourceName, settingsReportWriter);
                nodesByNodeId.Add(nodeId, node);
@@ -76,7 +76,7 @@ namespace Gamebook
                if (!nodesByNodeId.TryGetValue(targetNodeId, out var targetNode))
                   throw new InvalidOperationException(string.Format($"{sourceName}: Internal error: no node declaration for referenced target node '{targetNodeId}'"));
 
-               var code = new CodeTree(label, sourceName, InitialSettings);
+               var code = new CodeTree(label, sourceName, Settings);
                EvaluateSettingsReport(code, sourceName, settingsReportWriter);
                var (isMerge, referencedSceneId, isReturn) = EvaluateArrowType(code);
                Arrow arrow;

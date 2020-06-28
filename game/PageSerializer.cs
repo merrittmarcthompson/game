@@ -49,7 +49,7 @@ namespace Gamebook
       {
          // Loads saved story state data and links it to the static world description. Either loads and returns a valid Page or returns null if it reaches the end of the reader. Run this multiple times to read multiple Pages from the reader.
 
-         var settings = new Dictionary<string, Setting>(world.InitialSettings);
+         var settings = new Dictionary<string, Setting>(world.Settings);
          string actionText = "";
          var reactions = new Dictionary<string, ScoredReactionArrow>();
          var nextTargetNodeOnReturn = new Stack<Node>();

@@ -42,10 +42,7 @@ namespace Gamebook
             if (!GetLetter())
             {
                if (textAccumulator.Length != 0)
-               {
                   TheList.Add(new Token(TokenType.Characters, textAccumulator, lineNumber));
-                  textAccumulator = "";
-               }
                TheList.Add(new Token(TokenType.EndOfSourceText, "", lineNumber));
                return;
             }
@@ -158,7 +155,7 @@ namespace Gamebook
                            break;
 
                         default:
-                           if (!Char.IsLetterOrDigit(gottenLetter) || gottenLetter == '_')
+                           if (!char.IsLetterOrDigit(gottenLetter) || gottenLetter == '_')
                               throw new InvalidOperationException(string.Format($"file {sourceNameForErrorMessages} line {lineNumber}: unexpected character '{gottenLetter}' in\n{sourceText}"));
 
                            string id = "";
@@ -201,21 +198,17 @@ namespace Gamebook
                               TheList.Add(new Token(TokenType.SpecialId, id, lineNumber));
                            else
                            {
-                              if (settings.ContainsKey(id))
-                                 switch (settings[id])
+                              var type = settings.ContainsKey(id) ?
+                                 settings[id] switch
                                  {
-                                    case ScoreSetting scoreSetting:
-                                       TheList.Add(new Token(TokenType.ScoreId, id, lineNumber));
-                                       break;
-                                    case StringSetting stringSetting:
-                                       TheList.Add(new Token(TokenType.StringId, id, lineNumber));
-                                       break;
-                                    case BooleanSetting booleanSetting:
-                                       TheList.Add(new Token(TokenType.BooleanId, id, lineNumber));
-                                       break;
+                                    ScoreSetting _ => TokenType.ScoreId,
+                                    StringSetting _ => TokenType.StringId,
+                                    BooleanSetting _ => TokenType.BooleanId,
+                                    _ => throw new NotImplementedException(), // Just making the compiler happy. There is no other case.
                                  }
-                              else
-                                 TheList.Add(new Token(TokenType.Id, id, lineNumber));
+                              :
+                                 TokenType.Id;
+                              TheList.Add(new Token(type, id, lineNumber));
                            }
                            break;
                      }

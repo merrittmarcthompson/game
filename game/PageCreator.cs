@@ -16,7 +16,7 @@ namespace Gamebook
       public Page BuildFirst(
          World world)
       {
-         return Build(world.FirstNode, world.InitialSettings, new Stack<Node> (), "");
+         return Build(world.FirstNode, new Dictionary<string, Setting>(world.Settings), new Stack<Node> (), "");
       }
 
       public Page BuildNext(
@@ -81,8 +81,8 @@ namespace Gamebook
 
       private Page Build(
          Node firstNode,
-         Dictionary<string, Setting> settings,
-         Stack<Node> nextTargetNodeOnReturn,
+         Dictionary<string, Setting> accumulatedSettings,
+         Stack<Node> accumulatedNextTargetNodeOnReturn,
          string startingTrace)
       {
          // Starting with the given node, a) merge the texts of all nodes connected below it into one text, and b) collect all the reaction arrows.
@@ -96,7 +96,7 @@ namespace Gamebook
          double reactionScoreDisambiguator = 0;
 
          // Scores use this to compute whether you are above average in a score. Set it now, before creating the page, so it can be used in conditions evaluated throughout page creation.
-         ScoreSetting.Average = settings.Values
+         ScoreSetting.Average = accumulatedSettings.Values
             .OfType<ScoreSetting>()
             .Select(scoreSetting => scoreSetting.ScoreValue)
             .DefaultIfEmpty()
@@ -106,30 +106,28 @@ namespace Gamebook
             accumulatedActionTexts += String.Format($"@{Game.PositiveDebugTextStart}average = {ScoreSetting.Average:0.00}%{Game.DebugTextStop}");
 
          // This recursive routine will accumulate all the action and reaction text values in the above variables.
-         Accumulate(firstNode, nextTargetNodeOnReturn, settings);
+         Accumulate(firstNode);
          while (!gotAReactionArrow)
          {
             // We got to a dead end without finding any reaction options for the player. So pop back to a pushed location and continue merging from there.
-            if (!nextTargetNodeOnReturn.Any())
+            if (!accumulatedNextTargetNodeOnReturn.Any())
                throw new InvalidOperationException(string.Format($"Got to a dead end with no place to return to."));
-            var node = nextTargetNodeOnReturn.Pop();
+            var node = accumulatedNextTargetNodeOnReturn.Pop();
             if (DebugMode)
                accumulatedActionTexts += "@" + Game.PositiveDebugTextStart + "pop " + node.UniqueId + Game.DebugTextStop;
-            Accumulate(node, nextTargetNodeOnReturn, settings);
+            Accumulate(node);
          }
 
-         return new Page(FixPlus(accumulatedActionTexts), accumulatedReactions, settings, nextTargetNodeOnReturn);
+         return new Page(FixPlus(accumulatedActionTexts), accumulatedReactions, accumulatedSettings, accumulatedNextTargetNodeOnReturn);
 
          void Accumulate(
-            Node node,
-            Stack<Node> nextTargetNodeOnReturn,
-            Dictionary<string, Setting> settings)
+            Node node)
          {
             // First append this node's own text.
-            accumulatedActionTexts += (accumulatedActionTexts.Length != 0 ? " " : "") + EvaluateText(node.ActionCode, settings);
+            accumulatedActionTexts += (accumulatedActionTexts.Length != 0 ? " " : "") + EvaluateText(node.ActionCode, accumulatedSettings);
 
             // Then update the accumulated settings based on any 'set' or 'score' codes in the text.
-            EvaluateSettingsAndScores(node.ActionCode, settings, out string trace1);
+            EvaluateSettingsAndScores(node.ActionCode, accumulatedSettings, out string trace1);
             accumulatedActionTexts += trace1;
 
             // Finally, examine all the arrows for the node.
@@ -147,37 +145,35 @@ namespace Gamebook
                else
                {
                   // If conditions in the arrow are false, then just ignore the arrow completely. This includes both merge and reaction arrows.
-                  (var succeeded, var hadWhen) = EvaluateWhen(arrow.Code, settings, out string trace2);
+                  (var succeeded, var hadWhen) = EvaluateWhen(arrow.Code, accumulatedSettings, out string trace2);
                   accumulatedActionTexts += trace2;
                   if (!succeeded)
                      continue;
                   if (hadWhen)
                      allWhensFailed = false;
-                  AccumulateArrow(arrow, nextTargetNodeOnReturn, settings);
+                  AccumulateArrow(arrow);
                }
             }
             if (allWhensFailed)
                // If none of the 'when EXPRESSIONS' arrows succeeded, execute the 'when else' arrows now.
                foreach (var arrow in whenElseArrows)
-                  AccumulateArrow(arrow, nextTargetNodeOnReturn, settings);
+                  AccumulateArrow(arrow);
             if (returnArrows.Any())
             {
                // Create a node on the fly and push it on the stack for execution on return. This converts the return arrows to merge arrows.
                var returnNode = World.BuildReturnNodeFor(returnArrows);
-               nextTargetNodeOnReturn.Push(returnNode);
+               accumulatedNextTargetNodeOnReturn.Push(returnNode);
             }
          }
 
          void AccumulateArrow(
-            Arrow arrow,
-            Stack<Node> nextTargetNodeOnReturn,
-            Dictionary<string, Setting> settings)
+            Arrow arrow)
          {
             switch (arrow)
             {
                case MergeArrow mergeArrow:
                   // There may be 'set' parameters for a referential merge.
-                  EvaluateSettingsAndScores(arrow.Code, settings, out string trace);
+                  EvaluateSettingsAndScores(arrow.Code, accumulatedSettings, out string trace);
                   accumulatedActionTexts += trace;
 
                   if (DebugMode)
@@ -189,19 +185,19 @@ namespace Gamebook
                   {
                      targetNode = mergeArrow.TargetSceneNode;
                      // When we finish the jump to the other scene, we will continue merging with the action this arrow points to.
-                     nextTargetNodeOnReturn.Push(mergeArrow.TargetNode);
+                     accumulatedNextTargetNodeOnReturn.Push(mergeArrow.TargetNode);
                   }
                   else
                      // It's a local merge arrow. Merge the action it points to.
                      // It should be impossible for it to have no target. Let it crash if that's the case.
                      targetNode = mergeArrow.TargetNode;
                   // Call this routine again recursively. It will append the target's text and examine the target's arrows.
-                  Accumulate(targetNode, nextTargetNodeOnReturn, settings);
+                  Accumulate(targetNode);
                   break;
                case ReactionArrow reactionArrow:
                   gotAReactionArrow = true;
                   double highestScore = 0;
-                  var reactionText = EvaluateText(reactionArrow.Code, settings);
+                  var reactionText = EvaluateText(reactionArrow.Code, accumulatedSettings);
                   // There's a little trickiness with links here...
                   if (reactionText.Length > 0 && reactionText[0] == '{')
                   {
@@ -221,7 +217,7 @@ namespace Gamebook
                      highestScore = reactionArrow.Code.Traverse()
                         .OfType<ScoreCode>()
                         .SelectMany(scoreCode => scoreCode.Ids)
-                        .Select(id => settings[id])
+                        .Select(id => accumulatedSettings[id])
                         .OfType<ScoreSetting>()
                         .Select(scoreSetting => scoreSetting.ScoreValue)
                         .DefaultIfEmpty(0)

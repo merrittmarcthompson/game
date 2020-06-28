@@ -28,12 +28,12 @@ namespace Gamebook
          var tokenList = new TokenList(sourceText, sourceNameForErrorMessages, settings);
          var Look = new LookAhead(tokenList);
 
-         RootCode = GetSequence();
+         RootCode = ParseSequence();
          Look.Require(TokenType.EndOfSourceText, sourceText, sourceNameForErrorMessages);
 
          // Some local helper functions.
 
-         SequenceCode GetSequence()
+         SequenceCode ParseSequence()
          {
             var codes = new List<Code>();
 
@@ -86,17 +86,17 @@ namespace Gamebook
                   codes.Add(new TextCode(id, text));
                }
                else if (Look.Got(TokenType.Set))
-                  codes.Add(new SetCode(GetExpressions(false)));
+                  codes.Add(new SetCode(ParseExpressions(false)));
                else if (Look.Got(TokenType.When))
                {
                   if (Look.Got(TokenType.Else))
                      codes.Add(new WhenElseCode());
                   else
-                     codes.Add(new WhenCode(GetExpressions(true)));
+                     codes.Add(new WhenCode(ParseExpressions(true)));
                }
                else if (Look.Got(TokenType.If))
                {
-                  var ifCode = GetIf();
+                  var ifCode = ParseIf();
                   codes.Add(ifCode);
 
                   // The whole if/or case statement is terminated by 'end'.
@@ -110,7 +110,7 @@ namespace Gamebook
             }
          }
 
-         List<Expression> GetExpressions(
+         List<Expression> ParseExpressions(
             bool allowNotEqual)
          {
             // BOOLEANID
@@ -161,20 +161,20 @@ namespace Gamebook
              else
                C
          */
-         IfCode GetIf()
+         IfCode ParseIf()
          {
             // This is called after getting 'if' or 'or'.
             // First get the expression. It's like one of these:
             //   [if brave]
             //   [if not killedInspector]
-            var expressions = GetExpressions(true);
-            var trueCode = GetSequence();
+            var expressions = ParseExpressions(true);
+            var trueCode = ParseSequence();
             Code? falseCode = null;
 
             if (Look.Got(TokenType.Else))
-               falseCode = GetSequence();
+               falseCode = ParseSequence();
             else if (Look.Got(TokenType.Or))
-               falseCode = GetIf();
+               falseCode = ParseIf();
             // Otherwise must be 'end'. Let caller handle it.
             return new IfCode(expressions, trueCode, falseCode);
          }
